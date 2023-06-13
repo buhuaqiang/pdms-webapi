@@ -1,0 +1,17 @@
+{
+	"登錄":"Login",
+	"正在登錄":"Logging in",
+	"賬號登錄":"Account login",
+	"請輸入":"Please input",
+	"登錄成功,正在跳轉":"Login succeeded, skipping",
+	"請輸入賬號":"Please input  account",
+	"請輸入密碼":"Please input  password",
+	"賬號":"Account",
+	"密碼":"Password",
+	"不能為空":"cannot be empty",
+	"記住密碼":"Remember password",
+	"牛只信息": "Cow info",
+	"退出登錄":"Log out",
+	"至":"to",
+	"時間":"Date"
+}
