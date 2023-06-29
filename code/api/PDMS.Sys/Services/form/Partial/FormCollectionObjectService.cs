@@ -86,7 +86,18 @@ namespace PDMS.System.Services
                 return webResponse.OK(null, path.EncryptDES(AppSetting.Secret.ExportFile));
             };
             return base.Export(pageData);
-        } 
+        }
+
+
+        public FormCollectionObject GetFormCollectionObjectByCollectionId(int collectionId)
+        {
+            if ( collectionId == 0)
+            {
+                return null;
+            }
+            FormCollectionObject R = repository.DbContext.Set<FormCollectionObject>().Where(x => x.FormCollectionId == collectionId).FirstOrDefault();
+            return R;
+        }
     }
 
     public class FormOptions

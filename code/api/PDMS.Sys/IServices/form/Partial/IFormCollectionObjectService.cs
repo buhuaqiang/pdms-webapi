@@ -9,5 +9,6 @@ namespace PDMS.System.IServices
 {
     public partial interface IFormCollectionObjectService
     {
+        FormCollectionObject GetFormCollectionObjectByCollectionId(int collectionId);
     }
- }
+}
