@@ -40,7 +40,29 @@ namespace PDMS.System.Services
 
         public override PageGridData<FormDesignOptions> GetPageData(PageDataOptions options)
         {
+            //查询所有del_flag!=1
             return base.GetPageData(options);
         }
+
+        public override WebResponseContent Add(SaveModel saveDataModel)
+        {
+            //要确认已发布状态下表单code不可以重复
+            //设置默认status=0(暂存)
+            return base.Add(saveDataModel);
+        }
+
+        public override WebResponseContent Update(SaveModel saveModel)
+        {
+            //修改舊數據的del_flag=1
+            //複製一份數據做新增，發佈狀態改為 暫存 status=0
+            return base.Update(saveModel);
+        }
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            //如果表單被cmc_common_task表引用，不允許刪除
+            return base.Del(keys, delList);
+        }
+
     }
 }

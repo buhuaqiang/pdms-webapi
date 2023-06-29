@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.System.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.System.Controllers
 {
@@ -28,6 +29,12 @@ namespace PDMS.System.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+        [ApiActionPermission]
+        [HttpGet, Route("GetFormCollectionObjectByCollectionId")]
+        public ActionResult GetFormCollectionObjectByCollectionId(int collectionId)
+        {
+            return Json(_service.GetFormCollectionObjectByCollectionId(collectionId));
         }
     }
 }

@@ -44,7 +44,7 @@ namespace PDMS.System.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [Route("getFormOptions"), HttpGet]
-        public async Task<IActionResult> GetFormOptions(Guid id)
+        public async Task<IActionResult> GetFormOptions(int id)
         {
             var options = await _formDesignOptionsRepository.FindAsIQueryable(x => x.FormId == id)
                     .Select(s => new { s.Title, s.FormOptions })  
@@ -59,8 +59,20 @@ namespace PDMS.System.Controllers
         [Route("submit"), HttpPost]
         public IActionResult Submit([FromBody] SaveModel saveModel)
         {
-            var result = FormCollectionObjectService.Instance.Add(saveModel);
-            return Json(result);
+
+            if (saveModel.MainData["FormCollectionId"] == null)
+            {
+                var result = FormCollectionObjectService.Instance.Add(saveModel);
+                return Json(result);
+            }
+            else
+            {
+                /*string FormCollectionId = saveModel.MainData["FormCollectionId"]?.ToString();
+                object[] keys = { FormCollectionId };
+                FormCollectionObjectService.Instance.Del(keys);*/
+                var result = FormCollectionObjectService.Instance.Update(saveModel);
+                return Json(result);
+            }
         }
         /// <summary>
         ///获取有数据的设计器
@@ -76,5 +88,16 @@ namespace PDMS.System.Controllers
             return Json(data);  
 
         }
+
+
+
+        //
+        [Route("publishForm"), HttpPost]
+        public IActionResult publishForm(object[] keys)
+        {
+            //UPDATE FormDesignOptions SET status=1 where FormId in keys
+            return Json("OK");
+        }
+
     }
 }

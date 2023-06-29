@@ -21,9 +21,9 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Key]
        [Display(Name ="FormId")]
-       [Column(TypeName="uniqueidentifier")]
+       [Column(TypeName="int")]
        [Required(AllowEmptyStrings=false)]
-       public Guid FormId { get; set; }
+       public int FormId { get; set; }
 
        /// <summary>
        ///表单名称
@@ -35,10 +35,20 @@ namespace PDMS.Entity.DomainModels
        [Required(AllowEmptyStrings=false)]
        public string Title { get; set; }
 
-       /// <summary>
-       ///设计器配置
-       /// </summary>
-       [Display(Name ="设计器配置")]
+        /// <summary>
+        ///表单code
+        /// </summary>
+        [Display(Name = "表单code")]
+        [MaxLength(1000)]
+        [Column(TypeName = "nvarchar(20)")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public string FormCode { get; set; }
+
+        /// <summary>
+        ///设计器配置
+        /// </summary>
+        [Display(Name ="设计器配置")]
        [Column(TypeName="nvarchar(max)")]
        [Editable(true)]
        public string DaraggeOptions { get; set; }
@@ -119,6 +129,18 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="int")]
        public int? ModifyID { get; set; }
 
-       
+        /// <summary>
+        ///狀態：0-暫存，1-已發佈
+        /// </summary>
+        [Display(Name = "status")]
+        [Column(TypeName = "char")]
+        public string? status { get; set; }
+
+        /// <summary>
+        ///逻辑删除标识 0,1-删除
+        /// </summary>
+        [Display(Name = "del_flag")]
+        [Column(TypeName = "char")]
+        public string? del_flag { get; set; }
     }
 }
