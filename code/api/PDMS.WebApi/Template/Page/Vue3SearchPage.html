@@ -8,6 +8,7 @@
     <view-grid ref="grid"
                :columns="columns"
                :detail="detail"
+               :details="details"
                :editFormFields="editFormFields"
                :editFormOptions="editFormOptions"
                :searchFormFields="searchFormFields"
@@ -35,13 +36,8 @@
             const searchFormFields = ref(#searchFormFileds);
             const searchFormOptions = ref(#searchFormOptions);
             const columns = ref([#columns]);
-            const detail = ref({
-                cnName: "#detailCnName",
-                table: "#detailTable",
-                columns: [#detailColumns],
-                sortName: "#detailSortName",
-                key: "#detailKey"
-            });
+            const detail = ref(#tables1);
+            const details = ref(#tables2);
             return {
                 table,
                 extend,
@@ -51,6 +47,7 @@
                 searchFormOptions,
                 columns,
                 detail,
+                details
             };
         },
     });

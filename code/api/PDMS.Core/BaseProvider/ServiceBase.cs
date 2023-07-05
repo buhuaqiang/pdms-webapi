@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using PDMS.Core.BaseProvider;
 using PDMS.Core.CacheManager;
 using PDMS.Core.Configuration;
@@ -23,6 +27,7 @@ using PDMS.Core.WorkFlow;
 using PDMS.Entity;
 using PDMS.Entity.DomainModels;
 using PDMS.Entity.SystemModels;
+using static Dapper.SqlMapper;
 
 namespace PDMS.Core.BaseProvider
 {
@@ -102,7 +107,7 @@ namespace PDMS.Core.BaseProvider
             {
                 return repository.DbContext.Set<T>().FromSqlRaw(QuerySql);
             }
-            string multiTenancyString = TenancyManager<T>.GetSearchQueryable(QuerySql,typeof(T).GetEntityTableName());
+            string multiTenancyString = TenancyManager<T>.GetSearchQueryable(QuerySql, typeof(T).GetEntityTableName());
             return repository.DbContext.Set<T>().FromSqlRaw(multiTenancyString);
         }
 
@@ -307,6 +312,15 @@ namespace PDMS.Core.BaseProvider
             {
                 queryable = QueryRelativeExpression.Invoke(queryable);
             }
+
+            //过滤逻辑删除
+            var logicDelProperty = GetLogicDelProperty();
+            if (logicDelProperty != null)
+            {
+                queryable = queryable.Where(logicDelProperty.Name.CreateExpression<T>((int)DelStatus.正常, LinqExpressionType.Equal));
+            }
+
+
             if (options.Export)
             {
                 queryable = queryable.GetIQueryableOrderBy(orderbyDic);
@@ -339,10 +353,25 @@ namespace PDMS.Core.BaseProvider
 
         public virtual object GetDetailPage(PageDataOptions pageData)
         {
-            Type detailType = typeof(T).GetCustomAttribute<EntityAttribute>()?.DetailTable?[0];
-            if (detailType == null)
+            var tables = typeof(T).GetCustomAttribute<EntityAttribute>();
+            if (tables == null)
             {
                 return null;
+            }
+            Type detailType = null;
+            if (string.IsNullOrEmpty(pageData.TableName))
+            {
+                detailType = typeof(T).GetCustomAttribute<EntityAttribute>()?.DetailTable?[0];
+            }
+            else
+            {
+                detailType = tables.DetailTable.Where(c => c.Name == pageData.TableName).FirstOrDefault();
+            }
+            if (detailType == null)
+            {
+                string message = $"未找到配置{pageData.TableName},请检查代码生成器明细表配置及是否生成model";
+                Console.WriteLine(message);
+                return new { message = message };
             }
             object obj = typeof(ServiceBase<T, TRepository>)
                  .GetMethod("GetDetailPage", BindingFlags.Instance | BindingFlags.NonPublic)
@@ -550,6 +579,13 @@ namespace PDMS.Core.BaseProvider
             if (saveDataModel.MainData.Count == 0)
                 return Response.Error("保存的数据为空，请检查model是否配置正确!");
 
+            //过滤逻辑删除
+            var logicDelProperty = GetLogicDelProperty();
+            if (logicDelProperty != null)
+            {
+                saveDataModel.MainData[logicDelProperty.Name] = (int)DelStatus.正常;
+            }
+
             UserInfo userInfo = UserContext.Current.UserInfo;
             saveDataModel.SetDefaultVal(AppSetting.CreateMember, userInfo);
 
@@ -562,6 +598,13 @@ namespace PDMS.Core.BaseProvider
             {
                 saveDataModel.MainData.Remove(keyPro.Name);
             }
+
+            //一对多
+            if (saveDataModel.Details != null && saveDataModel.Details.Count() > 0)
+            {
+                return AddMultipleDetail(saveDataModel);
+            }
+
             //没有明细直接保存返回
             if (saveDataModel.DetailData == null || saveDataModel.DetailData.Count == 0)
             {
@@ -602,6 +645,8 @@ namespace PDMS.Core.BaseProvider
             return Add<T>(entity, null, validationEntity);
         }
 
+
+
         /// <summary>
         /// 保存主、明细数据
         /// </summary>
@@ -625,7 +670,7 @@ namespace PDMS.Core.BaseProvider
                     if (CheckResponseResult()) return Response;
                 }
             }
-            if (this.AddOnExecuting != null)
+            if (AddOnExecuting != null)
             {
                 Response = AddOnExecuting(entity, list);
                 if (CheckResponseResult()) return Response;
@@ -699,8 +744,9 @@ namespace PDMS.Core.BaseProvider
                     return;
                 }
                 //写入流程
-                WorkFlowManager.AddProcese<T>(entity);
-                //   WorkFlowManager.Audit<T>(entity, AuditStatus.待审核, null, null, null, null, init: true, initInvoke: AddWorkFlowExecuted);
+                WorkFlowManager.AddProcese<T>(entity,addWorkFlowExecuted: AddWorkFlowExecuted);
+                
+               // WorkFlowManager.Audit<T>(entity, AuditStatus.待审核, null, null, null, null, init: true, initInvoke: AddWorkFlowExecuted);
             }
         }
 
@@ -709,7 +755,98 @@ namespace PDMS.Core.BaseProvider
             List<PropertyInfo> listChilds = TProperties.Where(x => x.PropertyType.Name == "List`1").ToList();
             // repository.DbContext.Set<TDetail>().AddRange();
         }
+        /// <summary>
+        /// 一对多新建功能
+        /// </summary>
+        /// <param name="saveDataModel"></param>
+        /// <returns></returns>
+        private WebResponseContent AddMultipleDetail(SaveModel saveDataModel)
+        {
+            T mainEntity = saveDataModel.MainData.DicToEntity<T>();
+            SetAuditDefaultValue(mainEntity);
 
+            var tables = typeof(T).GetCustomAttribute<EntityAttribute>().DetailTable;
+            for (int i = 0; i < saveDataModel.Details.Count; i++)
+            {
+                DetailInfo detailInfo = saveDataModel.Details[i];
+                if (detailInfo.Data == null && detailInfo.Data.Count == 0)
+                {
+                    continue;
+                }
+                Type type = tables.Where(c => c.Name == detailInfo.Table).FirstOrDefault();
+                if (type == null)
+                {
+                    return Response.Error($"未找到明细表[{detailInfo.Table}],请重新配置主表的明细表");
+                }
+                //验证明细
+                string reslut = type.ValidateDicInEntity(detailInfo.Data, true, false, new string[] { TProperties.GetKeyName() });
+                if (reslut != string.Empty)
+                {
+                    return Response.Error($"{type.GetEntityTableCnName()}:{reslut}");
+                }
+                //一对多设置明细表数据
+                typeof(ServiceBase<T, TRepository>).GetMethod("SetEntityDetail", BindingFlags.Instance | BindingFlags.NonPublic)
+                             .MakeGenericMethod(new Type[] { type })
+                             .Invoke(this, new object[] { mainEntity, detailInfo.Data, null });
+            }
+
+            if (AddOnExecuting != null)
+            {
+                Response = AddOnExecuting(mainEntity, null);
+                if (CheckResponseResult()) return Response;
+            }
+
+            Response = repository.DbContextBeginTransaction(() =>
+            {
+                repository.Add(mainEntity);
+                repository.DbContext.SaveChanges();
+
+                if (AddOnExecuted != null)
+                    Response = AddOnExecuted(mainEntity, null);
+                return Response;
+            });
+            if (Response.Status && string.IsNullOrEmpty(Response.Message))
+            {
+                Response.OK(ResponseType.SaveSuccess);
+            }
+            AddProcese(mainEntity);
+            var propertyKey = typeof(T).GetKeyProperty();
+            saveDataModel.MainData[propertyKey.Name] = propertyKey.GetValue(mainEntity);
+            Response.Data = new { data = saveDataModel.MainData };
+            return Response;
+        }
+        /// <summary>
+        /// 一对多设置明细表数据
+        /// </summary>
+        /// <typeparam name="TDetail"></typeparam>
+        /// <param name="entity"></param>
+        /// <param name="detailData"></param>
+        private void SetEntityDetail<TDetail>(T entity, List<Dictionary<string, object>> detailData, List<TDetail> list) where TDetail : class
+        {
+            bool setDefault = true;
+            if (list == null)
+            {
+                setDefault = false;
+                list = detailData.DicToList<TDetail>();
+            }
+            PropertyInfo property = typeof(T).GetProperty(typeof(TDetail).Name);
+            if (setDefault)
+            {
+                foreach (var item in list)
+                {
+                    //设置用户默认值
+                    item.SetCreateDefaultVal();
+                }
+            }
+            property.SetValue(entity, list);
+        }
+
+        /// <summary>
+        /// 主从表新建
+        /// </summary>
+        /// <typeparam name="TDetail"></typeparam>
+        /// <param name="saveDataModel"></param>
+        /// <returns></returns>
         private WebResponseContent Add<TDetail>(SaveModel saveDataModel) where TDetail : class
         {
             T mainEntity = saveDataModel.MainData.DicToEntity<T>();
@@ -754,141 +891,7 @@ namespace PDMS.Core.BaseProvider
             return detailKeys;
         }
 
-        /// <summary>
-        /// 将数据转换成对象后最终保存
-        /// </summary>
-        /// <typeparam name="DetailT"></typeparam>
-        /// <param name="saveModel"></param>
-        /// <param name="mainKeyProperty"></param>
-        /// <param name="detailKeyInfo"></param>
-        /// <param name="keyDefaultVal"></param>
-        /// <returns></returns>
-        public WebResponseContent UpdateToEntity<DetailT>(SaveModel saveModel, PropertyInfo mainKeyProperty, PropertyInfo detailKeyInfo, object keyDefaultVal) where DetailT : class
-        {
-            T mainEnity = saveModel.MainData.DicToEntity<T>();
-            List<DetailT> detailList = saveModel.DetailData.DicToList<DetailT>();
-            //2021.08.21优化明细表删除
-            //删除的主键
-            //查出所有明细表数据的ID
-            //System.Collections.IList detailKeys = this.GetType().GetMethod("GetUpdateDetailSelectKeys")
-            //        .MakeGenericMethod(new Type[] { typeof(DetailT), detailKeyInfo.PropertyType })
-            //        .Invoke(this, new object[] {
-            //            detailKeyInfo.Name, mainKeyProperty.Name,
-            //            saveModel.MainData[mainKeyProperty.Name].ToString()
-            //        }) as System.Collections.IList;
 
-            //新增对象
-            List<DetailT> addList = new List<DetailT>();
-            //   List<object> containsKeys = new List<object>();
-            //编辑对象
-            List<DetailT> editList = new List<DetailT>();
-            //删除的主键
-            List<object> delKeys = new List<object>();
-            mainKeyProperty = typeof(DetailT).GetProperties().Where(x => x.Name == mainKeyProperty.Name).FirstOrDefault();
-            //获取新增与修改的对象
-            foreach (DetailT item in detailList)
-            {
-                object value = detailKeyInfo.GetValue(item);
-                if (keyDefaultVal.Equals(value))//主键为默认值的,新增数据
-                {
-                    //设置新增的主表的值
-                    mainKeyProperty.SetValue(item,
-                        saveModel.MainData[mainKeyProperty.Name]
-                        .ChangeType(mainKeyProperty.PropertyType));
-
-                    if (detailKeyInfo.PropertyType == typeof(Guid))
-                    {
-                        detailKeyInfo.SetValue(item, Guid.NewGuid());
-                    }
-                    addList.Add(item);
-                }
-                else //if (detailKeys.Contains(value))
-                {
-                    //containsKeys.Add(value);
-                    editList.Add(item);
-                }
-            }
-
-            //获取需要删除的对象的主键
-            if (saveModel.DelKeys != null && saveModel.DelKeys.Count > 0)
-            {
-                //2021.08.21优化明细表删除
-                delKeys = saveModel.DelKeys.Select(q => q.ChangeType(detailKeyInfo.PropertyType)).Where(x => x != null).ToList();
-                //.Where(x => detailKeys.Contains(x.ChangeType(detailKeyInfo.PropertyType)))
-                //.Select(q => q.ChangeType(detailKeyInfo.PropertyType)).ToList();
-            }
-
-            if (UpdateOnExecuting != null)
-            {
-                Response = UpdateOnExecuting(mainEnity, addList, editList, delKeys);
-                if (CheckResponseResult())
-                    return Response;
-            }
-            mainEnity.SetModifyDefaultVal();
-            //主表修改
-            //不修改!CreateFields.Contains创建人信息
-            repository.Update(mainEnity, typeof(T).GetEditField()
-                .Where(c => saveModel.MainData.Keys.Contains(c) && !CreateFields.Contains(c))
-                .ToArray());
-            //foreach (var item in saveModel.DetailData)
-            //{
-            //    item.SetModifyDefaultVal();
-            //}
-            //明细修改
-            editList.ForEach(x =>
-            {
-                //获取编辑的字段
-                var updateField = saveModel.DetailData
-                    .Where(c => c[detailKeyInfo.Name].ChangeType(detailKeyInfo.PropertyType)
-                    .Equal(detailKeyInfo.GetValue(x)))
-                    .FirstOrDefault()
-                    .Keys.Where(k => k != detailKeyInfo.Name)
-                    .Where(r => !CreateFields.Contains(r))
-                    .ToList();
-                updateField.AddRange(ModifyFields);
-                //設置默認值
-                x.SetModifyDefaultVal();
-                //添加修改字段
-                repository.Update<DetailT>(x, updateField.ToArray());
-            });
-
-            //明细新增
-            addList.ForEach(x =>
-            {
-                x.SetCreateDefaultVal();
-                repository.DbContext.Entry<DetailT>(x).State = EntityState.Added;
-            });
-            //明细删除
-            delKeys.ForEach(x =>
-            {
-                DetailT delT = Activator.CreateInstance<DetailT>();
-                detailKeyInfo.SetValue(delT, x);
-                repository.DbContext.Entry<DetailT>(delT).State = EntityState.Deleted;
-            });
-
-            if (UpdateOnExecuted == null)
-            {
-                repository.DbContext.SaveChanges();
-                Response.OK(ResponseType.SaveSuccess);
-            }
-            else
-            {
-                Response = repository.DbContextBeginTransaction(() =>
-                {
-                    repository.DbContext.SaveChanges();
-                    Response = UpdateOnExecuted(mainEnity, addList, editList, delKeys);
-                    return Response;
-                });
-            }
-            if (Response.Status)
-            {
-                addList.AddRange(editList);
-                Response.Data = new { data = mainEnity, list = addList };
-                if (string.IsNullOrEmpty(Response.Message))
-                    Response.OK(ResponseType.SaveSuccess);
-            }
-            return Response;
-        }
 
         /// <summary>
         /// 获取配置的创建人ID创建时间创建人,修改人ID修改时间、修改人与数据相同的字段
@@ -901,6 +904,11 @@ namespace PDMS.Core.BaseProvider
             {
                 if (_userIgnoreFields != null) return _userIgnoreFields;
                 List<string> fields = new List<string>();
+                //逻辑删除字段
+                if (!string.IsNullOrEmpty(AppSetting.LogicDelField))
+                {
+                    fields.Add(AppSetting.LogicDelField);
+                }
                 fields.AddRange(CreateFields);
                 fields.AddRange(ModifyFields);
                 _userIgnoreFields = fields.ToArray();
@@ -973,32 +981,10 @@ namespace PDMS.Core.BaseProvider
                 return Response.Error(result);
 
             PropertyInfo mainKeyProperty = type.GetKeyProperty();
-            //验证明细
-            Type detailType = null;
-            if (saveModel.DetailData != null || (saveModel.DelKeys != null && saveModel.DelKeys.Count > 0))
-            {
-                detailType = GetRealDetailType();
-                if (detailType != null)
-                {
-                    saveModel.DetailData = saveModel.DetailData == null
-                                           ? new List<Dictionary<string, object>>()
-                                           : saveModel.DetailData.Where(x => x.Count > 0).ToList();
 
-                    result = detailType.ValidateDicInEntity(saveModel.DetailData, true, false, new string[] { mainKeyProperty.Name });
-                    if (result != string.Empty) return Response.Error(result);
-                }
 
-                //主从关系指定外键,即从表的外键可以不是主键的主表,还需要改下代码生成器设置属性外键,功能预留后面再开发(2020.04.25)
-                //string foreignKey = type.GetTypeCustomValue<System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute>(x => new { x.Name });
-                //if (!string.IsNullOrEmpty(foreignKey))
-                //{
-                //    var _mainKeyProperty = detailType.GetProperties().Where(x => x.Name.ToLower() == foreignKey.ToLower()).FirstOrDefault();
-                //    if (_mainKeyProperty != null)
-                //    {
-                //        mainKeyProperty = _mainKeyProperty;
-                //    }
-                //}
-            }
+
+
 
             //获取主建类型的默认值用于判断后面数据是否正确,int long默认值为0,guid :0000-000....
             object keyDefaultVal = mainKeyProperty.PropertyType.Assembly.CreateInstance(mainKeyProperty.PropertyType.FullName);//.ToString();
@@ -1025,7 +1011,7 @@ namespace PDMS.Core.BaseProvider
                 ))
                 return Response.Error(ResponseType.KeyError);
 
-            if (saveModel.MainData.Count <= 1) return Response.Error("系统没有配置好编辑的数据，请检查model!");
+            if (saveModel.MainData.Count <= 1) return Response.Error("系统没有配置好编辑的数据，请检查model或设置编辑行再点击生成model!");
 
             // 2020.08.15添加多租户数据过滤（编辑）
             if (IsMultiTenancy && !UserContext.Current.IsSuperAdmin)
@@ -1037,11 +1023,15 @@ namespace PDMS.Core.BaseProvider
                 }
             }
 
-
             Expression<Func<T, bool>> expression = mainKeyProperty.Name.CreateExpression<T>(mainKeyVal.ToString(), LinqExpressionType.Equal);
             if (!repository.Exists(expression)) return Response.Error("保存的数据不存在!");
+
+            saveModel.DetailData = saveModel.DetailData == null
+                                         ? new List<Dictionary<string, object>>()
+                                         : saveModel.DetailData.Where(x => x.Count > 0).ToList();
+
             //没有明细的直接保存主表数据
-            if (detailType == null)
+            if (!(saveModel.DetailData.Count > 0 || (saveModel.Details != null && saveModel.Details.Count > 0)))
             {
                 saveModel.SetDefaultVal(AppSetting.ModifyMember, userInfo);
                 T mainEntity = saveModel.MainData.DicToEntity<T>();
@@ -1072,56 +1062,307 @@ namespace PDMS.Core.BaseProvider
                 return Response;
             }
 
-            saveModel.DetailData = saveModel.DetailData.Where(x => x.Count > 0).ToList();
+            return UpdateMultipleDetail(saveModel, mainKeyProperty, keyDefaultVal);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 一对多编辑功能
+        /// </summary>
+        /// <param name="saveDataModel"></param>
+        /// <returns></returns>
+        private WebResponseContent UpdateMultipleDetail(SaveModel saveModel, PropertyInfo mainKeyProperty, object keyDefaultVal)
+        {
+            bool isMultipleDetail = false;
+            var entity = saveModel.MainData.DicToEntity<T>();
+
+            List<DetailInfo> details = new List<DetailInfo>();
+            //一对多细明
+            if (saveModel.Details != null && saveModel.Details.Count > 0)
+            {
+                details = saveModel.Details;
+                isMultipleDetail = true;
+                // return UpdateMultipleDetail(saveModel);
+            }
+            else
+            {
+                //主从明细
+                Type detailType = GetRealDetailType();
+                details.Add(new DetailInfo()
+                {
+                    Data = saveModel.DetailData,
+                    DelKeys = saveModel.DelKeys,
+                    Table = detailType.GetEntityTableName()
+
+                });
+            }
+            //明细
+            //Type detailType = GetRealDetailType();
+
+            //if (saveModel.DetailData.Count>0 || (saveModel.DelKeys != null && saveModel.DelKeys.Count > 0))
+            //{
+            //        result = detailType.ValidateDicInEntity(saveModel.DetailData, true, false, new string[] { mainKeyProperty.Name });
+            //        if (result != string.Empty) return Response.Error(result);
+            //}
+
+            // saveModel.DetailData = saveModel.DetailData.Where(x => x.Count > 0).ToList();
 
             //明细操作
-            PropertyInfo detailKeyInfo = detailType.GetKeyProperty();
+            //PropertyInfo detailKeyInfo = detailType.GetKeyProperty();
             //主键类型
             //  string detailKeyType = mainKeyProperty.GetTypeCustomValue<ColumnAttribute>(c => new { c.TypeName });
             //判断明细是否包含了主表的主键
 
-            string deatilDefaultVal = detailKeyInfo.PropertyType.Assembly.CreateInstance(detailKeyInfo.PropertyType.FullName).ToString();
-            foreach (Dictionary<string, object> dic in saveModel.DetailData)
+            var detailTypes = typeof(T).GetCustomAttribute<EntityAttribute>().DetailTable;
+
+            int index = 0;
+            foreach (var item in details)
             {
-                //不包含主键的默认添加主键默认值，用于后面判断是否为新增数据
-                if (!dic.ContainsKey(detailKeyInfo.Name))
+                var detailType = detailTypes.Where(c => c.Name == item.Table).FirstOrDefault();
+                var detailKeyInfo = detailType.GetKeyProperty();
+                string deatilDefaultVal = detailKeyInfo.PropertyType.Assembly.CreateInstance(detailKeyInfo.PropertyType.FullName).ToString();
+                foreach (Dictionary<string, object> dic in item.Data)
                 {
-                    dic.Add(detailKeyInfo.Name, keyDefaultVal);
-                    if (dic.ContainsKey(mainKeyProperty.Name))
+                    //不包含主键的默认添加主键默认值，用于后面判断是否为新增数据
+                    if (!dic.ContainsKey(detailKeyInfo.Name))
                     {
-                        dic[mainKeyProperty.Name] = keyDefaultVal;
+                        dic.Add(detailKeyInfo.Name, keyDefaultVal);
+                        if (dic.ContainsKey(mainKeyProperty.Name))
+                        {
+                            dic[mainKeyProperty.Name] = keyDefaultVal;
+                        }
+                        else
+                        {
+                            dic.Add(mainKeyProperty.Name, keyDefaultVal);
+                        }
+                        continue;
                     }
-                    else
+                    if (dic[detailKeyInfo.Name] == null)
+                        return Response.Error(ResponseType.NoKey);
+
+                    //主键值是否正确
+                    string detailKeyVal = dic[detailKeyInfo.Name].ToString();
+                    if (!detailKeyInfo.ValidationValueForDbType(detailKeyVal).FirstOrDefault().Item1
+                        || deatilDefaultVal == detailKeyVal)
+                        return Response.Error(ResponseType.KeyError);
+
+                    //判断主表的值是否正确
+                    if (detailKeyVal != keyDefaultVal.ToString() && (!dic.ContainsKey(mainKeyProperty.Name) || dic[mainKeyProperty.Name] == null || dic[mainKeyProperty.Name].ToString() == keyDefaultVal.ToString()))
                     {
-                        dic.Add(mainKeyProperty.Name, keyDefaultVal);
+                        return Response.Error($"[{mainKeyProperty.Name.Translator()}]{"是必填项".Translator()}");
                     }
-                    continue;
+                    if (saveModel.DetailData.Exists(c => c.Count <= 2))
+                    {
+                        return Response.Error("系统没有配置好明细编辑的数据，请检查model,或者明细表点击生成model!");
+                    }
+
                 }
-                if (dic[detailKeyInfo.Name] == null)
-                    return Response.Error(ResponseType.NoKey);
+                index++;
+                this.GetType().GetMethod("UpdateToEntity")
+                  .MakeGenericMethod(new Type[] { detailType })
+                  .Invoke(this, new object[] {
+                       entity,
+                       saveModel.MainData,
+                       item.Data,
+                       item.DelKeys,
+                       mainKeyProperty,
+                       detailKeyInfo,
+                       keyDefaultVal,
+                       index == details.Count,
+                       isMultipleDetail
+                  });
+            }
 
-                //主键值是否正确
-                string detailKeyVal = dic[detailKeyInfo.Name].ToString();
-                if (!detailKeyInfo.ValidationValueForDbType(detailKeyVal).FirstOrDefault().Item1
-                    || deatilDefaultVal == detailKeyVal)
-                    return Response.Error(ResponseType.KeyError);
+            return Response;
 
-                //判断主表的值是否正确
-                if (detailKeyVal != keyDefaultVal.ToString() && (!dic.ContainsKey(mainKeyProperty.Name) || dic[mainKeyProperty.Name] == null || dic[mainKeyProperty.Name].ToString() == keyDefaultVal.ToString()))
+
+            //if (saveModel.DetailData.Exists(c => c.Count <= 2))
+            //    return Response.Error("系统没有配置好明细编辑的数据，请检查model,或者明细表点击生成model!");
+            //return this.GetType().GetMethod("UpdateToEntity")
+            //    .MakeGenericMethod(new Type[] { detailType })
+            //    .Invoke(this, new object[] { saveModel, saveModel.MainData.DicToEntity<T>(), mainKeyProperty, detailKeyInfo, keyDefaultVal })
+            //    as WebResponseContent;
+        }
+
+
+        /// <summary>
+        /// 将数据转换成对象后最终保存
+        /// </summary>
+        /// <typeparam name="DetailT"></typeparam>
+        /// <param name="saveModel"></param>
+        /// <param name="mainKeyProperty"></param>
+        /// <param name="detailKeyInfo"></param>
+        /// <param name="keyDefaultVal"></param>
+        /// <returns></returns>
+        public void UpdateToEntity<DetailT>(
+            T mainEntity,
+            Dictionary<string, object> mainData,
+            List<Dictionary<string, object>> detailData,
+            List<object> detailDelKeys,
+            PropertyInfo mainKeyProperty,
+            PropertyInfo detailKeyInfo,
+            object keyDefaultVal,
+            bool save,
+            bool isMultipleDetail
+            ) where DetailT : class
+        {
+            // T mainEntity = saveModel.MainData.DicToEntity<T>();
+            List<DetailT> detailList = detailData.DicToList<DetailT>();
+
+            //新增对象
+            List<DetailT> addList = new List<DetailT>();
+            //   List<object> containsKeys = new List<object>();
+            //编辑对象
+            List<DetailT> editList = new List<DetailT>();
+            //删除的主键
+            List<object> delKeys = new List<object>();
+            Type detailType = typeof(DetailT);
+            mainKeyProperty = detailType.GetProperties().Where(x => x.Name == mainKeyProperty.Name).FirstOrDefault();
+            //获取新增与修改的对象
+            foreach (DetailT item in detailList)
+            {
+                object value = detailKeyInfo.GetValue(item);
+                if (keyDefaultVal.Equals(value))//主键为默认值的,新增数据
                 {
-                    return Response.Error(mainKeyProperty.Name + "是必填项!");
+                    //设置新增的主表的值
+                    mainKeyProperty.SetValue(item,
+                        mainData[mainKeyProperty.Name]
+                        .ChangeType(mainKeyProperty.PropertyType));
+
+                    if (detailKeyInfo.PropertyType == typeof(Guid))
+                    {
+                        detailKeyInfo.SetValue(item, Guid.NewGuid());
+                    }
+                    addList.Add(item);
+                }
+                else //if (detailKeys.Contains(value))
+                {
+                    //containsKeys.Add(value);
+                    editList.Add(item);
                 }
             }
 
-            if (saveModel.DetailData.Exists(c => c.Count <= 2))
-                return Response.Error("系统没有配置好明细编辑的数据，请检查model!");
-            return this.GetType().GetMethod("UpdateToEntity")
-                .MakeGenericMethod(new Type[] { detailType })
-                .Invoke(this, new object[] { saveModel, mainKeyProperty, detailKeyInfo, keyDefaultVal })
-                as WebResponseContent;
-        }
+            //获取需要删除的对象的主键
+            if (detailDelKeys != null && detailDelKeys.Count > 0)
+            {
+                //2021.08.21优化明细表删除
+                delKeys = detailDelKeys.Select(q => q.ChangeType(detailKeyInfo.PropertyType)).Where(x => x != null).ToList();
+                //.Where(x => detailKeys.Contains(x.ChangeType(detailKeyInfo.PropertyType)))
+                //.Select(q => q.ChangeType(detailKeyInfo.PropertyType)).ToList();
+            }
 
-        #endregion
+            //明细修改
+            editList.ForEach(x =>
+            {
+                //获取编辑的字段
+                var updateField = detailData
+                    .Where(c => c[detailKeyInfo.Name].ChangeType(detailKeyInfo.PropertyType)
+                    .Equal(detailKeyInfo.GetValue(x)))
+                    .FirstOrDefault()
+                    .Keys.Where(k => k != detailKeyInfo.Name)
+                    .Where(r => !CreateFields.Contains(r))
+                    .ToList();
+                updateField.AddRange(ModifyFields);
+                //設置默認值
+                x.SetModifyDefaultVal();
+                //添加修改字段
+                repository.Update<DetailT>(x, updateField.ToArray());
+            });
+
+            //明细新增
+            addList.ForEach(x =>
+            {
+                x.SetCreateDefaultVal();
+                repository.DbContext.Entry<DetailT>(x).State = EntityState.Added;
+            });
+            //明细删除
+            delKeys.ForEach(x =>
+            {
+                DetailT delT = Activator.CreateInstance<DetailT>();
+                detailKeyInfo.SetValue(delT, x);
+                repository.DbContext.Entry<DetailT>(delT).State = EntityState.Deleted;
+            });
+            //不保存直接返回
+            if (!save)
+            {
+                //多个明细表时，记录明细表数据
+                //一对多设置明细表数据
+                if (isMultipleDetail)
+                {
+                    var list = new List<DetailT>();
+                    list.AddRange(editList);
+                    list.AddRange(addList);
+                    typeof(ServiceBase<T, TRepository>).GetMethod("SetEntityDetail", BindingFlags.Instance | BindingFlags.NonPublic)
+                                 .MakeGenericMethod(new Type[] { detailType })
+                                 .Invoke(this, new object[] { mainEntity, null, list });
+                }
+
+                return;
+            }
+
+
+            //最后一个明细执行保存
+
+            mainEntity.SetModifyDefaultVal();
+            //主表修改
+            //不修改!CreateFields.Contains创建人信息
+            repository.Update(mainEntity, typeof(T).GetEditField()
+                .Where(c => mainData.Keys.Contains(c) && !CreateFields.Contains(c))
+                .ToArray());
+
+            if (UpdateOnExecuting != null)
+            {
+                //多明细表从mainEntity与SaveModel.Details中取数据
+                //mainEntity为主表与明细表数据，SaveModel.Details中取删除的数据
+                if (isMultipleDetail)
+                {
+                    Response = UpdateOnExecuting(mainEntity, null, null, null);
+                }
+                else
+                {
+                    Response = UpdateOnExecuting(mainEntity, addList, editList, delKeys);
+                }
+                if (CheckResponseResult())
+                {
+                    return;
+                }
+            }
+
+
+            if (UpdateOnExecuted == null)
+            {
+                repository.DbContext.SaveChanges();
+                Response.OK(ResponseType.SaveSuccess);
+            }
+            else
+            {
+                Response = repository.DbContextBeginTransaction(() =>
+                {
+                    repository.DbContext.SaveChanges();
+
+                    //多明细表从mainEntity与SaveModel.Details中取数据
+                    //mainEntity为主表与明细表数据，SaveModel.Details中取删除的数据
+                    if (isMultipleDetail)
+                    {
+                        Response = UpdateOnExecuted(mainEntity, null, null, null);
+                    }
+                    else
+                    {
+                        Response = UpdateOnExecuted(mainEntity, addList, editList, delKeys);
+                    }
+
+                    return Response;
+                });
+            }
+            if (Response.Status)
+            {
+                addList.AddRange(editList);
+                Response.Data = new { data = mainEntity, list = addList };
+                if (string.IsNullOrEmpty(Response.Message))
+                    Response.OK(ResponseType.SaveSuccess);
+            }
+        }
 
         /// <summary>
         /// 
@@ -1149,7 +1390,13 @@ namespace PDMS.Core.BaseProvider
                 Response = DelOnExecuting(keys);
                 if (CheckResponseResult()) return Response;
             }
-
+            PropertyInfo lgProperty = entityType.GetProperty(AppSetting.LogicDelField);
+            //逻辑删除
+            if (lgProperty != null)
+            {
+                LogicDel(keys, keyProperty, lgProperty);
+                return Response;
+            }
             FieldType fieldType = entityType.GetFieldType();
             string joinKeys = (fieldType == FieldType.Int || fieldType == FieldType.BigInt)
                  ? string.Join(",", keys)
@@ -1165,31 +1412,36 @@ namespace PDMS.Core.BaseProvider
                 }
             }
 
-            string sql = $"DELETE FROM {entityType.GetEntityTableName() } where {tKey} in ({joinKeys});";
+        
+
+            var logicDelProperty = GetLogicDelProperty();
+            //逻辑删除
+            if (logicDelProperty != null)
+            {
+                return LogicDel(keys, keyProperty, logicDelProperty);
+            }
+
+            string sql = $"DELETE FROM {entityType.GetEntityTableName()} where {tKey} in ({joinKeys});";
             // 2020.08.06增加pgsql删除功能
             if (DBType.Name == DbCurrentType.PgSql.ToString())
             {
-                sql = $"DELETE FROM \"public\".\"{entityType.GetEntityTableName() }\" where \"{tKey}\" in ({joinKeys});";
+                sql = $"DELETE FROM \"public\".\"{entityType.GetEntityTableName()}\" where \"{tKey}\" in ({joinKeys});";
             }
             if (delList)
             {
-                Type detailType = GetRealDetailType();
-                if (detailType != null)
+                var tables = entityType.GetCustomAttribute<EntityAttribute>().DetailTable.Select(s => s.GetEntityTableName()).ToList();
+                if (tables.Count>0)
                 {
                     if (DBType.Name == DbCurrentType.PgSql.ToString())
                     {
-                        sql += $"DELETE FROM \"public\".\"{detailType.GetEntityTableName()}\" where \"{tKey}\" in ({joinKeys});";
-                    }
-                    else
+                        sql += string.Join(" ", tables.Select(c => $"DELETE FROM \"public\".\"{c}\" where \"{tKey}\" in ({joinKeys});"));
+                    } else
                     {
-                        sql += $"DELETE FROM {detailType.GetEntityTableName()} where {tKey} in ({joinKeys});";
+                        sql += string.Join(" ", tables.Select(c =>$"DELETE FROM {c} where {tKey} in ({joinKeys});"));
                     }
                 }
 
             }
-
-            //repository.DapperContext.ExcuteNonQuery(sql, CommandType.Text, null, true);
-
             //可能在删除后还要做一些其它数据库新增或删除操作，这样就可能需要与删除保持在同一个事务中处理
             //采用此方法 repository.DbContextBeginTransaction(()=>{//do delete......and other});
             //做的其他操作，在DelOnExecuted中加入委托实现
@@ -1205,6 +1457,42 @@ namespace PDMS.Core.BaseProvider
             if (Response.Status && string.IsNullOrEmpty(Response.Message)) Response.OK(ResponseType.DelSuccess);
             return Response;
         }
+
+        /// <summary>
+        /// 逻辑删除
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <param name="keyProperty"></param>
+        /// <param name="logicDelProperty"></param>
+        /// <returns></returns>
+        private WebResponseContent LogicDel(object[] keys, PropertyInfo keyProperty, PropertyInfo logicDelProperty)
+        {
+            var keyCondition = keyProperty.Name.CreateExpression<T>(keys, LinqExpressionType.In);
+
+            var selectExp = keyProperty.Name.GetExpression<T, object>();
+            keys = repository.FindAsIQueryable(keyCondition).Select(selectExp).ToArray();
+
+            List<T> delList = new List<T>();
+
+            foreach (object key in keys)
+            {
+                var entity = Activator.CreateInstance<T>();
+                keyProperty.SetValue(entity, key.ChangeType(keyProperty.PropertyType));
+                logicDelProperty.SetValue(entity, ((int)DelStatus.已删除).ChangeType(logicDelProperty.PropertyType));
+                delList.Add(entity);
+            }
+            Response = repository.DbContextBeginTransaction(() =>
+            {
+                repository.UpdateRange(delList, new string[] { logicDelProperty.Name }, true);
+                if (DelOnExecuted != null)
+                {
+                    Response = DelOnExecuted(keys);
+                }
+                return Response.OK("删除成功".Translator());
+            });
+            return Response;
+        }
+
 
         private static string[] auditFields = new string[] { "auditid", "auditstatus", "auditor", "auditdate", "auditreason" };
 
@@ -1222,15 +1510,19 @@ namespace PDMS.Core.BaseProvider
 
             Expression<Func<T, bool>> whereExpression = typeof(T).GetKeyName().CreateExpression<T>(keys[0], LinqExpressionType.Equal);
             T entity = repository.FindAsIQueryable(whereExpression).FirstOrDefault();
-
+            if (entity == null)
+            {
+                return Response.Error($"未查到数据,或者数据已被删除,id:{keys[0]}");
+            }
+            var auditProperty = TProperties.Where(x => x.Name.ToLower() == "auditstatus").FirstOrDefault();
+            if (auditProperty == null)
+            {
+                return Response.Error("表缺少审核状态字段：AuditStatus");
+            }
             //进入流程审批
             if (WorkFlowManager.Exists<T>(entity))
             {
-                var auditProperty = TProperties.Where(x => x.Name.ToLower() == "auditstatus").FirstOrDefault();
-                if (auditProperty == null)
-                {
-                    return Response.Error("表缺少审核状态字段：AuditStatus");
-                }
+
 
                 AuditStatus status = (AuditStatus)Enum.Parse(typeof(AuditStatus), auditStatus.ToString());
                 int val = auditProperty.GetValue(entity).GetInt();
@@ -1240,7 +1532,7 @@ namespace PDMS.Core.BaseProvider
                 }
                 Response = repository.DbContextBeginTransaction(() =>
                 {
-                    return WorkFlowManager.Audit<T>(repository.DbContext,entity, status, auditReason, auditProperty, AuditWorkFlowExecuting, AuditWorkFlowExecuted);
+                    return WorkFlowManager.Audit<T>(repository.DbContext, entity, status, auditReason, auditProperty, AuditWorkFlowExecuting, AuditWorkFlowExecuted);
                 });
                 if (Response.Status)
                 {
@@ -1412,5 +1704,20 @@ namespace PDMS.Core.BaseProvider
         {
             return !Response.Status || Response.Code == "-1";
         }
+
+        private PropertyInfo GetLogicDelProperty()
+        {
+            if (string.IsNullOrEmpty(AppSetting.LogicDelField))
+            {
+                return null;
+            }
+            return typeof(T).GetProperty(AppSetting.LogicDelField);
+        }
+    }
+
+    public enum DelStatus
+    {
+        正常 = 0,
+        已删除 = 1
     }
 }
