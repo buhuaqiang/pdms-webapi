@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using PDMS.Core.DBManager;
 using PDMS.Core.EFDbContext;
 using PDMS.Core.Extensions;
+using PDMS.Core.Infrastructure;
 using PDMS.Core.ManageUser;
 using PDMS.Core.Services;
 using PDMS.Core.Utilities;
@@ -35,6 +36,103 @@ namespace PDMS.Core.WorkFlow
         {
             return GetAuditFlowTable<T>(value)?.AuditStatus ?? 0;
         }
+
+        /// <summary>
+        /// 获取审批的数据
+        /// </summary>
+        public static async Task<object> GetAuditFormDataAsync(string tableKey, string table)
+        {
+            Type type = WorkFlowContainer.GetType(table);
+            if (type == null)
+            {
+                return Array.Empty<object>();
+            }
+
+            var obj = typeof(WorkFlowManager).GetMethod("GetFormDataAsync").MakeGenericMethod(new Type[] { type })
+                .Invoke(null, new object[] { tableKey, table }) as Task<object>;
+            return await obj;
+        }
+        /// <summary>
+        /// 审批表单数据查询与数据源转换
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="tableKey"></param>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        public static async Task<object> GetFormDataAsync<T>(string tableKey, string table) where T : class
+        {
+            string[] fields = WorkFlowContainer.GetFormFields(table);
+            if (fields == null || fields.Length == 0)
+            {
+                return Array.Empty<object>();
+            }
+            var tableOptions = await DBServerProvider.DbContext.Set<Sys_TableColumn>().Where(c => c.TableName == table && fields.Contains(c.ColumnName))
+                   .Select(s => new { s.ColumnName, s.ColumnCnName, s.DropNo, isDate = s.IsImage == 4 }).ToListAsync();
+
+            var condition = typeof(T).GetKeyName().CreateExpression<T>(tableKey, Enums.LinqExpressionType.Equal);
+            //动态分库应该查询对应的数据库
+            var data = await DBServerProvider.DbContext.Set<T>().Where(condition).FirstOrDefaultAsync();
+            if (data == null)
+            {
+                Console.WriteLine($"未查到数据,表：{table},id:{tableKey}");
+                return Array.Empty<object>();
+            }
+
+            List<Sys_Dictionary> dictionaries = new List<Sys_Dictionary>();
+            var dicNos = tableOptions.Select(s => s.DropNo).ToList();
+            if (dicNos.Count > 0)
+            {
+                dictionaries = DictionaryManager.GetDictionaries(dicNos, true).ToList();
+            }
+
+            List<object> list = new List<object>();
+            var properties = typeof(T).GetProperties();
+
+            foreach (var field in fields)
+            {
+                var property = properties.Where(c => c.Name == field).FirstOrDefault();
+                string value = property.GetValue(data)?.ToString();
+
+                var option = tableOptions.Where(c => c.ColumnName == field).FirstOrDefault();
+                string name = option?.ColumnCnName;
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = property.GetDisplayName();
+                }
+                if (option == null || string.IsNullOrEmpty(value))
+                {
+                    list.Add(new
+                    {
+                        name,
+                        value = value ?? ""
+                    });
+                    continue;
+                }
+                if (option.isDate)
+                {
+                    value = value.GetDateTime().Value.ToString("yyyy-MM-dd");
+                }
+                else if (!string.IsNullOrEmpty(option.DropNo))
+                {
+                    string val = dictionaries.Where(c => c.DicNo == option.DropNo).FirstOrDefault()
+                         ?.Sys_DictionaryList
+                         //这里多选的暂时没处理
+                         ?.Where(c => c.DicValue == value)?.Select(s => s.DicName)
+                         .FirstOrDefault();
+                    if (!string.IsNullOrEmpty(val))
+                    {
+                        value = val;
+                    }
+                }
+                list.Add(new
+                {
+                    name,
+                    value
+                });
+            }
+            return list;
+        }
+
 
         public static Sys_WorkFlowTable GetAuditFlowTable<T>(string workTableKey)
         {
@@ -105,7 +203,7 @@ namespace PDMS.Core.WorkFlow
         /// <param name="entity"></param>
         /// <param name="rewrite">是否重新生成流程</param>
         /// <param name="changeTableStatus">是否修改原表的审批状态</param>
-        public static void AddProcese<T>(T entity, bool rewrite = false, bool changeTableStatus = true) where T : class
+        public static void AddProcese<T>(T entity, bool rewrite = false, bool changeTableStatus = true, Action<T, List<int>> addWorkFlowExecuted=null) where T : class
         {
             WorkFlowTableOptions workFlow = WorkFlowContainer.GetFlowOptions(entity);
             //没有对应的流程信息
@@ -247,7 +345,7 @@ namespace PDMS.Core.WorkFlow
             }
 
             //设置进入流程后的第一个审核节点,(开始节点的下一个节点)
-            var nodeInfo = steps.Where(x => x.ParentId == steps[0].StepId).Select(s => new { s.StepId, s.StepName }).FirstOrDefault();
+            var nodeInfo = steps.Where(x => x.ParentId == steps[0].StepId).Select(s => new { s.StepId, s.StepName,s.StepType,s.StepValue }).FirstOrDefault();
             workFlowTable.CurrentStepId = nodeInfo.StepId;
             workFlowTable.StepName = nodeInfo.StepName;
 
@@ -266,6 +364,12 @@ namespace PDMS.Core.WorkFlow
             dbContext.Set<Sys_WorkFlowTable>().Add(workFlowTable);
             dbContext.Set<Sys_WorkFlowTableAuditLog>().Add(log);
             dbContext.SaveChanges();
+            //新建成功后调用方法
+            if (addWorkFlowExecuted!=null)
+            {
+                addWorkFlowExecuted.Invoke(entity, GetAuditUserIds(nodeInfo.StepType ?? 0, nodeInfo.StepValue));
+            }
+           
         }
 
 
@@ -280,7 +384,7 @@ namespace PDMS.Core.WorkFlow
         /// <param name="workFlowExecuting"></param>
         /// <param name="workFlowExecuted"></param>
         /// <returns></returns>
-        public static WebResponseContent Audit<T>(BaseDbContext tableDbContext,T entity, AuditStatus status, string remark,
+        public static WebResponseContent Audit<T>(BaseDbContext tableDbContext, T entity, AuditStatus status, string remark,
             PropertyInfo autditProperty,
              Func<T, AuditStatus, bool, WebResponseContent> workFlowExecuting,
              Func<T, AuditStatus, List<int>, bool, WebResponseContent> workFlowExecuted,
@@ -522,9 +626,9 @@ namespace PDMS.Core.WorkFlow
                 Guid departmentId = nextId.GetGuid() ?? Guid.Empty;
                 userIds = DBServerProvider.DbContext.Set<Sys_UserDepartment>().Where(s => s.DepartmentId == departmentId && s.Enable == 1).Take(50).Select(s => s.UserId).ToList();
             }
-            else
+            else 
             {
-                userIds.Add(nextId.GetInt());
+                return nextId.Split(",").Select(c => c.GetInt()).ToList();
             }
             return userIds;
         }

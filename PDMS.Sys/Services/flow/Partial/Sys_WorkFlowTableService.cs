@@ -6,21 +6,22 @@
 *用户信息、权限、角色等使用UserContext.Current操作
 *Sys_WorkFlowTableService对增、删、改查、导入、导出、审核业务代码扩展参照ServiceFunFilter
 */
-using PDMS.Core.BaseProvider;
-using PDMS.Core.Extensions.AutofacManager;
-using PDMS.Entity.DomainModels;
+using VolPro.Core.BaseProvider;
+using VolPro.Core.Extensions.AutofacManager;
+using VolPro.Entity.DomainModels;
 using System.Linq;
-using PDMS.Core.Utilities;
+using VolPro.Core.Utilities;
 using System.Linq.Expressions;
-using PDMS.Core.Extensions;
+using VolPro.Core.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
-using PDMS.System.IRepositories;
-using PDMS.Core.ManageUser;
-using PDMS.Core.WorkFlow;
+using VolPro.System.IRepositories;
+using VolPro.Core.ManageUser;
+using VolPro.Core.WorkFlow;
+using System;
 
-namespace PDMS.System.Services
+namespace VolPro.System.Services
 {
     public partial class Sys_WorkFlowTableService
     {
@@ -44,6 +45,26 @@ namespace PDMS.System.Services
 
         public override PageGridData<Sys_WorkFlowTable> GetPageData(PageDataOptions options)
         {
+            Expression<Func<Sys_WorkFlowTable, bool>> expression = null;
+            //移动端
+            if (options.Value != null)
+            {
+                int value = options.Value.GetInt();
+                //待审批
+                if (value == 0)
+                {
+                    expression = x => x.AuditStatus == (int)AuditStatus.审核中 || x.AuditStatus == (int)AuditStatus.待审核;
+                }
+                //已审批
+                else if (value == 1)
+                {
+                    expression = x => x.AuditStatus != (int)AuditStatus.审核中 && x.AuditStatus != (int)AuditStatus.待审核;
+                } //我的提交
+                else if (value == 2)
+                {
+                    expression = x => x.CreateID == UserContext.Current.UserId;
+                }
+            }
             if (!UserContext.Current.IsSuperAdmin)
             {
                 var user = UserContext.Current.UserInfo;
