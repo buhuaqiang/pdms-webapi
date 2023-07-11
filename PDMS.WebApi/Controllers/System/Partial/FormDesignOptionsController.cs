@@ -44,7 +44,7 @@ namespace PDMS.System.Controllers
         /// <param name="id"></param>
         /// <returns></returns>
         [Route("getFormOptions"), HttpGet]
-        public async Task<IActionResult> GetFormOptions(int id)
+        public async Task<IActionResult> GetFormOptions(Guid id)
         {
             var options = await _formDesignOptionsRepository.FindAsIQueryable(x => x.FormId == id)
                     .Select(s => new { s.Title, s.FormOptions })  

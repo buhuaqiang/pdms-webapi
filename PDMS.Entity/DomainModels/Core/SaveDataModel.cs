@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace VolPro.Entity.DomainModels
+namespace PDMS.Entity.DomainModels
 {
     public class SaveModel
     {

@@ -744,9 +744,9 @@ namespace PDMS.Core.BaseProvider
                     return;
                 }
                 //写入流程
-                WorkFlowManager.AddProcese<T>(entity,addWorkFlowExecuted: AddWorkFlowExecuted);
-                
-               // WorkFlowManager.Audit<T>(entity, AuditStatus.待审核, null, null, null, null, init: true, initInvoke: AddWorkFlowExecuted);
+                WorkFlowManager.AddProcese<T>(entity, addWorkFlowExecuted: AddWorkFlowExecuted);
+
+                // WorkFlowManager.Audit<T>(entity, AuditStatus.待审核, null, null, null, null, init: true, initInvoke: AddWorkFlowExecuted);
             }
         }
 
@@ -1412,7 +1412,7 @@ namespace PDMS.Core.BaseProvider
                 }
             }
 
-        
+
 
             var logicDelProperty = GetLogicDelProperty();
             //逻辑删除
@@ -1429,18 +1429,22 @@ namespace PDMS.Core.BaseProvider
             }
             if (delList)
             {
-                var tables = entityType.GetCustomAttribute<EntityAttribute>().DetailTable.Select(s => s.GetEntityTableName()).ToList();
-                if (tables.Count>0)
+                var detailTables = entityType.GetCustomAttribute<EntityAttribute>()?.DetailTable;
+                if (detailTables != null)
                 {
-                    if (DBType.Name == DbCurrentType.PgSql.ToString())
+                    var tables = detailTables.Select(s => s.GetEntityTableName()).ToList();
+                    if (tables.Count > 0)
                     {
-                        sql += string.Join(" ", tables.Select(c => $"DELETE FROM \"public\".\"{c}\" where \"{tKey}\" in ({joinKeys});"));
-                    } else
-                    {
-                        sql += string.Join(" ", tables.Select(c =>$"DELETE FROM {c} where {tKey} in ({joinKeys});"));
+                        if (DBType.Name == DbCurrentType.PgSql.ToString())
+                        {
+                            sql += string.Join(" ", tables.Select(c => $"DELETE FROM \"public\".\"{c}\" where \"{tKey}\" in ({joinKeys});"));
+                        }
+                        else
+                        {
+                            sql += string.Join(" ", tables.Select(c => $"DELETE FROM {c} where {tKey} in ({joinKeys});"));
+                        }
                     }
                 }
-
             }
             //可能在删除后还要做一些其它数据库新增或删除操作，这样就可能需要与删除保持在同一个事务中处理
             //采用此方法 repository.DbContextBeginTransaction(()=>{//do delete......and other});
