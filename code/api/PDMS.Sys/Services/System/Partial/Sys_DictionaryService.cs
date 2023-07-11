@@ -189,9 +189,15 @@ namespace PDMS.System.Services
             base.UpdateOnExecuting = (Sys_Dictionary dictionary, object addList, object editList, List<object> obj) =>
             {
                 List<Sys_DictionaryList> listObj = new List<Sys_DictionaryList>();
-                listObj.AddRange(addList as List<Sys_DictionaryList>);
-                listObj.AddRange(editList as List<Sys_DictionaryList>);
-
+                if (addList!=null)
+                {
+                    listObj.AddRange(addList as List<Sys_DictionaryList>);
+                }
+                if (editList != null)
+                {
+                    listObj.AddRange(editList as List<Sys_DictionaryList>);
+                }
+              
                 WebResponseContent _responseData = CheckKeyValue(listObj);
                 if (!_responseData.Status) return _responseData;
 

@@ -89,13 +89,13 @@ namespace PDMS.System.Services
         }
 
 
-        public FormCollectionObject GetFormCollectionObjectByCollectionId(int collectionId)
+        public FormCollectionObject GetFormCollectionObjectByCollectionId(string collectionId)
         {
-            if ( collectionId == 0)
+            if (collectionId == null || collectionId == "")
             {
                 return null;
             }
-            FormCollectionObject R = repository.DbContext.Set<FormCollectionObject>().Where(x => x.FormCollectionId == collectionId).FirstOrDefault();
+            FormCollectionObject R = repository.DbContext.Set<FormCollectionObject>().Where(x => x.FormCollectionId == Guid.Parse(collectionId)).FirstOrDefault();
             return R;
         }
     }

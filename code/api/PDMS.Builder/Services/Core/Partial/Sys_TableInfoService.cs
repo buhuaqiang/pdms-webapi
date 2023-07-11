@@ -1,4 +1,4 @@
-﻿using VolPro.Builder.Utility;
+﻿using PDMS.Builder.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyModel;
 using Newtonsoft.Json;
@@ -11,20 +11,20 @@ using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 using System.Threading.Tasks;
-using VolPro.Core.Const;
-using VolPro.Core.DBManager;
-using VolPro.Core.Enums;
-using VolPro.Core.Extensions;
-using VolPro.Core.ManageUser;
-using VolPro.Core.Utilities;
-using VolPro.Entity.DomainModels;
-using VolPro.Entity.DomainModels.Sys;
-using VolPro.Entity.SystemModels;
-using VolPro.Core.EFDbContext;
-using VolPro.Core.Configuration;
+using PDMS.Core.Const;
+using PDMS.Core.DBManager;
+using PDMS.Core.Enums;
+using PDMS.Core.Extensions;
+using PDMS.Core.ManageUser;
+using PDMS.Core.Utilities;
+using PDMS.Entity.DomainModels;
+using PDMS.Entity.DomainModels.Sys;
+using PDMS.Entity.SystemModels;
+using PDMS.Core.EFDbContext;
+using PDMS.Core.Configuration;
 
 
-namespace VolPro.Builder.Services
+namespace PDMS.Builder.Services
 {
     public partial class Sys_TableInfoService
     {
@@ -1908,7 +1908,7 @@ DISTINCT
             }
             //获取的是本地开发代码所在目录，不是布后的目录
             string mapPath = ProjectPath.GetProjectDirectoryInfo()?.FullName; //new DirectoryInfo(("~/").MapPath()).Parent.FullName;
-                                                                              //  string folderPath= string.Format("\\VolPro.Framework.Core.\\DomainModels\\{0}\\", foldername);
+                                                                              //  string folderPath= string.Format("\\PDMS.Framework.Core.\\DomainModels\\{0}\\", foldername);
             if (string.IsNullOrEmpty(mapPath))
             {
                 return "未找到生成的目录!";
@@ -1982,7 +1982,7 @@ DISTINCT
             //如果还需要添加其他独立数据库，请在此处继续添加
             string baseEntityName = DBServerProvider.GetDbEntityName(tableInfo.DBServer);
 
-            //业务库,增加业务库这里同时需要修改下，baseEntityName为VolPro.Entity->SystemModels下面的entity文件名
+            //业务库,增加业务库这里同时需要修改下，baseEntityName为PDMS.Entity->SystemModels下面的entity文件名
             //if (tableInfo.DBServer == typeof(ServiceDbContext).Name)
             //{
             //    baseEntityName = typeof(ServiceEntity).Name;

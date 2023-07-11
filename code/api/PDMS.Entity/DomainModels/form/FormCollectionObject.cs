@@ -21,17 +21,17 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Key]
        [Display(Name ="FormCollectionId")]
-       [Column(TypeName="int")]
+       [Column(TypeName="uniqueidentifier")]
        [Required(AllowEmptyStrings=false)]
-       public int FormCollectionId { get; set; }
+       public Guid FormCollectionId { get; set; }
 
        /// <summary>
        ///表单ID
        /// </summary>
        [Display(Name ="表单ID")]
-       [Column(TypeName="int")]
+       [Column(TypeName="uniqueidentifier")]
        [Editable(true)]
-       public int FormId { get; set; }
+       public Guid? FormId { get; set; }
 
        /// <summary>
        ///标题

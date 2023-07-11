@@ -5,10 +5,12 @@ using PDMS.Core.BaseProvider;
 using PDMS.Entity.DomainModels;
 using PDMS.Core.Utilities;
 using System.Linq.Expressions;
+using System;
+
 namespace PDMS.System.IServices
 {
     public partial interface IFormCollectionObjectService
     {
-        FormCollectionObject GetFormCollectionObjectByCollectionId(int collectionId);
+        FormCollectionObject GetFormCollectionObjectByCollectionId(string collectionId);
     }
 }
