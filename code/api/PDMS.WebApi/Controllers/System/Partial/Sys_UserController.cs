@@ -175,5 +175,14 @@ namespace PDMS.System.Controllers
             HttpContext.GetService<IMemoryCache>().Set(data.uuid.ToString(), code, new TimeSpan(0, 5, 0));
             return Json(data);
         }
+
+
+
+        [ApiActionPermission]
+        [HttpPost, Route("getUserList")]
+        public ActionResult getUserList([FromBody] LoginInfo lgf)
+        {
+            return Json(Service.getUserList(lgf));
+        }
     }
 }

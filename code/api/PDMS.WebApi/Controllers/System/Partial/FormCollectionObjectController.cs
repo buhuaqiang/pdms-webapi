@@ -32,7 +32,7 @@ namespace PDMS.System.Controllers
         }
         [ApiActionPermission]
         [HttpGet, Route("GetFormCollectionObjectByCollectionId")]
-        public ActionResult GetFormCollectionObjectByCollectionId(int collectionId)
+        public ActionResult GetFormCollectionObjectByCollectionId(string collectionId)
         {
             return Json(_service.GetFormCollectionObjectByCollectionId(collectionId));
         }

@@ -1,7 +1,9 @@
 ﻿using PDMS.Core.BaseProvider;
 using PDMS.Core.Utilities;
 using PDMS.Entity.DomainModels;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+
 
 namespace PDMS.System.IServices
 {
@@ -12,6 +14,8 @@ namespace PDMS.System.IServices
         Task<WebResponseContent> ReplaceToken();
         Task<WebResponseContent> ModifyPwd(string oldPwd, string newPwd);
         Task<WebResponseContent> GetCurrentUserInfo();
+
+        List<Sys_User> getUserList(LoginInfo loginInfo);
     }
 }
 

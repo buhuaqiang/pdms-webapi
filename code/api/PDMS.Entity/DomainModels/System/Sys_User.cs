@@ -208,6 +208,15 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string Email { get; set; }
 
-       
+
+        /// <summary>
+        ///用戶編號
+        /// </summary>
+        [Display(Name = "用戶編號")]
+        [MaxLength(200)]
+        [Column(TypeName = "nvarchar(20)")]
+        [Editable(true)]
+        public string user_code { get; set; }
+
     }
 }
