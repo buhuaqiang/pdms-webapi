@@ -29,5 +29,7 @@ namespace PDMS.Entity.DomainModels
 
         public int[] RoleIds { get; set; }
         public string Token { get; set; }
+
+        public string DepartmentCode { get; set; }
     }
 }

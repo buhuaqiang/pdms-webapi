@@ -1979,9 +1979,8 @@ DISTINCT
 
 
             //(2020.08.22)增加model数据库划分
-            //如果还需要添加其他独立数据库，请在此处继续添加
             string baseEntityName = DBServerProvider.GetDbEntityName(tableInfo.DBServer);
-
+            
             //业务库,增加业务库这里同时需要修改下，baseEntityName为PDMS.Entity->SystemModels下面的entity文件名
             //if (tableInfo.DBServer == typeof(ServiceDbContext).Name)
             //{

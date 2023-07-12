@@ -66,11 +66,12 @@ namespace PDMS.System.Services
                 string token = JwtHelper.IssueJwt(new UserInfo()
                 {
                     User_Id = user.User_Id,
-                    UserName = user.UserName,
+                    UserName = user.UserName,                    
                     Role_Id = user.Role_Id ?? 0
                 });
                 user.Token = token;
-                webResponse.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl };
+                //DepartmentCode="D148",//擋板，後期修改為動態查詢用戶部門
+                webResponse.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl, DepartmentCode="D148" };
                 repository.Update(user, x => x.Token, true);
                 UserContext.Current.LogOut(user.User_Id);
 
@@ -510,6 +511,17 @@ namespace PDMS.System.Services
                 return responseData;
             };
             return base.Export(pageData);
+        }
+
+        public  List<Sys_User> getUserList(LoginInfo loginInfo)
+        {
+            List<Sys_User> Result = new List<Sys_User>();
+            string sql = $@"select * from sys_user where 1=1 ";
+            if (!string.IsNullOrEmpty(loginInfo.DepartmentCode))
+            {
+                sql += $" AND user_id IN ( SELECT UserId FROM Sys_UserDepartment WHERE DepartmentId = ( SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode = '"+loginInfo.DepartmentCode+"' ) ) ";            }
+            Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
+            return Result;
         }
     }
 }

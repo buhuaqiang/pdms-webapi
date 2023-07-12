@@ -25,6 +25,17 @@ namespace PDMS.Entity.DomainModels
         [Required(AllowEmptyStrings = false)]
         public Guid FormId { get; set; }
 
+
+        /// <summary>
+        ///表单code
+        /// </summary>
+        [Display(Name = "表单code")]
+        [MaxLength(1000)]
+        [Column(TypeName = "nvarchar(20)")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public string FormCode { get; set; }
+
         /// <summary>
         ///表单名称
         /// </summary>
@@ -34,6 +45,16 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         [Required(AllowEmptyStrings = false)]
         public string Title { get; set; }
+
+
+        /// <summary>
+        ///表單描述
+        /// </summary>
+        [Display(Name = "表單描述")]
+        [MaxLength(1000)]
+        [Column(TypeName = "nvarchar(1000)")]
+        [Editable(true)]
+        public string form_desc { get; set; }
 
         /// <summary>
         ///设计器配置

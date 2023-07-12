@@ -24,5 +24,7 @@ namespace PDMS.Entity.DomainModels
         /// 2020.06.12增加验证码
         /// </summary>
         public string UUID { get; set; }
+
+        public string DepartmentCode { get; set; }
     }
 }

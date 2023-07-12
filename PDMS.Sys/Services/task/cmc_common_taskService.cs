@@ -1,0 +1,27 @@
+/*
+ *Author：jxx
+ *Contact：283591387@qq.com
+ *代码由框架生成,此处任何更改都可能导致被代码生成器覆盖
+ *所有业务编写全部应在Partial文件夹下cmc_common_taskService与Icmc_common_taskService中编写
+ */
+using PDMS.Sys.IRepositories;
+using PDMS.Sys.IServices;
+using PDMS.Core.BaseProvider;
+using PDMS.Core.Extensions.AutofacManager;
+using PDMS.Entity.DomainModels;
+
+namespace PDMS.Sys.Services
+{
+    public partial class cmc_common_taskService : ServiceBase<cmc_common_task, Icmc_common_taskRepository>
+    , Icmc_common_taskService, IDependency
+    {
+    public cmc_common_taskService(Icmc_common_taskRepository repository)
+    : base(repository)
+    {
+    Init(repository);
+    }
+    public static Icmc_common_taskService Instance
+    {
+      get { return AutofacContainerModule.GetService<Icmc_common_taskService>(); } }
+    }
+ }
