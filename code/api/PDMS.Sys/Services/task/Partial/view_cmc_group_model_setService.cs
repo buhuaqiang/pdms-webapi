@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
+using PDMS.Sys.IServices;
 
 namespace PDMS.Sys.Services
 {
@@ -25,17 +26,35 @@ namespace PDMS.Sys.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Iview_cmc_group_model_setRepository _repository;//访问数据库
 
+        private readonly Icmc_group_model_setService cmc_group_model_service;
+
         [ActivatorUtilitiesConstructor]
         public view_cmc_group_model_setService(
             Iview_cmc_group_model_setRepository dbRepository,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            cmc_group_model_setService cmc_Group_Model_SetService
             )
         : base(dbRepository)
         {
             _httpContextAccessor = httpContextAccessor;
             _repository = dbRepository;
+            cmc_group_model_service = cmc_Group_Model_SetService;
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        public override WebResponseContent Add(SaveModel saveDataModel)
+        {
+            return cmc_group_model_service.Add(saveDataModel);
+        }
+
+        public override WebResponseContent Update(SaveModel saveModel)
+        {
+            return cmc_group_model_service.Update(saveModel);
+        }
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            return cmc_group_model_service.Del(keys, delList);
+        }
+    }
 }
