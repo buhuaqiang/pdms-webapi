@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PDMS.Core\PDMS.Core.csproj" />
+    <ProjectReference Include="..\PDMS.Entity\PDMS.Entity.csproj" />
+    <ProjectReference Include="..\PDMS.Sys\PDMS.Sys.csproj" />
+  </ItemGroup>
+
+</Project>
