@@ -96,7 +96,7 @@ namespace PDMS.System.Controllers
         public IActionResult publishForm(object[] keys)
         {
             //UPDATE FormDesignOptions SET status=1 where FormId in keys
-            return Json("OK");
+            return Json(_service.publishForm(keys));
         }
 
     }
