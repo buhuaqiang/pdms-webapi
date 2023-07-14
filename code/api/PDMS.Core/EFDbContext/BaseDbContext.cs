@@ -18,6 +18,7 @@ using Dapper;
 using PDMS.Core.Dapper;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.SqlServer.Query.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace PDMS.Core.EFDbContext
 {
@@ -37,6 +38,10 @@ namespace PDMS.Core.EFDbContext
 
         protected void UseDbType(DbContextOptionsBuilder optionsBuilder, string connectionString)
         {
+            var loggerFactory = new LoggerFactory();
+            loggerFactory.AddProvider(new EFLoggerProvider());
+            optionsBuilder.UseLoggerFactory(loggerFactory);
+
             if (DBType.Name == DbCurrentType.MsSql.ToString())
             {
                 if (AppSetting.UseSqlserver2008)
