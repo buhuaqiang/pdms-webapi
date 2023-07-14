@@ -17,6 +17,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.System.IRepositories;
+using System.Collections.Generic;
+using static Dapper.SqlMapper;
+using System;
 
 namespace PDMS.System.Services
 {
@@ -24,6 +27,7 @@ namespace PDMS.System.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IFormDesignOptionsRepository _repository;//访问数据库
+        private WebResponseContent _responseContent = new WebResponseContent();
 
         [ActivatorUtilitiesConstructor]
         public FormDesignOptionsService(
@@ -46,21 +50,41 @@ namespace PDMS.System.Services
 
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
-            //要确认已发布状态下表单code不可以重复
+            //要确认已发布状态下表单code不可以重复           
+            string code = saveDataModel.MainData["FormCode"].ToString();
+            List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormCode ==code).ToList();
+            //自定义逻辑
+            if (orderLists != null && orderLists.Count > 0)
+            {//
+                return _responseContent.Error("表单编号重复");
+            }
             //设置默认status=0(暂存)
+            saveDataModel.MainData["status"] = "0";
             return base.Add(saveDataModel);
         }
 
         public override WebResponseContent Update(SaveModel saveModel)
         {
             //修改舊數據的del_flag=1
-            //複製一份數據做新增，發佈狀態改為 暫存 status=0
+            //複製一份數據做新增，發佈狀態改為 暫存 status=0            //
+            if (saveModel.MainData.ContainsKey("DaraggeOptions"))
+            {
+
+            }
             return base.Update(saveModel);
         }
 
         public override WebResponseContent Del(object[] keys, bool delList = true)
         {
+            string dd = string.Join("','", keys);
             //如果表單被cmc_common_task表引用，不允許刪除
+            string sSql = $@"select count(*) from cmc_common_task where FormId in ('{dd}')";
+            object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+
+            if (Convert.ToInt32(obj) > 0)
+            {
+                return _responseContent.Error("表单被引用，不允许删除");
+            }
             return base.Del(keys, delList);
         }
 
