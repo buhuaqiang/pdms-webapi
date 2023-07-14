@@ -56,7 +56,7 @@ namespace PDMS.Sys.Services
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
            
-            UserInfo userList = PDMS.Core.ManageUser.UserContext.Current.UserInfo;
+            UserInfo userList = UserContext.Current.UserInfo;
             cmc_group_model_set queueEntity = new cmc_group_model_set()
             {
                 group_set_id = Guid.NewGuid(),
