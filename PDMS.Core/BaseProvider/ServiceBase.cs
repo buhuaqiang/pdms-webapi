@@ -28,6 +28,7 @@ using PDMS.Entity;
 using PDMS.Entity.DomainModels;
 using PDMS.Entity.SystemModels;
 using static Dapper.SqlMapper;
+using System.Collections;
 
 namespace PDMS.Core.BaseProvider
 {
@@ -410,6 +411,114 @@ namespace PDMS.Core.BaseProvider
         }
 
 
+
+        /// <summary>
+        /// 处理多实体方法
+        /// </summary>
+        /// <typeparam name="DetailT"></typeparam>
+        /// <param name="entityFac"></param>
+        /// <returns></returns>
+        public WebResponseContent BatchProcessEntity<DetailT>(SaveModel.DetailListDataResult entityFac) where DetailT : class
+        {
+            if (entityFac.detailDelKeys.Count > 0)
+            {
+                PropertyInfo detailKeyInfo = typeof(DetailT).GetKeyProperty();
+                entityFac.detailDelKeys.ForEach(x =>
+                {
+                    DetailT delT = Activator.CreateInstance<DetailT>();
+                    detailKeyInfo.SetValue(delT, x);
+                    repository.DbContext.Entry<DetailT>(delT).State = EntityState.Deleted;
+                });
+
+                return Response.OK();
+            }
+
+            List<DetailT> detailList = entityFac.DetailData?.DicToList<DetailT>();
+            if (entityFac.optionType == SaveModel.MainOptionType.add)
+            {
+                detailList.ForEach(x =>
+                {
+                    //設置默認值
+                    x.SetCreateDefaultVal();
+                    repository.DbContext.Entry<DetailT>(x).State = EntityState.Added;
+                });
+            }
+            else if (entityFac.optionType == SaveModel.MainOptionType.update)
+            {
+                PropertyInfo detailKeyInfo = typeof(DetailT).GetKeyProperty();
+
+                detailList.ForEach(x =>
+                {
+                    //获取编辑的字段
+                    string[] updateField = entityFac.DetailData
+                        .Where(c => c[detailKeyInfo.Name].ChangeType(detailKeyInfo.PropertyType)
+                        .Equal(detailKeyInfo.GetValue(x)))
+                        .FirstOrDefault()
+                        .Keys.Where(k => k != detailKeyInfo.Name)
+                        .Where(r => !CreateFields.Contains(r))
+                        .ToArray();
+
+                    //設置默認值
+                    x.SetModifyDefaultVal();
+                    ArrayList list = new ArrayList(updateField.ToList());
+                    var propertys = typeof(DetailT).GetAtrrNames();
+                    if (propertys.Exists(x => x.Contains("ModifyID")))
+                    {
+                        if (!updateField.Contains("ModifyID"))
+                        {
+                            list.Add("ModifyID");
+                        }
+                    }
+                    if (propertys.Exists(x => x.Contains("Modifier")))
+                    {
+                        if (!updateField.Contains("Modifier"))
+                        {
+                            list.Add("Modifier");
+                        }
+                    }
+                    if (propertys.Exists(x => x.Contains("ModifyDate")))
+                    {
+                        if (!updateField.Contains("ModifyDate"))
+                        {
+                            list.Add("ModifyDate");
+                        }
+                    }
+                    UserInfo userInfo = ManageUser.UserContext.Current.UserInfo;
+                    //if (userInfo.ClientID > 0)
+                    //{
+                    //    if (propertys.Exists(x => x.Contains("modified_client")))
+                    //    {
+                    //        if (!updateField.Contains("modified_client"))
+                    //        {
+                    //            list.Add("modified_client");
+                    //        }
+                    //    }
+                    //    if (propertys.Exists(x => x.Contains("modified_clientusername")))
+                    //    {
+                    //        if (!updateField.Contains("modified_clientusername"))
+                    //        {
+                    //            list.Add("modified_clientusername");
+                    //        }
+                    //    }
+                    //}
+
+
+                    updateField = (string[])list.ToArray(typeof(string));
+                    repository.Update(x, updateField);
+                });
+            }
+            else if (entityFac.optionType == SaveModel.MainOptionType.delete)
+            {
+                detailList.ForEach(x =>
+                {
+                    //設置默認值
+                    //x.SetModifyDefaultVal();
+                    repository.DbContext.Entry<DetailT>(x).State = EntityState.Deleted;
+                });
+            }
+
+            return Response.OK();
+        }
 
         public virtual WebResponseContent CustomBatchProcessEntity(SaveModel saveModel)
         {
