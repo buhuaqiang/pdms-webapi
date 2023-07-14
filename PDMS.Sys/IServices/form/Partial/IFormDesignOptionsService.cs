@@ -9,6 +9,7 @@ namespace PDMS.System.IServices
 {
     public partial interface IFormDesignOptionsService
     {
-        
+
+        public WebResponseContent publishForm(object[] keys);
     }
  }
