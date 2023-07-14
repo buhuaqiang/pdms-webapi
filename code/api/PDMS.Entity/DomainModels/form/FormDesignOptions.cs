@@ -141,5 +141,12 @@ namespace PDMS.Entity.DomainModels
         public int? ModifyID { get; set; }
 
 
+        /// <summary>
+        ///status
+        /// </summary>
+        [Display(Name = "status")]
+        [MaxLength(1000)]
+        [Column(TypeName = "nvarchar(20)")]
+        public string status { get; set; }
     }
 }
