@@ -20,6 +20,7 @@ using PDMS.System.IRepositories;
 using System.Collections.Generic;
 using static Dapper.SqlMapper;
 using System;
+using Newtonsoft.Json;
 
 namespace PDMS.System.Services
 {
@@ -67,11 +68,139 @@ namespace PDMS.System.Services
         {
             //修改舊數據的del_flag=1
             //複製一份數據做新增，發佈狀態改為 暫存 status=0            //
+            SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
+            FormDesignOptions opsList = new FormDesignOptions();
+            DbContext dbcon = repository.DbContext;
+            var FormID = new Guid();
+            if (saveModel.MainData.ContainsKey("FormId"))
+            {
+                //页面传过来的 FormID
+                FormID = Guid.Parse(saveModel.MainData["FormId"].ToString());
+            }
+            var List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == FormID).FirstOrDefault();
             if (saveModel.MainData.ContainsKey("DaraggeOptions"))
             {
+                
+                if (List != null)
+                {
+                    var status = List.status;
+                    if (status == "1")
+                    {
+                        try
+                        {
+                            var Temp = new Guid();//创建新的NewId()
+                            var FormCode = saveModel.MainData["FormCode"].ToString();
+                            #region   修改FormDesignOptions
+                            List.del_flag = "1";
+                            queueResult.optionType = SaveModel.MainOptionType.update;
+                            queueResult.detailType = typeof(FormDesignOptions);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(queueResult);
 
+                            #endregion
+
+                            #region 新增 FormDesignOptions
+                            FormDesignOptions ListTemp = new FormDesignOptions();
+                            ListTemp = List;
+                            ListTemp.FormId = Temp;
+                            ListTemp.status = "0";
+                            ListTemp.del_flag = "0";
+                            queueResult.optionType = SaveModel.MainOptionType.add;
+                            queueResult.detailType = typeof(FormDesignOptions);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ListTemp)));
+                            saveModel.DetailListData.Add(queueResult);
+
+                            #endregion
+
+                            #region 释放实体
+                            _responseContent = base.CustomBatchProcessEntity(saveModel);
+                            var Entry = dbcon.ChangeTracker.Entries();
+                            if (Entry.Count() != 0)
+                            {
+                                foreach (var item in Entry)
+                                {
+                                    //设置实体State为EntityState.Detached，取消跟踪该实体，之后dbContext.ChangeTracker.Entries().Count()的值会减1
+                                    item.State = EntityState.Detached;
+                                }
+                            }
+                            #endregion
+
+                            #region  按照新的 FormID修改数据 FormDesignOptions
+                            List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Temp).FirstOrDefault();
+                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"].ToString();
+                            List.FormOptions = saveModel.MainData["FormOptions"].ToString();
+                            List.FormConfig = saveModel.MainData["FormConfig"].ToString();
+                            List.FormFields = saveModel.MainData["FormFields"].ToString();
+                            List.TableConfig = saveModel.MainData["TableConfig"].ToString();
+                            List.status = "0";
+                            queueResult.optionType = SaveModel.MainOptionType.update;
+                            queueResult.detailType = typeof(FormDesignOptions);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(queueResult);
+                            #endregion
+
+                            #region 修改任務表 cmc_common_task                   
+                            var taskList = repository.DbContext.Set<cmc_common_task>().Where(x => x.FormCode == FormCode).FirstOrDefault();
+                            taskList.FormId = Temp;
+                            queueResult.optionType = SaveModel.MainOptionType.update;
+                            queueResult.detailType = typeof(cmc_common_task);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
+                            saveModel.DetailListData.Add(queueResult);
+
+                            #endregion
+
+                            #region 修改子專案工作計劃表 cmc_pdms_project_task  ---- 缺少 Cmc_pdms_project_task 实体
+                            //var ProjcetList = repository.DbContext.Set<Cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId==null || x.approve_status=="00")).FirstOrDefault();
+                            //taskList.FormId = Temp;
+                            //queueResult.optionType = SaveModel.MainOptionType.update;
+                            //queueResult.detailType = typeof(cmc_common_task);
+                            //queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
+                            //saveModel.DetailListData.Add(queueResult);
+
+                            #endregion
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "PDMS:參數設置--->表單配置：修改（Edit）功能：FormDesignOptionsService 文件：" + DateTime.Now + ":" + ex.Message);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            #region 根据页面上选择的FormID，修改数据 FormDesignOptions
+                            List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == FormID).FirstOrDefault();
+                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"].ToString();
+                            List.FormOptions = saveModel.MainData["FormOptions"].ToString();
+                            List.FormConfig = saveModel.MainData["FormConfig"].ToString();
+                            List.FormFields = saveModel.MainData["FormFields"].ToString();
+                            List.TableConfig = saveModel.MainData["TableConfig"].ToString();
+                            queueResult.optionType = SaveModel.MainOptionType.update;
+                            queueResult.detailType = typeof(FormDesignOptions);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(queueResult);
+                            #endregion
+                        }
+                        catch (Exception ex)
+                        {
+
+                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "PDMS:參數設置--->表單配置：修改（Edit）功能：FormDesignOptionsService 文件：" + DateTime.Now + ":" + ex.Message);
+                        }
+                    }
+                }
             }
-            return base.Update(saveModel);
+            else
+            {
+                #region  僅僅修改   FormDesignOptions ，Title、form_desc欄位
+                List.Title = saveModel.MainData["Title"].ToString();
+                List.form_desc = saveModel.MainData["form_desc"].ToString();
+                queueResult.optionType = SaveModel.MainOptionType.update;
+                queueResult.detailType = typeof(FormDesignOptions);
+                queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                saveModel.DetailListData.Add(queueResult);
+                #endregion
+            }
+            return base.CustomBatchProcessEntity(saveModel);
         }
 
         public override WebResponseContent Del(object[] keys, bool delList = true)
@@ -88,5 +217,25 @@ namespace PDMS.System.Services
             return base.Del(keys, delList);
         }
 
+
+        public WebResponseContent publishForm(object[] keys)
+        {
+            var str = "";
+            try
+            {
+                if (keys.Count() != 0)
+                {
+                    str = string.Join("''", keys);
+                }
+                string sql = $@" update	FormDesignOptions set status=1  where FormId in('{str}')";
+                int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "PDMS:參數設置-->表單配置-->發佈功能-->批量修改 FormDesignOptions 表，FormDesignOptionsService 文件-->FormId ："+ str + "," + DateTime.Now + ":" + ex.Message);
+                return _responseContent.Error(ex.Message);
+            }
+            return _responseContent.OK();
+        }
     }
 }
