@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Sys.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Sys.Controllers
 {
@@ -28,6 +29,13 @@ namespace PDMS.Sys.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        [Route("copyTemplate"), HttpPost]
+        [ApiActionPermission()]
+        public  ActionResult copyTemplate([FromBody] SaveModel saveModel)
+        {
+            return _service.copyTemplate(saveModel);
         }
     }
 }

@@ -11,6 +11,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Sys.IServices;
+using PDMS.DbTest.Repositories;
+using PDMS.Sys.Repositories;
+using System.Linq;
+using PDMS.Core.Filters;
 
 namespace PDMS.Sys.Controllers
 {
@@ -28,6 +32,28 @@ namespace PDMS.Sys.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        
+        [Route("getList"), HttpGet]
+        [ApiActionPermission()]
+        public  ActionResult GetList(string template_id)
+        {
+            List<cmc_common_task_template_set> list = _service.GetList(template_id);
+
+            var data=list.Select(s => new
+            {
+                id = s.set_id,
+                ParentId=s.parent_set_id,
+                name = s.dicName
+            });
+
+            return Json(data);
         }
     }
 }

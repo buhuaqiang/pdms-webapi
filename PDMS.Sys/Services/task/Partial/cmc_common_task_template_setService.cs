@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
+using System.Collections.Generic;
 
 namespace PDMS.Sys.Services
 {
@@ -37,5 +38,25 @@ namespace PDMS.Sys.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        public List<cmc_common_task_template_set> GetList(string template_id)
+        {
+            List<cmc_common_task_template_set> Result = new List<cmc_common_task_template_set>();
+            string sql = $@"SELECT
+	                        set_id,
+	                        parent_set_id,
+	                        set_type,
+	                        set_value,
+	                        sl2.DicName dicName	
+                        FROM
+	                        cmc_common_task_template_set st
+	                        LEFT JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue= st.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = st.set_type ) )
+                        WHERE 1=1 ";
+            if (!string.IsNullOrEmpty(template_id))
+            {
+                sql += $" and st.template_id= '"+template_id+"'";
+            }
+            Result = repository.DapperContext.QueryList<cmc_common_task_template_set>(sql, null);
+            return Result;
+        }
+    }
 }
