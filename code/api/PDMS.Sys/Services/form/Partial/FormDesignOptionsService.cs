@@ -150,12 +150,12 @@ namespace PDMS.System.Services
                             #endregion
 
                             #region 修改子專案工作計劃表 cmc_pdms_project_task  ---- 缺少 Cmc_pdms_project_task 实体
-                            //var ProjcetList = repository.DbContext.Set<Cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId==null || x.approve_status=="00")).FirstOrDefault();
-                            //taskList.FormId = Temp;
-                            //queueResult.optionType = SaveModel.MainOptionType.update;
-                            //queueResult.detailType = typeof(cmc_common_task);
-                            //queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
-                            //saveModel.DetailListData.Add(queueResult);
+                            var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).FirstOrDefault();
+                            taskList.FormId = Temp;
+                            queueResult.optionType = SaveModel.MainOptionType.update;
+                            queueResult.detailType = typeof(cmc_common_task);
+                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
+                            saveModel.DetailListData.Add(queueResult);
 
                             #endregion
                         }
