@@ -17,5 +17,14 @@ namespace PDMS.Entity.DomainModels
     public partial class cmc_common_task_template_set
     {
         //此处配置字段(字段配置见此model的另一个partial),如果表中没有此字段请加上 [NotMapped]属性，否则会异常
+
+        /// <summary>
+        ///大日程/階段 名稱
+        /// </summary>
+        [Display(Name = "名稱")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(20)")]
+        [NotMapped]
+        public string dicName { get; set; }
     }
 }

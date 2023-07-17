@@ -57,7 +57,7 @@ namespace PDMS.System.Services
             //自定义逻辑
             if (orderLists != null && orderLists.Count > 0)
             {//
-                return _responseContent.Error("表单编号重复");
+                return _responseContent.Error("重複的表單編號");
             }
             //设置默认status=0(暂存)
             saveDataModel.MainData["status"] = "0";
@@ -212,7 +212,7 @@ namespace PDMS.System.Services
 
             if (Convert.ToInt32(obj) > 0)
             {
-                return _responseContent.Error("表单被引用，不允许删除");
+                return _responseContent.Error("表單被任務引用，不允許刪除");
             }
             return base.Del(keys, delList);
         }

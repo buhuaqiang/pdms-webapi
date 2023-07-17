@@ -17,6 +17,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
+using PDMS.System.IRepositories;
+using System;
 
 namespace PDMS.Sys.Services
 {
@@ -25,17 +27,59 @@ namespace PDMS.Sys.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Icmc_common_taskRepository _repository;//访问数据库
 
+        private readonly IFormDesignOptionsRepository _formRepository;
+
+        private readonly WebResponseContent _responseContent=new WebResponseContent();
+
         [ActivatorUtilitiesConstructor]
         public cmc_common_taskService(
             Icmc_common_taskRepository dbRepository,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            IFormDesignOptionsRepository formDesignOptionsRepository
             )
         : base(dbRepository)
         {
             _httpContextAccessor = httpContextAccessor;
             _repository = dbRepository;
+            _formRepository = formDesignOptionsRepository;
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        public override WebResponseContent Add(SaveModel saveDataModel)
+        {
+            string formID = saveDataModel.MainData["FormId"].ToString();
+            FormDesignOptions fo= _formRepository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId ==Guid.Parse(formID)).FirstOrDefault();
+            if (fo != null)
+            {
+                saveDataModel.MainData["FormCode"] = fo.FormCode;
+            }
+            return base.Add(saveDataModel);
+        }
+
+        public override WebResponseContent Update(SaveModel saveModel)
+        {
+            string formID = saveModel.MainData["FormId"].ToString();
+            FormDesignOptions fo = _formRepository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Guid.Parse(formID)).FirstOrDefault();
+            if (fo != null)
+            {
+                saveModel.MainData["FormCode"] = fo.FormCode;
+            }
+            return base.Update(saveModel);
+        }
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            string dd = string.Join("','", keys);
+            //如果表單被cmc_common_task表引用，不允許刪除
+            string sSql = $@"SELECT COUNT(0) FROM cmc_common_template_mapping WHERE task_id IN  ('{dd}')";
+            object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+
+            if (Convert.ToInt32(obj) > 0)
+            {
+                return _responseContent.Error("任務被模板引用，不允許刪除");
+            }
+
+            return base.Del(keys, delList);
+        }
+    }
 }

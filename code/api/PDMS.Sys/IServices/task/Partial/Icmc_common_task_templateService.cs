@@ -9,5 +9,6 @@ namespace PDMS.Sys.IServices
 {
     public partial interface Icmc_common_task_templateService
     {
+        WebResponseContent copyTemplate(SaveModel saveModel);
     }
  }
