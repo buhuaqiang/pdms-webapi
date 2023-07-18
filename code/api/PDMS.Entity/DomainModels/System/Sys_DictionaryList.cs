@@ -120,24 +120,5 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="datetime")]
        public DateTime? ModifyDate { get; set; }
 
-
-
-        /// <summary>
-        ///字典键
-        /// </summary>
-        [Display(Name = "字典键")]
-        [MaxLength(30)]
-        [Column(TypeName = "nvarchar(30)")]
-        public string key { get; set; }
-
-
-        /// <summary>
-        ///字典值
-        /// </summary>
-        [Display(Name = "字典值")]
-        [MaxLength(30)]
-        [Column(TypeName = "nvarchar(30)")]
-        public string value { get; set; }
-
     }
 }
