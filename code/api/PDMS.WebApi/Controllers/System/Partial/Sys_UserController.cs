@@ -184,5 +184,12 @@ namespace PDMS.System.Controllers
         {
             return Json(Service.getUserList(lgf));
         }
+
+        [ApiActionPermission]
+        [HttpPost, Route("getUserName")]
+        public ActionResult getUserName([FromBody] Object obj)
+        {
+            return Json(Service.getUserName(obj));
+        }
     }
 }
