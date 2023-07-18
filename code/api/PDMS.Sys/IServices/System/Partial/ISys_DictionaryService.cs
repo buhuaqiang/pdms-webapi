@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using PDMS.Core.BaseProvider;
 using PDMS.Entity.DomainModels;
+using static PDMS.System.Services.Sys_DictionaryService;
 
 namespace PDMS.System.IServices
 {
@@ -25,7 +26,7 @@ namespace PDMS.System.IServices
         Task<object> GetRemoteDefaultKeyValue(string dicNo, string key);
 
 
-        List<Sys_DictionaryList> GetDictionaryData(int dic_id, string dic_name);
+        List<DictionaryInfo> GetDictionaryData(int dic_id, string dic_name);
     }
 }
 
