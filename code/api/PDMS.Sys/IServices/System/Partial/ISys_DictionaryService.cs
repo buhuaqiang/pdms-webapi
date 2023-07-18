@@ -23,6 +23,9 @@ namespace PDMS.System.IServices
         /// <param name="value"></param>
         /// <returns></returns>
         Task<object> GetRemoteDefaultKeyValue(string dicNo, string key);
+
+
+        List<Sys_DictionaryList> GetDictionaryData(int dic_id, string dic_name);
     }
 }
 
