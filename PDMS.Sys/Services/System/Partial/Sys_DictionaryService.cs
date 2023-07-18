@@ -297,7 +297,7 @@ namespace PDMS.System.Services
         public List<DictionaryInfo> GetDictionaryData(int dic_id=-1, string dic_no = "")
         {
             string sql = "";
-            var deful = repository.DbContext.Set<Sys_Dictionary>().Where(x => x.Dic_ID == dic_id).FirstOrDefault();
+            var deful = repository.DbContext.Set<Sys_Dictionary>().Where(x => x.Dic_ID == dic_id || x.DicNo== dic_no).FirstOrDefault();
             if (deful != null)
             {
                 sql = deful.DbSql;
