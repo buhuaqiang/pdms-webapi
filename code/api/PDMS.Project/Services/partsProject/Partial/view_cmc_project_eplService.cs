@@ -43,17 +43,7 @@ namespace PDMS.Project.Services
 
         public override WebResponseContent Update(SaveModel saveModel)
         {
-            //VSellOrder为视图
-            //直接操作原表SellOrder的编辑功能
-            //saveModel为视图编辑字段信息，如果当前视图提交的saveModel字段与原表SellOrder不一致，
-            //可以直接修改视图提交saveModel里面的字段信息
-            List<Sys_Department> Result = new List<Sys_Department>();
-            String a = "";
-
-
-            return response.OK();
-            // return view_cmc_project_eplService.Instance.Update(saveModel);
-            //  return base.Update(saveModel);
+            return cmc_pdms_project_eplService.Instance.Update(saveModel);
         }
         
     }
