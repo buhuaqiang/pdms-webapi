@@ -13,7 +13,7 @@ using PDMS.Entity.SystemModels;
 
 namespace PDMS.Entity.DomainModels
 {
-    [Entity(TableCnName = "零件專案管制",TableName = "view_cmc_project_pm",DBServer = "SysDbContext")]
+    [Entity(TableCnName = "專案建立",TableName = "view_cmc_project_pm",DetailTable =  new Type[] { typeof(cmc_pdms_project_gate),typeof(cmc_pdms_project_org)},DetailTableCnName = "cmc_pdms_project_gate,cmc_pdms_project_org",DBServer = "SysDbContext")]
     public partial class view_cmc_project_pm:SysEntity
     {
         /// <summary>
@@ -194,6 +194,16 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="ModifyDate")]
        [Column(TypeName="datetime")]
        public DateTime? ModifyDate { get; set; }
+
+       [Display(Name ="cmc_pdms_project_gate")]
+       [ForeignKey("project_id")]
+       public List<cmc_pdms_project_gate> cmc_pdms_project_gate { get; set; }
+
+
+       [Display(Name ="cmc_pdms_project_org")]
+       [ForeignKey("project_id")]
+       public List<cmc_pdms_project_org> cmc_pdms_project_org { get; set; }
+
 
        
     }
