@@ -124,6 +124,16 @@ namespace PDMS.System.Controllers
                 }).ToListAsync();
             return JsonNormal(new { rows });
         }
+
+
+
+        [ApiActionPermission]
+        [HttpPost, Route("getGroupList")]
+        public ActionResult getGroupList([FromBody] Sys_Department sysDepartment)
+        {
+            return Json(Service.getGroupList(sysDepartment));
+        }
+
     }
 }
 
