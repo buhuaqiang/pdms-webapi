@@ -20,6 +20,7 @@ using PDMS.System.IRepositories;
 using System.Collections.Generic;
 using PDMS.Core.ManageUser;
 using PDMS.Core.UserManager;
+using System;
 
 namespace PDMS.System.Services
 {
@@ -96,6 +97,14 @@ namespace PDMS.System.Services
         public override WebResponseContent Del(object[] keys, bool delList = true)
         {
             return base.Del(keys, delList).Reload();
+        }
+
+        public List<Sys_Department> getGroupList(Sys_Department sysDepartment)
+        {
+            List<Sys_Department> Result = new List<Sys_Department>();
+            string sql = $@"select  *  from  Sys_Department where ParentId = (select DepartmentId from Sys_Department where DepartmentCode='"+ sysDepartment.DepartmentCode + "') ";
+            Result = repository.DapperContext.QueryList<Sys_Department>(sql, null);
+            return Result;
         }
     }
 
