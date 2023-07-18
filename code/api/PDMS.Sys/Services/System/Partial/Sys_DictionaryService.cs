@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using OfficeOpenXml.ConditionalFormatting;
 using PDMS.Core.BaseProvider;
 using PDMS.Core.Const;
 using PDMS.Core.DBManager;
@@ -288,6 +290,39 @@ namespace PDMS.System.Services
                 CacheContext.Remove(DictionaryManager.Key);
             }
             return webResponse;
+        }
+
+
+
+        public List<Sys_DictionaryList> GetDictionaryData(int dic_id=-1, string dic_no = "")
+        {
+            string sql = "";
+            var deful = repository.DbContext.Set<Sys_Dictionary>().Where(x => x.Dic_ID == dic_id).FirstOrDefault();
+            if (deful != null)
+            {
+                sql = deful.DbSql;
+                if (!string.IsNullOrEmpty(sql))
+                {
+                    return repository.DapperContext.QueryList<Sys_DictionaryList>(sql, null);
+                }
+                else
+                {
+                    List<Sys_DictionaryList> list = repository.DbContext.Set<Sys_DictionaryList>().Where(x => x.Dic_ID == dic_id).ToList();
+                    List<Sys_DictionaryList> TempList = JsonConvert.DeserializeObject<List<Sys_DictionaryList>>(list.Select(x => new { key = x.DicName, value = x.DicValue }).ToString());
+                    return TempList;
+                }
+            }
+            else if (!string.IsNullOrEmpty(dic_no))
+            {
+                sql = $@" select  d.DicName as 'key' ,d.DicValue as 'value' from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID 
+                where s.DicNo='{dic_no}' and d.Enable='1'  and s.Enable='1' ";
+                return repository.DapperContext.QueryList<Sys_DictionaryList>(sql, null);
+            }
+            else
+            {
+                return new List<Sys_DictionaryList>();
+            } 
+
         }
     }
 }
