@@ -59,5 +59,13 @@ namespace PDMS.System.Controllers
             return Json(await Service.GetBuilderDictionary());
         }
 
+
+        [ApiActionPermission]
+        [HttpGet, Route("GetDictionaryData")]
+        public ActionResult GetDictionaryData(int dic_id, string dic_no = "")
+        {
+            return Json(Service.GetDictionaryData(dic_id, dic_no));
+        }
+
     }
 }
