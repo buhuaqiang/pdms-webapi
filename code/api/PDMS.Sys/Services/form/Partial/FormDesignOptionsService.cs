@@ -89,7 +89,7 @@ namespace PDMS.System.Services
                         try
                         {
                             var Temp = new Guid();//创建新的NewId()
-                            var FormCode = saveModel.MainData["FormCode"].ToString();
+                            var FormCode = List.FormCode;
                             #region   修改FormDesignOptions
                             List.del_flag = "1";
                             queueResult.optionType = SaveModel.MainOptionType.update;
@@ -127,11 +127,11 @@ namespace PDMS.System.Services
 
                             #region  按照新的 FormID修改数据 FormDesignOptions
                             List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Temp).FirstOrDefault();
-                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"].ToString();
-                            List.FormOptions = saveModel.MainData["FormOptions"].ToString();
-                            List.FormConfig = saveModel.MainData["FormConfig"].ToString();
-                            List.FormFields = saveModel.MainData["FormFields"].ToString();
-                            List.TableConfig = saveModel.MainData["TableConfig"].ToString();
+                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"]!=null? saveModel.MainData["DaraggeOptions"].ToString():"";
+                            List.FormOptions = saveModel.MainData["FormOptions"]!=null? saveModel.MainData["FormOptions"].ToString():"";
+                            List.FormConfig = saveModel.MainData["FormConfig"]!=null? saveModel.MainData["FormConfig"].ToString():"";
+                            List.FormFields = saveModel.MainData["FormFields"]!=null? saveModel.MainData["FormFields"].ToString():"";
+                            List.TableConfig = saveModel.MainData["TableConfig"]!=null? saveModel.MainData["TableConfig"].ToString():"";
                             List.status = "0";
                             queueResult.optionType = SaveModel.MainOptionType.update;
                             queueResult.detailType = typeof(FormDesignOptions);
@@ -149,7 +149,7 @@ namespace PDMS.System.Services
 
                             #endregion
 
-                            #region 修改子專案工作計劃表 cmc_pdms_project_task  ---- 缺少 Cmc_pdms_project_task 实体
+                            #region 修改子專案工作計劃表 cmc_pdms_project_task  
                             var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).FirstOrDefault();
                             taskList.FormId = Temp;
                             queueResult.optionType = SaveModel.MainOptionType.update;
@@ -170,11 +170,11 @@ namespace PDMS.System.Services
                         {
                             #region 根据页面上选择的FormID，修改数据 FormDesignOptions
                             List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == FormID).FirstOrDefault();
-                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"].ToString();
-                            List.FormOptions = saveModel.MainData["FormOptions"].ToString();
-                            List.FormConfig = saveModel.MainData["FormConfig"].ToString();
-                            List.FormFields = saveModel.MainData["FormFields"].ToString();
-                            List.TableConfig = saveModel.MainData["TableConfig"].ToString();
+                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"]!=null? saveModel.MainData["DaraggeOptions"].ToString():"";
+                            List.FormOptions = saveModel.MainData["FormOptions"]!=null? saveModel.MainData["FormOptions"].ToString():"";
+                            List.FormConfig = saveModel.MainData["FormConfig"]!=null? saveModel.MainData["FormConfig"].ToString():"";
+                            List.FormFields = saveModel.MainData["FormFields"]!=null?saveModel.MainData["FormFields"].ToString():"";
+                            List.TableConfig = saveModel.MainData["TableConfig"]!=null? saveModel.MainData["TableConfig"].ToString():"";
                             queueResult.optionType = SaveModel.MainOptionType.update;
                             queueResult.detailType = typeof(FormDesignOptions);
                             queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
@@ -223,7 +223,8 @@ namespace PDMS.System.Services
             var str = "";
             try
             {
-                if (keys.Count() != 0)
+                if (
+                    keys.Count() != 0)
                 {
                     str = string.Join("''", keys);
                 }
