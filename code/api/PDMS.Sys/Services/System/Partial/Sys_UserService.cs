@@ -17,6 +17,8 @@ using PDMS.Core.UserManager;
 using PDMS.Core.Utilities;
 using PDMS.Entity.DomainModels;
 using PDMS.System.IRepositories;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.System.Services
 {
@@ -520,6 +522,22 @@ namespace PDMS.System.Services
             if (!string.IsNullOrEmpty(loginInfo.DepartmentCode))
             {
                 sql += $" AND user_id IN ( SELECT UserId FROM Sys_UserDepartment WHERE DepartmentId = ( SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode = '"+loginInfo.DepartmentCode+"' ) ) ";            }
+            Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
+            return Result;
+        }
+
+        public List<Sys_User> getUserName(Object obj)
+        {
+            List<Sys_User> Result = new List<Sys_User>();
+            var data = JObject.Parse(obj.ToString());
+            var departmentCode = data["DepartmentCode"].ToString();
+            var modelType = data["modelType"].ToString();
+              
+;
+            string sql = $@"select suser.* from Sys_User suser
+	                        left  join  cmc_group_model_set mset on mset.user_id=suser.User_Id 
+	                        where DepartmentCode='"+ departmentCode + "' and set_type='01' and model_type='"+ modelType + "'  ";
+           
             Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
             return Result;
         }
