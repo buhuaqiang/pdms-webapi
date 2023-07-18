@@ -294,7 +294,7 @@ namespace PDMS.System.Services
 
 
 
-        public List<Sys_DictionaryList> GetDictionaryData(int dic_id=-1, string dic_no = "")
+        public List<DictionaryInfo> GetDictionaryData(int dic_id=-1, string dic_no = "")
         {
             string sql = "";
             var deful = repository.DbContext.Set<Sys_Dictionary>().Where(x => x.Dic_ID == dic_id).FirstOrDefault();
@@ -303,12 +303,12 @@ namespace PDMS.System.Services
                 sql = deful.DbSql;
                 if (!string.IsNullOrEmpty(sql))
                 {
-                    return repository.DapperContext.QueryList<Sys_DictionaryList>(sql, null);
+                    return repository.DapperContext.QueryList<DictionaryInfo>(sql, null);
                 }
                 else
                 {
                     List<Sys_DictionaryList> list = repository.DbContext.Set<Sys_DictionaryList>().Where(x => x.Dic_ID == dic_id).ToList();
-                    List<Sys_DictionaryList> TempList = JsonConvert.DeserializeObject<List<Sys_DictionaryList>>(list.Select(x => new { key = x.DicName, value = x.DicValue }).ToString());
+                    List<DictionaryInfo> TempList = JsonConvert.DeserializeObject<List<DictionaryInfo>>(list.Select(x => new { key = x.DicName, value = x.DicValue }).ToString());
                     return TempList;
                 }
             }
@@ -316,13 +316,20 @@ namespace PDMS.System.Services
             {
                 sql = $@" select  d.DicName as 'key' ,d.DicValue as 'value' from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID 
                 where s.DicNo='{dic_no}' and d.Enable='1'  and s.Enable='1' ";
-                return repository.DapperContext.QueryList<Sys_DictionaryList>(sql, null);
+                return repository.DapperContext.QueryList<DictionaryInfo>(sql, null);
             }
             else
             {
-                return new List<Sys_DictionaryList>();
+                return new List<DictionaryInfo>();
             } 
 
+        }
+
+
+        public class DictionaryInfo
+        {
+            public string  key { get; set; }
+            public string value { get; set; }
         }
     }
 }
