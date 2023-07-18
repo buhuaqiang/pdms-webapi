@@ -1,6 +1,7 @@
 ﻿using PDMS.Core.BaseProvider;
 using PDMS.Core.Utilities;
 using PDMS.Entity.DomainModels;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,6 +17,7 @@ namespace PDMS.System.IServices
         Task<WebResponseContent> GetCurrentUserInfo();
 
         List<Sys_User> getUserList(LoginInfo loginInfo);
+        List<Sys_User> getUserName(Object obj);
     }
 }
 
