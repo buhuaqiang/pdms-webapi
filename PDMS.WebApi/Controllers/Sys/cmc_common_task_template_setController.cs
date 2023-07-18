@@ -9,7 +9,7 @@ using PDMS.Sys.IServices;
 namespace PDMS.Sys.Controllers
 {
     [Route("api/cmc_common_task_template_set")]
-    [PermissionTable()]
+    [PermissionTable(Name = "cmc_common_task_template_set")]
     public partial class cmc_common_task_template_setController : ApiBaseController<Icmc_common_task_template_setService>
     {
         public cmc_common_task_template_setController(Icmc_common_task_template_setService service)
