@@ -207,6 +207,15 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string del_flag { get; set; }
 
-       
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "預計工期")]
+        [MaxLength(1)]
+        [Column(TypeName = "int")]
+        [Editable(true)]
+        public int work_days { get; set; }
+
     }
 }
