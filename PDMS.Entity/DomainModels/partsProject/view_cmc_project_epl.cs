@@ -358,6 +358,24 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string del_flag { get; set; }
 
-       
+        /// <summary>
+        ///開發承辦人姓名
+        /// </summary>
+        [Display(Name = "開發承辦人姓名")]
+        [MaxLength(200)]
+        [Column(TypeName = "nvarchar(200)")]
+        [Editable(true)]
+        public string? UserTrueName { get; set; }
+
+        /// <summary>
+        ///承辦工號
+        /// </summary>
+        [Display(Name = "承辦工號")]
+        [MaxLength(200)]
+        [Column(TypeName = "nvarchar(20)")]
+        [Editable(true)]
+        public string? user_code { get; set; }
+
+
     }
 }
