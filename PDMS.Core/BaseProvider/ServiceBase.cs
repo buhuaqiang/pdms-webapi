@@ -412,6 +412,77 @@ namespace PDMS.Core.BaseProvider
 
 
 
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="sJson"></param>
+        /// <returns></returns>
+        public List<Dictionary<string, object>> CalcSameEntiryProperties(Type type, string sJsonData)
+        {
+            PropertyInfo[] pInfo = type.GetProperties();
+            List<Dictionary<string, object>> dictionaryResult = new List<Dictionary<string, object>>();
+
+            //把json转换成数组 把多条json转成单条json的数据
+            Newtonsoft.Json.Linq.JArray jarray = JsonConvert.DeserializeObject(sJsonData) as Newtonsoft.Json.Linq.JArray;
+            if (jarray != null && jarray.Count > 0)
+            {
+                for (int i = 0; i < jarray.Count; i++)
+                {
+                    Dictionary<string, object> dicRow = new Dictionary<string, object>();
+                    //表体的多条数据，利用循环一条一条转成dictinary
+                    //把数组中，单条json转成 键值对
+                    string listdata = jarray[i].ToString();
+                    Object obj1 = JsonConvert.DeserializeObject(listdata);
+                    Newtonsoft.Json.Linq.JObject js1 = obj1 as Newtonsoft.Json.Linq.JObject;//把上面的obj转换为 Jobject对象
+
+                    bool bHaveKey = false;
+                    PropertyInfo mainKey = type.GetKeyProperty();
+                    foreach (var item in js1)
+                    {
+                        string sKey = item.Key;
+                        object sData = item.Value;
+                        foreach (PropertyInfo pInfoTmp in pInfo)
+                        {
+                            if (pInfoTmp.GetDisplayName() == "CanNotWrite")
+                            {
+                                break;
+                            }
+                            if (sKey.ToLower() == pInfoTmp.Name.ToLower())
+                            {
+                                //界面上的值和实体中的值一致，需要保存 如果该值是guid，需要注意类型
+                                if (pInfoTmp.GetType() == typeof(System.Guid))
+                                {
+                                    dicRow.Add(sKey, new Guid(sData.ToString()));
+                                }
+                                else
+                                {
+                                    dicRow.Add(sKey, sData);
+                                }
+                            }
+                        }
+                        //检查是否有主键，没有则增加
+                        if (sKey.ToLower() == mainKey.Name.ToLower())
+                        {
+                            bHaveKey = true;
+                        }
+                    }
+
+                    if (bHaveKey == false)
+                    {
+                        dicRow.Add(mainKey.Name, "");
+                    }
+
+                    dictionaryResult.Add(dicRow);
+                }
+            }
+
+            return dictionaryResult;
+        }
+
+
+
         /// <summary>
         /// 处理多实体方法
         /// </summary>
