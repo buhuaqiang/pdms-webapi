@@ -45,6 +45,36 @@ namespace PDMS.Sys.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
+
+        public WebResponseContent bathUpdateData(object saveData)
+        {
+            SaveModel saveModel = new SaveModel();
+            string sRowDatas = saveData.ToString();
+            List<cmc_common_template_mapping> entityDic = JsonConvert.DeserializeObject<List<cmc_common_template_mapping>>(sRowDatas);
+            try
+            {
+                if (entityDic.Count > 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(entityDic, x => new { x.is_audit_key,x.is_delete_able,x.order_no,x.work_days });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                else
+                {
+                    return _webResponseContent.Error("沒有要修改的數據");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱 cmc_common_template_mapping 表，cmc_common_template_mappingService 文件-->foreach：" + DateTime.Now + ":" + ex.Message);
+
+                return _webResponseContent.Error(ex.Message);
+            }
+            return _webResponseContent.OK("操作成功");
+        }
         public WebResponseContent bathAddData(object saveData)
         {
             SaveModel saveModel = new SaveModel();
@@ -53,7 +83,7 @@ namespace PDMS.Sys.Services
             {
                 var data=JObject.Parse(sRowDatas);
                 Guid template_id = Guid.Parse(data["template_id"].ToString());
-                Guid set_id = Guid.Parse(data["template_id"].ToString());
+                Guid set_id = Guid.Parse(data["set_id"].ToString());
                 List<Dictionary<string, object>> entityDic = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(data["datas"].ToString());
                 List<cmc_common_template_mapping> setList = new List<cmc_common_template_mapping>();
                 var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.template_id == template_id).Select(x => new { set_id = x.set_id }).ToList();
@@ -78,7 +108,7 @@ namespace PDMS.Sys.Services
                             else
                             {
                                 cmc_common_template_mapping map = new cmc_common_template_mapping();
-                                map.mapping_id = new Guid();
+                                map.mapping_id = Guid.NewGuid();
                                 map.set_id = set_id;
                                 map.task_id = task_id;
                                 map.is_delete_able = dic["is_delete_able"] == null ? "" : dic["is_delete_able"].ToString();
@@ -97,11 +127,19 @@ namespace PDMS.Sys.Services
                 }
                 try
                 {
-                    repository.DapperContext.BeginTransaction((r) =>
+                    if (setList.Count > 0)
                     {
-                        DBServerProvider.SqlDapper.BulkInsert(setList, "cmc_common_template_mapping");
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(setList, "cmc_common_template_mapping");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                    else
+                    {
+                       return  _webResponseContent.Error("任務在模版已存在");
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -114,7 +152,7 @@ namespace PDMS.Sys.Services
                 _webResponseContent.Error("no data save");
             }
             _webResponseContent.Data = saveData;
-            return _webResponseContent.OK();
+            return _webResponseContent.OK("操作成功");
         }
     }
 }

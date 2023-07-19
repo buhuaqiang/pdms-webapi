@@ -40,6 +40,13 @@ namespace PDMS.Sys.Controllers
         {
             return Json(_service.bathAddData(saveModel));
         }
-
+        // 
+        //批量修改任務數據
+        [ApiActionPermission]
+        [HttpPost, Route("bathUpdateData")]
+        public ActionResult bathUpdateData([FromBody] object saveModel)
+        {
+            return Json(_service.bathUpdateData(saveModel));
+        }
     }
 }
