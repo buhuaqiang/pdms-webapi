@@ -39,6 +39,7 @@ namespace PDMS.Project.Services
             //base.Init(dbRepository);
         }
 
+        public WebResponseContent ResponseContent = new WebResponseContent();
         public override PageGridData<view_cmc_plan_execution> GetPageData(PageDataOptions options)
         {
             //查询所有del_flag!=1
@@ -85,6 +86,5 @@ namespace PDMS.Project.Services
           
             return base.GetPageData(options);
         }
-
     }
 }
