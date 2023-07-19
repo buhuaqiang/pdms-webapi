@@ -22,6 +22,7 @@ using System.Net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using PDMS.Core.DBManager;
 
 namespace PDMS.Sys.Services
 {
@@ -51,21 +52,61 @@ namespace PDMS.Sys.Services
             if (string.IsNullOrEmpty(sRowDatas) == false)
             {
                 var data=JObject.Parse(sRowDatas);
-                string template_id = data["template_id"].ToString();
+                Guid template_id = Guid.Parse(data["template_id"].ToString());
                 List<Dictionary<string, object>> entityDic = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(data["datas"].ToString());
                 List<cmc_common_template_mapping> setList = new List<cmc_common_template_mapping>();
                 foreach (Dictionary<string, object> dic in entityDic)
                 {
-                    string  task_id = dic["task_id"].ToString();
-                    //task_id,is_audit_key,is_delete_able,work_days  寫入欄位
+                    try
+                    {
+                        Guid task_id = Guid.Parse(dic["task_id"].ToString());
+                        //task_id,is_audit_key,is_delete_able,work_days  寫入欄位
+                        var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.template_id == template_id).FirstOrDefault();
+                        if (List != null)
+                        {
+                            var set_id = List.set_id;
+                            var MapList = repository.DbContext.Set<cmc_common_template_mapping>().Where(x => x.task_id == task_id && x.set_id == set_id).FirstOrDefault();
+                            if (MapList != null)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                cmc_common_template_mapping map = new cmc_common_template_mapping();
+                                map.mapping_id = new Guid();
+                                map.set_id = Guid.Parse(dic["task_id"].ToString());
+                                map.task_id = task_id;
+                                map.is_delete_able = dic["is_delete_able"] == null ? "" : dic["is_delete_able"].ToString();
+                                map.is_audit_key = dic["is_audit_key"] == null ? "" : dic["is_audit_key"].ToString();
+                                setList.Add(map);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱 cmc_common_template_mapping 表，cmc_common_template_mappingService 文件-->foreach：" + DateTime.Now + ":" + ex.Message);
 
+                        return _webResponseContent.Error(ex.Message);
+                    }
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.BulkInsert(setList, "cmc_common_template_mapping");
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_common_template_mapping 表，cmc_common_template_mappingService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                    return _webResponseContent.Error(ex.Message);
                 }
             }
             else
             {
                 _webResponseContent.Error("no data save");
             }
-
             _webResponseContent.Data = saveData;
             return _webResponseContent.OK();
         }
