@@ -53,19 +53,24 @@ namespace PDMS.Sys.Services
             {
                 var data=JObject.Parse(sRowDatas);
                 Guid template_id = Guid.Parse(data["template_id"].ToString());
+                Guid set_id = Guid.Parse(data["template_id"].ToString());
                 List<Dictionary<string, object>> entityDic = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(data["datas"].ToString());
                 List<cmc_common_template_mapping> setList = new List<cmc_common_template_mapping>();
+                var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.template_id == template_id).Select(x => new { set_id = x.set_id }).ToList();
+                List<string> listS = new List<string>();
+                foreach (var item in List)
+                {
+                    listS.Add(item.set_id.ToString());
+                }
                 foreach (Dictionary<string, object> dic in entityDic)
                 {
                     try
                     {
                         Guid task_id = Guid.Parse(dic["task_id"].ToString());
-                        //task_id,is_audit_key,is_delete_able,work_days  寫入欄位
-                        var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.template_id == template_id).FirstOrDefault();
+                        //task_id,is_audit_key,is_delete_able,work_days  寫入欄位           
                         if (List != null)
                         {
-                            var set_id = List.set_id;
-                            var MapList = repository.DbContext.Set<cmc_common_template_mapping>().Where(x => x.task_id == task_id && x.set_id == set_id).FirstOrDefault();
+                            var MapList = repository.DbContext.Set<cmc_common_template_mapping>().Where(x => x.task_id == task_id && listS.Contains(x.set_id==null?"": x.set_id.ToString())).FirstOrDefault();
                             if (MapList != null)
                             {
                                 continue;
@@ -74,7 +79,7 @@ namespace PDMS.Sys.Services
                             {
                                 cmc_common_template_mapping map = new cmc_common_template_mapping();
                                 map.mapping_id = new Guid();
-                                map.set_id = Guid.Parse(dic["task_id"].ToString());
+                                map.set_id = set_id;
                                 map.task_id = task_id;
                                 map.is_delete_able = dic["is_delete_able"] == null ? "" : dic["is_delete_able"].ToString();
                                 map.is_audit_key = dic["is_audit_key"] == null ? "" : dic["is_audit_key"].ToString();
