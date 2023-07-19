@@ -37,5 +37,12 @@ namespace PDMS.Sys.Controllers
         {
             return Json(_service.copyTemplate(saveModel));
         }
+
+        [Route("getPageData"), HttpPost]
+        [ApiActionPermission()]
+        public override ActionResult GetPageData([FromBody] PageDataOptions loadData)
+        {
+            return base.GetPageData(loadData);
+        }
     }
 }

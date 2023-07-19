@@ -78,6 +78,7 @@ namespace PDMS.Sys.Services
                                 map.task_id = task_id;
                                 map.is_delete_able = dic["is_delete_able"] == null ? "" : dic["is_delete_able"].ToString();
                                 map.is_audit_key = dic["is_audit_key"] == null ? "" : dic["is_audit_key"].ToString();
+                                map.work_days= dic["work_days"] == null ? 0 :Int32.Parse( dic["work_days"].ToString());
                                 setList.Add(map);
                             }
                         }
