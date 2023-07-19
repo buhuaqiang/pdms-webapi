@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Sys.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Sys.Controllers
 {
@@ -29,5 +30,16 @@ namespace PDMS.Sys.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
+
+
+        // 
+        //批量新增任務數據
+        [ApiActionPermission]
+        [HttpPost, Route("bathAddData")]
+        public ActionResult bathSaveCheckData([FromBody] object saveModel)
+        {
+            return Json(_service.bathAddData(saveModel));
+        }
+
     }
 }

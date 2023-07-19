@@ -9,5 +9,6 @@ namespace PDMS.Sys.IServices
 {
     public partial interface Icmc_common_template_mappingService
     {
+        public WebResponseContent bathAddData(object saveData);
     }
  }

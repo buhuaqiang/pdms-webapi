@@ -130,6 +130,14 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="int")]
        public int? order_no { get; set; }
 
-       
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "預計工期")]
+        [MaxLength(1)]
+        [Column(TypeName = "int")]
+        [Editable(true)]
+        public int work_days { get; set; }
     }
 }

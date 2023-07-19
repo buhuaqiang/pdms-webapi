@@ -17,6 +17,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
+using System.Collections.Generic;
+using System.Net;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 
 namespace PDMS.Sys.Services
 {
@@ -24,6 +29,8 @@ namespace PDMS.Sys.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Icmc_common_template_mappingRepository _repository;//访问数据库
+
+        WebResponseContent _webResponseContent = new WebResponseContent();
 
         [ActivatorUtilitiesConstructor]
         public cmc_common_template_mappingService(
@@ -37,5 +44,30 @@ namespace PDMS.Sys.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        public WebResponseContent bathAddData(object saveData)
+        {
+            SaveModel saveModel = new SaveModel();
+            string sRowDatas = saveData.ToString();
+            if (string.IsNullOrEmpty(sRowDatas) == false)
+            {
+                var data=JObject.Parse(sRowDatas);
+                string template_id = data["template_id"].ToString();
+                List<Dictionary<string, object>> entityDic = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(data["datas"].ToString());
+                List<cmc_common_template_mapping> setList = new List<cmc_common_template_mapping>();
+                foreach (Dictionary<string, object> dic in entityDic)
+                {
+                    string  task_id = dic["task_id"].ToString();
+                    //task_id,is_audit_key,is_delete_able,work_days  寫入欄位
+
+                }
+            }
+            else
+            {
+                _webResponseContent.Error("no data save");
+            }
+
+            _webResponseContent.Data = saveData;
+            return _webResponseContent.OK();
+        }
+    }
 }
