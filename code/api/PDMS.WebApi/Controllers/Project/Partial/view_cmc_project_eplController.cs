@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
+using PDMS.Core.Utilities;
 
 namespace PDMS.Project.Controllers
 {
@@ -29,6 +30,22 @@ namespace PDMS.Project.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        //判斷選取數據的kd件、組別是否維護完整
+        [ApiActionPermission]
+        [HttpPost, Route("getEplCount")]
+        public int getEplCount([FromBody] SaveModel saveModel)
+        {
+            return Service.getEplCount(saveModel);
+        }
+
+        //提交功能
+        [ApiActionPermission]
+        [HttpPost, Route("submit")]
+        public WebResponseContent submit([FromBody] SaveModel saveModel)
+        {
+            return Service.submit(saveModel);
         }
     }
 }
