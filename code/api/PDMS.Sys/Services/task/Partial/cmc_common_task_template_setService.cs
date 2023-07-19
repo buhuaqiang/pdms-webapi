@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
 using System.Collections.Generic;
+using System;
 
 namespace PDMS.Sys.Services
 {
@@ -25,6 +26,8 @@ namespace PDMS.Sys.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Icmc_common_task_template_setRepository _repository;//访问数据库
+
+        WebResponseContent webContent=new WebResponseContent();
 
         [ActivatorUtilitiesConstructor]
         public cmc_common_task_template_setService(
@@ -57,6 +60,44 @@ namespace PDMS.Sys.Services
             }
             Result = repository.DapperContext.QueryList<cmc_common_task_template_set>(sql, null);
             return Result;
+        }
+
+        public WebResponseContent delSet(string set_id)
+        {
+            string sql = $@"";
+            return webContent.OK();
+        }
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            string dd = string.Join("','", keys);
+            //有下級，不允許刪除
+            string sSql = $@"SELECT count(0) from cmc_common_task_template_set where parent_set_id  in ('{dd}')";
+            object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+            if (Convert.ToInt32(obj) > 0)
+            {
+                return webContent.Error("有子層級，不允許刪除");
+            }
+            //有任務，不允許刪除
+            sSql = $@"SELECT count(0) from cmc_common_template_mapping where set_id  in ('{dd}')";
+            obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+            if (Convert.ToInt32(obj) > 0)
+            {
+                return webContent.Error("當前層級下有任務，不允許刪除");
+            }
+            return base.Del(keys, delList);
+        }
+
+        public override WebResponseContent Add(SaveModel saveDataModel)
+        {
+            
+            string sSql = $@"SELECT count(0) from cmc_common_task_template_set where  template_id='{saveDataModel.MainData["template_id"].ToString()}' and set_type='{saveDataModel.MainData["set_type"].ToString()}' and set_value ='{saveDataModel.MainData["set_value"].ToString()}'";
+            object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+            if (Convert.ToInt32(obj) > 0)
+            {
+                return webContent.Error("重複數據，不允許添加");
+            }
+            return base.Add(saveDataModel);
         }
     }
 }

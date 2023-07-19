@@ -63,7 +63,7 @@ namespace PDMS.Sys.Services
             {
                 sql += $" and st.template_id='{template_id}'";
             }
-            if(sets != null)
+            if(sets != null && sets.Count()>0)
             {
                 string ids  = string.Join("','", sets);
                 sql += $" and map.set_id in ('{ids}')";
