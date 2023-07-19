@@ -26,10 +26,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string gate_code { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="gate_start_date")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_name")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_name { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="gate_start_date")]
        [Column(TypeName="datetime")]
        [Editable(true)]
        public DateTime? gate_start_date { get; set; }
@@ -69,10 +78,20 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string set_value { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="task_name")]
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "set_name")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string set_name { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="task_name")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
