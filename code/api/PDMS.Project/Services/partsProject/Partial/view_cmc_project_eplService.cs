@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace PDMS.Project.Services
 {
@@ -65,6 +66,89 @@ namespace PDMS.Project.Services
         public  WebResponseContent submit(SaveModel saveModel)
         {
             return cmc_pdms_project_eplService.Instance.submit(saveModel);
+        }
+
+        public override PageGridData<view_cmc_project_epl> GetPageData(PageDataOptions options) {
+            string project_id = "";
+            string upg_id = "";
+            string part_no = "";
+            string submit_status = "";
+            string path = "";
+            string where = " ";
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "project_id".ToLower())
+                        {
+                            project_id = sp.Value;
+                            if (!string.IsNullOrEmpty(project_id))
+                            {
+                                where += " and epl.project_id= " + project_id ;
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "upg_id".ToLower())
+                        {
+                            upg_id = sp.Value;
+                            if (!string.IsNullOrEmpty(upg_id))
+                            {
+                                where += " and epl.upg_id= " + upg_id;
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "part_no".ToLower())
+                        {
+                            part_no = sp.Value;
+                            if (!string.IsNullOrEmpty(part_no))
+                            {
+                                where += " and epl.part_no= " + part_no;
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "submit_status".ToLower())
+                        {
+                            submit_status = sp.Value;
+                            if (!string.IsNullOrEmpty(submit_status))
+                            {
+                                where += " and epl.submit_status= " + submit_status;
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "path".ToLower())
+                        {
+                            path = sp.Value;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            if (path == "/view_cmc_project_epl")//部車型窗口查詢
+            {
+                QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName ,'' as UserTrueName,'' as user_code    
+                             from cmc_pdms_project_epl epl
+                             left  join cmc_pdms_project_main main on main.project_id=epl.project_id
+                             left join  cmc_pdms_project_org org  on org.project_id=main.project_id and epl.org_code=org.org_code
+                            left join cmc_group_model_set mset on mset.DepartmentCode=epl.group_code and mset.model_type=main.model_type and mset.set_type='01'
+                            where 1=1  ";
+                QuerySql += where;
+            }
+            if (path == "/view_cmc_project_epl_group")
+            { //組車型窗口查詢
+                QuerySql = @" select  epl.* , (select  UserTrueName from sys_user where  User_Id=epl.dev_taker_id) as UserTrueName,
+                                (select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserName   
+                            from   cmc_pdms_project_epl epl  where  epl.submit_status='1'  
+                        ";
+                QuerySql += where;
+
+            }
+
+                return base.GetPageData(options);
         }
 
     }
