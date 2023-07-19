@@ -45,6 +45,27 @@ namespace PDMS.Project.Services
         {
             return cmc_pdms_project_eplService.Instance.Update(saveModel);
         }
-        
+
+        public int getEplCount(SaveModel saveModel)
+        {
+            int count = 0;
+            var MainDatas = saveModel.MainDatas;
+            var eplIds = "";
+            foreach (var item in MainDatas)
+            {
+                object eplId = item["epl_id"];
+                eplIds += "'" + eplId + "'" + ",";
+            }
+            eplIds = eplIds.Substring(0, eplIds.Length - 1);
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl where epl_id in ("+ eplIds + ")  and (kd_type='' or group_code='') ";
+            count =Convert.ToInt32( repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
+
+        public  WebResponseContent submit(SaveModel saveModel)
+        {
+            return cmc_pdms_project_eplService.Instance.submit(saveModel);
+        }
+
     }
 }

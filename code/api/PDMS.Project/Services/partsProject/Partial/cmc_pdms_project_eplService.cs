@@ -101,5 +101,53 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
 
         }
+
+        public  WebResponseContent submit(SaveModel saveModel) {
+
+            var MainDatas = saveModel.MainDatas;
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            epl.submit_status = "1";
+
+
+                            //部門變更邏輯待完善
+                          
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+            }
+            return ResponseContent.OK();
+        }
     }
 }
