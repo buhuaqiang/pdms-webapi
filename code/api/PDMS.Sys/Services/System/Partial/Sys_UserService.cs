@@ -541,6 +541,18 @@ namespace PDMS.System.Services
             Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
             return Result;
         }
+
+        public List<Sys_User> getUserCode(Object obj)
+        {
+            List<Sys_User> Result = new List<Sys_User>();
+            var data = JObject.Parse(obj.ToString());
+            var userId = data["User_Id"].ToString();
+            ;
+            string sql = $@"select  * from sys_user where  User_Id='"+ userId + "'  ";
+
+            Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
+            return Result;
+        }
     }
 }
 
