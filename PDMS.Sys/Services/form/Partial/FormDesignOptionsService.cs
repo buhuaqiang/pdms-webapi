@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using static Dapper.SqlMapper;
 using System;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace PDMS.System.Services
 {
@@ -68,9 +69,8 @@ namespace PDMS.System.Services
         {
             //修改舊數據的del_flag=1
             //複製一份數據做新增，發佈狀態改為 暫存 status=0            //
-            SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
-            FormDesignOptions opsList = new FormDesignOptions();
             DbContext dbcon = repository.DbContext;
+            FormDesignOptions opsList = new FormDesignOptions();
             var FormID = Guid.NewGuid();
             if (saveModel.MainData.ContainsKey("FormId"))
             {
@@ -88,15 +88,15 @@ namespace PDMS.System.Services
                     {
                         try
                         {
-                            var Temp = Guid.NewGuid();//创建新的NewId()
+                            var Temp =Guid.NewGuid();//创建新的NewId()
                             var FormCode = List.FormCode;
                             #region   修改FormDesignOptions
                             List.del_flag = "1";
-                            queueResult.optionType = SaveModel.MainOptionType.update;
-                            queueResult.detailType = typeof(FormDesignOptions);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
-                            saveModel.DetailListData.Add(queueResult);
-
+                            SaveModel.DetailListDataResult updateResult = new SaveModel.DetailListDataResult();
+                            updateResult.optionType = SaveModel.MainOptionType.update;
+                            updateResult.detailType = typeof(FormDesignOptions);
+                            updateResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(updateResult);
                             #endregion
 
                             #region 新增 FormDesignOptions
@@ -105,16 +105,17 @@ namespace PDMS.System.Services
                             ListTemp.FormId = Temp;
                             ListTemp.status = "0";
                             ListTemp.del_flag = "0";
-                            queueResult.optionType = SaveModel.MainOptionType.add;
-                            queueResult.detailType = typeof(FormDesignOptions);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ListTemp)));
-                            saveModel.DetailListData.Add(queueResult);
+                            SaveModel.DetailListDataResult AddResult = new SaveModel.DetailListDataResult();
+                            AddResult.optionType = SaveModel.MainOptionType.add;
+                            AddResult.detailType = typeof(FormDesignOptions);
+                            AddResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ListTemp)));
+                            saveModel.DetailListData.Add(AddResult);
 
                             #endregion
 
                             #region 释放实体
                             _responseContent = base.CustomBatchProcessEntity(saveModel);
-                            var Entry = dbcon.ChangeTracker.Entries();
+                            var   Entry = dbcon.ChangeTracker.Entries();
                             if (Entry.Count() != 0)
                             {
                                 foreach (var item in Entry)
@@ -123,40 +124,49 @@ namespace PDMS.System.Services
                                     item.State = EntityState.Detached;
                                 }
                             }
+                            saveModel.DetailListData = new List<SaveModel.DetailListDataResult>();
                             #endregion
 
                             #region  按照新的 FormID修改数据 FormDesignOptions
                             List = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Temp).FirstOrDefault();
-                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"]!=null? saveModel.MainData["DaraggeOptions"].ToString():"";
-                            List.FormOptions = saveModel.MainData["FormOptions"]!=null? saveModel.MainData["FormOptions"].ToString():"";
-                            List.FormConfig = saveModel.MainData["FormConfig"]!=null? saveModel.MainData["FormConfig"].ToString():"";
-                            List.FormFields = saveModel.MainData["FormFields"]!=null? saveModel.MainData["FormFields"].ToString():"";
-                            List.TableConfig = saveModel.MainData["TableConfig"]!=null? saveModel.MainData["TableConfig"].ToString():"";
+                            List.DaraggeOptions = saveModel.MainData["DaraggeOptions"] != null ? saveModel.MainData["DaraggeOptions"].ToString() : "";
+                            List.FormOptions = saveModel.MainData["FormOptions"] != null ? saveModel.MainData["FormOptions"].ToString() : "";
+                            List.FormConfig = saveModel.MainData["FormConfig"] != null ? saveModel.MainData["FormConfig"].ToString() : "";
+                            List.FormFields = saveModel.MainData["FormFields"] != null ? saveModel.MainData["FormFields"].ToString() : "";
+                            List.TableConfig = saveModel.MainData["TableConfig"] != null ? saveModel.MainData["TableConfig"].ToString() : "";
                             List.status = "0";
-                            queueResult.optionType = SaveModel.MainOptionType.update;
-                            queueResult.detailType = typeof(FormDesignOptions);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
-                            saveModel.DetailListData.Add(queueResult);
+                            SaveModel.DetailListDataResult upResult = new SaveModel.DetailListDataResult();
+                            upResult.optionType = SaveModel.MainOptionType.update;
+                            upResult.detailType = typeof(FormDesignOptions);
+                            upResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(upResult);
+                            //_responseContent = base.CustomBatchProcessEntity(saveModel);
                             #endregion
 
                             #region 修改任務表 cmc_common_task                   
                             var taskList = repository.DbContext.Set<cmc_common_task>().Where(x => x.FormCode == FormCode).FirstOrDefault();
-                            taskList.FormId = Temp;
-                            queueResult.optionType = SaveModel.MainOptionType.update;
-                            queueResult.detailType = typeof(cmc_common_task);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
-                            saveModel.DetailListData.Add(queueResult);
-
+                            if (taskList != null)
+                            {
+                                taskList.FormId = Temp;
+                                SaveModel.DetailListDataResult upTaskResult = new SaveModel.DetailListDataResult();
+                                upTaskResult.optionType = SaveModel.MainOptionType.update;
+                                upTaskResult.detailType = typeof(cmc_common_task);
+                                upTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
+                                saveModel.DetailListData.Add(upTaskResult);
+                            }       
                             #endregion
 
                             #region 修改子專案工作計劃表 cmc_pdms_project_task  
                             var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).FirstOrDefault();
-                            taskList.FormId = Temp;
-                            queueResult.optionType = SaveModel.MainOptionType.update;
-                            queueResult.detailType = typeof(cmc_common_task);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
-                            saveModel.DetailListData.Add(queueResult);
-
+                            if (ProjcetList != null)
+                            {
+                                ProjcetList.FormId = Temp;
+                                SaveModel.DetailListDataResult upPTaskResult = new SaveModel.DetailListDataResult();
+                                upPTaskResult.optionType = SaveModel.MainOptionType.update;
+                                upPTaskResult.detailType = typeof(cmc_pdms_project_task);
+                                upPTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ProjcetList)));
+                                saveModel.DetailListData.Add(upPTaskResult);
+                            }            
                             #endregion
                         }
                         catch (Exception ex)
@@ -175,10 +185,11 @@ namespace PDMS.System.Services
                             List.FormConfig = saveModel.MainData["FormConfig"]!=null? saveModel.MainData["FormConfig"].ToString():"";
                             List.FormFields = saveModel.MainData["FormFields"]!=null?saveModel.MainData["FormFields"].ToString():"";
                             List.TableConfig = saveModel.MainData["TableConfig"]!=null? saveModel.MainData["TableConfig"].ToString():"";
-                            queueResult.optionType = SaveModel.MainOptionType.update;
-                            queueResult.detailType = typeof(FormDesignOptions);
-                            queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
-                            saveModel.DetailListData.Add(queueResult);
+                            SaveModel.DetailListDataResult uptskResult = new SaveModel.DetailListDataResult();
+                            uptskResult.optionType = SaveModel.MainOptionType.update;
+                            uptskResult.detailType = typeof(FormDesignOptions);
+                            uptskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                            saveModel.DetailListData.Add(uptskResult);
                             #endregion
                         }
                         catch (Exception ex)
@@ -194,10 +205,11 @@ namespace PDMS.System.Services
                 #region  僅僅修改   FormDesignOptions ，Title、form_desc欄位
                 List.Title = saveModel.MainData["Title"].ToString();
                 List.form_desc = saveModel.MainData["form_desc"].ToString();
-                queueResult.optionType = SaveModel.MainOptionType.update;
-                queueResult.detailType = typeof(FormDesignOptions);
-                queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
-                saveModel.DetailListData.Add(queueResult);
+                SaveModel.DetailListDataResult opsResult = new SaveModel.DetailListDataResult();
+                opsResult.optionType = SaveModel.MainOptionType.update;
+                opsResult.detailType = typeof(FormDesignOptions);
+                opsResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(List)));
+                saveModel.DetailListData.Add(opsResult);
                 #endregion
             }
             return base.CustomBatchProcessEntity(saveModel);
