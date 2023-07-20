@@ -71,7 +71,7 @@ namespace PDMS.System.Services
             SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
             FormDesignOptions opsList = new FormDesignOptions();
             DbContext dbcon = repository.DbContext;
-            var FormID = new Guid();
+            var FormID = Guid.NewGuid();
             if (saveModel.MainData.ContainsKey("FormId"))
             {
                 //页面传过来的 FormID
@@ -88,7 +88,7 @@ namespace PDMS.System.Services
                     {
                         try
                         {
-                            var Temp = new Guid();//创建新的NewId()
+                            var Temp = Guid.NewGuid();//创建新的NewId()
                             var FormCode = List.FormCode;
                             #region   修改FormDesignOptions
                             List.del_flag = "1";

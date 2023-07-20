@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using PDMS.Core.DBManager;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Sys.Services
 {
@@ -46,18 +47,21 @@ namespace PDMS.Sys.Services
         }
         public WebResponseContent copyTemplate(SaveModel saveModel)
         {
+            UserInfo userList = UserContext.Current.UserInfo;
+            var CreateID = userList.User_Id;
+            var Creator = userList.UserTrueName;
 
             var oldid = Guid.Parse(saveModel.MainData["template_id"].ToString());
-            var newid = new Guid();//创建新的NewId()
+            var newid =Guid.NewGuid();//创建新的NewId()
             #region 新增
             SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
             cmc_common_task_template template = new cmc_common_task_template();
             template.template_id = newid;
             template.template_name = saveModel.MainData["template_name"].ToString();
-            template.suit_org_codes = saveModel.MainData["suit_org_codes"].ToString();
-            template.template_desc = saveModel.MainData["template_desc"].ToString();
+            template.suit_org_codes = String.IsNullOrEmpty(saveModel.MainData["suit_org_codes"].ToString())?null: saveModel.MainData["suit_org_codes"].ToString();
+            template.template_desc = String.IsNullOrEmpty(saveModel.MainData["template_desc"].ToString())?null: saveModel.MainData["template_desc"].ToString();
             queueResult.optionType = SaveModel.MainOptionType.add;
-            queueResult.detailType = typeof(FormDesignOptions);
+            queueResult.detailType = typeof(cmc_common_task_template);
             queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(template)));
             saveModel.DetailListData.Add(queueResult);
             _responseContent = base.CustomBatchProcessEntity(saveModel);
@@ -65,25 +69,31 @@ namespace PDMS.Sys.Services
 
             #region 批量查詢並插入舊模板層級關係表
             string sql = $@"insert into cmc_common_task_template_set
-                    (
+                    (   set_id,
 	                    template_id,
 	                    level,
 	                    parent_set_id,
 	                    set_type,
 	                    set_value,
 	                    order_no,
+                        CreateID,
+                        Creator,
+                        CreateDate,
 	                    source_set_id
                     )
                     SELECT 
+                    NEWID(),
                     '{newid}',
                     level,
                     parent_set_id,
                     set_type,
 	                    set_value,
 	                    order_no,
+                        {CreateID},
+                        '{Creator}',
+                        GETDATE(),
 	                    set_id
-                    from  cmc_common_task_template_set where template_id='{oldid}'
-                    ";
+                    from  cmc_common_task_template_set where template_id='{oldid}' ";
             int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
             //查詢剛才新增的所有數據
             string selectSet = $@"SELECT * FROM cmc_common_task_template_set WHERE template_id= '{newid}' and parent_set_id is not null";
@@ -98,7 +108,7 @@ namespace PDMS.Sys.Services
                     foreach (var item in addset)
                     {
                         //获取parent_set_id
-                        var parent_set_id = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id).FirstOrDefault().set_id;
+                        var parent_set_id = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id && x.template_id==newid).FirstOrDefault().set_id;
                         //获取当前实体
                         var Setlist = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.set_id == item.set_id).FirstOrDefault();
                         //对需要调整的字段进行赋值
@@ -129,28 +139,36 @@ namespace PDMS.Sys.Services
             #region  複製層架下對應任務：
             string sql2 = $@"insert into cmc_common_template_mapping
                         (
+                            mapping_id,
                         	set_id,
                         	task_id,
                         	is_delete_able,
                         	is_audit_key,
+                            CreateID,
+                            Creator,
+                            CreateDate,
                         	order_no
                         )
                         SELECT 
+                        NEWID(),
                         st.set_id,
                         task_id,
                         	map.is_delete_able,
                         	map.is_audit_key,
+                            {CreateID},
+                            '{Creator}',
+                            GETDATE(),
                         	map.order_no
                         from  cmc_common_template_mapping map
                         left join cmc_common_task_template_set st on st.source_set_id=map.set_id
-                        where map.set_id in (SELECT set_id from cmc_common_task_template_set where template_id='{oldid}'";
+                        where map.set_id in (SELECT set_id from cmc_common_task_template_set where template_id='{oldid}')";
             int succ2 = repository.DapperContext.ExcuteNonQuery(sql2, null);
 
             #endregion
 
             #endregion
 
-            return _responseContent.OK();
+            return _responseContent.OK("操作成功");
         }
     }
 }

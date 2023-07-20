@@ -48,5 +48,13 @@ namespace PDMS.Sys.Controllers
         {
             return Json(_service.bathUpdateData(saveModel));
         }
+
+        //批量修改任務属性（是否可删除，是否重点审核）
+        [ApiActionPermission]
+        [HttpPost, Route("bathSet")]
+        public ActionResult bathSeta([FromBody] object saveModel)
+        {
+            return Json(_service.bathSet(saveModel));
+        }
     }
 }

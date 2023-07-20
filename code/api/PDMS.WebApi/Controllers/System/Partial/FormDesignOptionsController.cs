@@ -93,7 +93,7 @@ namespace PDMS.System.Controllers
 
         //
         [Route("publishForm"), HttpPost]
-        public IActionResult publishForm(object[] keys)
+        public IActionResult publishForm([FromBody] object[] keys)
         {
             //UPDATE FormDesignOptions SET status=1 where FormId in keys
             return Json(_service.publishForm(keys));

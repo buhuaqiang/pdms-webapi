@@ -75,6 +75,34 @@ namespace PDMS.Sys.Services
             }
             return _webResponseContent.OK("操作成功");
         }
+        public WebResponseContent bathSet(object saveData)
+        {
+            SaveModel saveModel = new SaveModel();
+            string sRowDatas = saveData.ToString();
+            if (string.IsNullOrEmpty(sRowDatas) == false)
+            {
+                var data = JObject.Parse(sRowDatas);
+                string flag = data["flag"].ToString();
+                var ids=JArray.Parse(data["ids"].ToString());
+                 if (ids != null && ids.Count() > 0)
+                {
+                    string ids_str = string.Join("','", ids);
+                    string sql = "";
+                    if (flag == "1")//是否可删除
+                    {
+                        sql = $@"update cmc_common_template_mapping set is_delete_able=(1-is_delete_able) where mapping_id in ('{ids_str}') ";
+                    }else if (flag == "2")//是否重点审核项目
+                    {
+                        sql = $@"update cmc_common_template_mapping set is_audit_key=(1-is_audit_key) where mapping_id in ('{ids_str}') ";
+                    }
+                    var s=repository.DapperContext.ExcuteNonQuery(sql, null);
+                    return _webResponseContent.OK(s + "条记录操作成功" );
+                }
+
+            }
+            return _webResponseContent.OK("操作成功");
+        }
+
         public WebResponseContent bathAddData(object saveData)
         {
             SaveModel saveModel = new SaveModel();
