@@ -481,7 +481,30 @@ namespace PDMS.Core.BaseProvider
             return dictionaryResult;
         }
 
+        public virtual WebResponseContent CustomExcuteBySql(List<string> sSqls, string sMessage)
+        {
+            try
+            {
+                Response = repository.DbContextBeginTransaction(() =>
+                {
+                    foreach (string sSql in sSqls)
+                    {
+                        repository.ExecuteSqlCommand(sSql);
+                    }
+                    return Response;
+                });
+            }
+            catch (Exception eError)
+            {
+                Response.Error("数据库更新操作失败：" + eError.Message);
+            }
+            finally
+            {
+                Response.Code = "-1";
+            }
 
+            return Response.OK(sMessage);
+        }
 
         /// <summary>
         /// 处理多实体方法
