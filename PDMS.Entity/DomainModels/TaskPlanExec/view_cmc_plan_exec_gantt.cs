@@ -17,10 +17,31 @@ namespace PDMS.Entity.DomainModels
     [Entity(TableCnName = "view_cmc_plan_exec_gantt",TableName = "view_cmc_plan_exec_gantt",DBServer = "SysDbContext")]
     public partial class view_cmc_plan_exec_gantt:SysEntity
     {
+
         /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="gate_code")]
+        ///
+        /// </summary>
+        [Display(Name = "task_id")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public Guid task_id { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "task_name")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string task_name { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="gate_code")]
        [MaxLength(10)]
        [Column(TypeName="varchar(10)")]
        [Editable(true)]
@@ -88,14 +109,6 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         public string set_name { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name ="task_name")]
-       [MaxLength(50)]
-       [Column(TypeName="varchar(50)")]
-       [Editable(true)]
-       public string task_name { get; set; }
 
        /// <summary>
        ///
@@ -163,6 +176,34 @@ namespace PDMS.Entity.DomainModels
        [Required(AllowEmptyStrings=false)]
        public Guid project_id { get; set; }
 
-       
+        /// <summary>
+        ///
+        /// </summary>
+        [Key]
+        [Display(Name = "project_id")]
+        [JsonIgnore]
+        [Column(TypeName = "uniqueidentifier")]
+        [Required(AllowEmptyStrings = false)]
+        public string FormCode { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Key]
+        [Display(Name = "project_id")]
+        [JsonIgnore]
+        [Column(TypeName = "uniqueidentifier")]
+        [Required(AllowEmptyStrings = false)]
+        public Guid FormId { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Key]
+        [Display(Name = "project_id")]
+        [JsonIgnore]
+        [Column(TypeName = "uniqueidentifier")]
+        [Required(AllowEmptyStrings = false)]
+        public Guid FormCollectionId { get; set; }
     }
 }
