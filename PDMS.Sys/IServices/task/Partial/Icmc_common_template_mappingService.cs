@@ -11,5 +11,8 @@ namespace PDMS.Sys.IServices
     {
         public WebResponseContent bathAddData(object saveData);
         public WebResponseContent bathUpdateData(object saveData);
+
+        public WebResponseContent bathSet(object saveData);
+        
     }
  }
