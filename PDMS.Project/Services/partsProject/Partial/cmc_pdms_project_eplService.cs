@@ -43,6 +43,7 @@ namespace PDMS.Project.Services
         public override WebResponseContent Update(SaveModel saveModel)
         {
             var MainDatas = saveModel.MainDatas;
+            var Extra = saveModel.Extra;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             if (MainDatas.Count != 0)
             {
@@ -55,24 +56,32 @@ namespace PDMS.Project.Services
 
                         if (epl != null)
                         {
-                            if (item["org_code"].ToString() == item["new_org_code"].ToString())
-                            {
-                                epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
-                                epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
-                                epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
-                                epl.new_org_code = epl.new_org_code;
-                                epl.submit_status = "0";
-                                epl.org_change_approve_status = "02";
+                            if (Extra.Equal("/view_cmc_project_epl_group") ) {//組窗口保存操作
+                                epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
+
                             }
-                            else
-                            {
-                                epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
-                                epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
-                                epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
-                                epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
-                                epl.submit_status = "0";
-                                epl.org_change_approve_status = "00";
+                            else {//部車型窗口保存操作
+                                if (item["org_code"].ToString() == item["new_org_code"].ToString())
+                                {
+                                    epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
+                                    epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
+                                    epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
+                                    epl.new_org_code = epl.new_org_code;
+                                    epl.submit_status = "0";
+                                    epl.org_change_approve_status = "02";
+                                }
+                                else
+                                {
+                                    epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
+                                    epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
+                                    epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
+                                    epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
+                                    epl.submit_status = "0";
+                                    epl.org_change_approve_status = "00";
+                                }
                             }
+
+                           
                         }
                         eplList.Add(epl);
                     }
@@ -84,11 +93,24 @@ namespace PDMS.Project.Services
                 }
                 try
                 {
-                    repository.DapperContext.BeginTransaction((r) =>
+                    if (Extra.Equal("/view_cmc_project_epl_group"))
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.dev_taker_id });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                    else {
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+
+
+                       
                 }
                 catch (Exception ex)
                 {
