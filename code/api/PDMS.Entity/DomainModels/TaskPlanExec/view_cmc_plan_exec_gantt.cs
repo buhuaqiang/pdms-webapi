@@ -179,18 +179,16 @@ namespace PDMS.Entity.DomainModels
         /// <summary>
         ///
         /// </summary>
-        [Key]
-        [Display(Name = "project_id")]
+        [Display(Name = "FormCode")]
         [JsonIgnore]
-        [Column(TypeName = "uniqueidentifier")]
+        [Column(TypeName = "string")]
         [Required(AllowEmptyStrings = false)]
         public string FormCode { get; set; }
 
         /// <summary>
         ///
         /// </summary>
-        [Key]
-        [Display(Name = "project_id")]
+        [Display(Name = "FormId")]
         [JsonIgnore]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
@@ -199,8 +197,7 @@ namespace PDMS.Entity.DomainModels
         /// <summary>
         ///
         /// </summary>
-        [Key]
-        [Display(Name = "project_id")]
+        [Display(Name = "FormCollectionId")]
         [JsonIgnore]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
