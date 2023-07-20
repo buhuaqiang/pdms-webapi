@@ -18,6 +18,8 @@ namespace PDMS.System.IServices
 
         List<Sys_User> getUserList(LoginInfo loginInfo);
         List<Sys_User> getUserName(Object obj);
+
+        List<Sys_User> getUserCode(Object obj);
     }
 }
 
