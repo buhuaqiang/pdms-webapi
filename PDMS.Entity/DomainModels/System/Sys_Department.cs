@@ -13,7 +13,7 @@ using PDMS.Entity.SystemModels;
 
 namespace PDMS.Entity.DomainModels
 {
-    [Entity(TableCnName = "组织架构",TableName = "Sys_Department",DBServer = "SysDbContext")]
+    [Entity(TableCnName = "組織架構",TableName = "Sys_Department",DBServer = "SysDbContext")]
     public partial class Sys_Department:SysEntity
     {
         /// <summary>
@@ -27,9 +27,9 @@ namespace PDMS.Entity.DomainModels
        public Guid DepartmentId { get; set; }
 
        /// <summary>
-       ///部门名称
+       ///名稱
        /// </summary>
-       [Display(Name ="部门名称")]
+       [Display(Name ="名稱")]
        [MaxLength(200)]
        [Column(TypeName="nvarchar(200)")]
        [Editable(true)]
@@ -37,26 +37,35 @@ namespace PDMS.Entity.DomainModels
        public string DepartmentName { get; set; }
 
        /// <summary>
-       ///上级部门
+       ///UPG ID
        /// </summary>
-       [Display(Name ="上级部门")]
+       [Display(Name ="UPG ID")]
+       [MaxLength(50)]
+       [Column(TypeName="varchar(50)")]
+       [Editable(true)]
+       public string UpgID { get; set; }
+
+       /// <summary>
+       ///上級組織
+       /// </summary>
+       [Display(Name ="上級組織")]
        [Column(TypeName="uniqueidentifier")]
        [Editable(true)]
        public Guid? ParentId { get; set; }
 
        /// <summary>
-       ///部门编号
+       ///編號
        /// </summary>
-       [Display(Name ="部门编号")]
+       [Display(Name ="編號")]
        [MaxLength(50)]
        [Column(TypeName="nvarchar(50)")]
        [Editable(true)]
        public string DepartmentCode { get; set; }
 
        /// <summary>
-       ///类型
+       ///類型
        /// </summary>
-       [Display(Name ="类型")]
+       [Display(Name ="類型")]
        [MaxLength(50)]
        [Column(TypeName="nvarchar(50)")]
        [Editable(true)]
@@ -71,9 +80,9 @@ namespace PDMS.Entity.DomainModels
        public int? Enable { get; set; }
 
        /// <summary>
-       ///备注
+       ///備注
        /// </summary>
-       [Display(Name ="备注")]
+       [Display(Name ="備注")]
        [MaxLength(500)]
        [Column(TypeName="nvarchar(500)")]
        [Editable(true)]
@@ -84,24 +93,21 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="CreateID")]
        [Column(TypeName="int")]
-       [Editable(true)]
        public int? CreateID { get; set; }
 
        /// <summary>
-       ///创建人
+       ///創建人
        /// </summary>
-       [Display(Name ="创建人")]
+       [Display(Name ="創建人")]
        [MaxLength(30)]
        [Column(TypeName="nvarchar(30)")]
-       [Editable(true)]
        public string Creator { get; set; }
 
        /// <summary>
-       ///创建时间
+       ///創建時間
        /// </summary>
-       [Display(Name ="创建时间")]
+       [Display(Name ="創建時間")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? CreateDate { get; set; }
 
        /// <summary>
@@ -109,7 +115,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="ModifyID")]
        [Column(TypeName="int")]
-       [Editable(true)]
        public int? ModifyID { get; set; }
 
        /// <summary>
@@ -118,23 +123,20 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="修改人")]
        [MaxLength(30)]
        [Column(TypeName="nvarchar(30)")]
-       [Editable(true)]
        public string Modifier { get; set; }
 
        /// <summary>
-       ///修改时间
+       ///修改時間
        /// </summary>
-       [Display(Name ="修改时间")]
+       [Display(Name ="修改時間")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? ModifyDate { get; set; }
 
        /// <summary>
-       ///所属数据库
+       ///所屬數據庫
        /// </summary>
-       [Display(Name ="所属数据库")]
+       [Display(Name ="所屬數據庫")]
        [Column(TypeName="uniqueidentifier")]
-       [Editable(true)]
        public Guid? DbServiceId { get; set; }
 
        
