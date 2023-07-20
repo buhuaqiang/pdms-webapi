@@ -88,7 +88,7 @@ namespace PDMS.Project.Services
                             project_id = sp.Value;
                             if (!string.IsNullOrEmpty(project_id))
                             {
-                                where += " and epl.project_id= " + project_id ;
+                                where += " and epl.project_id='" + project_id +"'";
                             }
                             continue;
                         }
@@ -97,7 +97,7 @@ namespace PDMS.Project.Services
                             upg_id = sp.Value;
                             if (!string.IsNullOrEmpty(upg_id))
                             {
-                                where += " and epl.upg_id= " + upg_id;
+                                where += " and epl.upg_id like '%" + upg_id+"%'";
                             }
                             continue;
                         }
@@ -106,7 +106,7 @@ namespace PDMS.Project.Services
                             part_no = sp.Value;
                             if (!string.IsNullOrEmpty(part_no))
                             {
-                                where += " and epl.part_no= " + part_no;
+                                where += " and epl.part_no like '%" + part_no+"%'";
                             }
                             continue;
                         }
@@ -115,7 +115,7 @@ namespace PDMS.Project.Services
                             submit_status = sp.Value;
                             if (!string.IsNullOrEmpty(submit_status))
                             {
-                                where += " and epl.submit_status= " + submit_status;
+                                where += " and epl.submit_status='" + submit_status+"'";
                             }
                             continue;
                         }
