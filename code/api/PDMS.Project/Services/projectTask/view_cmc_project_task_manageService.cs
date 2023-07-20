@@ -9,6 +9,7 @@ using PDMS.Project.IServices;
 using PDMS.Core.BaseProvider;
 using PDMS.Core.Extensions.AutofacManager;
 using PDMS.Entity.DomainModels;
+using PDMS.Core.Utilities;
 
 namespace PDMS.Project.Services
 {
@@ -23,5 +24,15 @@ namespace PDMS.Project.Services
     public static Iview_cmc_project_task_manageService Instance
     {
       get { return AutofacContainerModule.GetService<Iview_cmc_project_task_manageService>(); } }
+
+        public WebResponseContent setPartTaker(SaveModel saveModel)
+        {
+            return Instance.setPartTaker(saveModel);
+        }
+
+        public List<view_cmc_project_task_manage> submitReview(object saveModel)
+        {
+            return Instance.submitReview(saveModel);
+        }
     }
  }
