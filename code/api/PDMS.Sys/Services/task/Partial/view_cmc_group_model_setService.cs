@@ -56,5 +56,19 @@ namespace PDMS.Sys.Services
         {
             return cmc_group_model_service.Del(keys, delList);
         }
+        public override PageGridData<view_cmc_group_model_set> GetPageData(PageDataOptions options)
+        {
+            QuerySql = $@"SELECT
+	                    ms.*,
+	                    dp.DepartmentName,
+	                    u.UserTrueName,
+	                    u.user_code 
+                    FROM
+	                    cmc_group_model_set ms
+	                    LEFT JOIN Sys_User u ON ms.user_id = u.User_Id
+	                    LEFT JOIN Sys_Department dp ON dp.DepartmentCode= ms.DepartmentCode";
+
+            return base.GetPageData(options);
+        }
     }
 }

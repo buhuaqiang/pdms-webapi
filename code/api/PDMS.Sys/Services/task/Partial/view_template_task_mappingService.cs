@@ -73,5 +73,27 @@ namespace PDMS.Sys.Services
             Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
             return Result;
         }
+
+        public override PageGridData<view_template_task_mapping> GetPageData(PageDataOptions options)
+        {
+            QuerySql = $@"SELECT
+	                map.*,
+	                task.task_name,
+	                sl2.dicName,
+	                st.template_id,
+	                st.set_type,
+	                st.set_value,
+	                task.FormId,
+	                task.FormCode,
+	                task.is_part_handle,
+	                '' AS start_date,
+	                '' AS end_date
+                FROM
+	                cmc_common_template_mapping map
+	                LEFT JOIN cmc_common_task task ON map.task_id= task.task_id 
+	                left join cmc_common_task_template_set st on st.set_id=map.set_id
+	                LEFT JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue= st.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = st.set_type ) )";
+            return base.GetPageData(options);
+        }
     }
 }
