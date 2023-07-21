@@ -34,7 +34,7 @@ namespace PDMS.Project.Controllers
          
         [ApiActionPermission]
         [HttpPost, Route("BindGanttInfo")]
-        public ActionResult BindGanttInfo([FromBody] SaveModel saveModel)
+        public ActionResult BindGanttInfo([FromBody] object saveModel)
         {
             return Json(Service.BindGanttInfo(saveModel));
         }

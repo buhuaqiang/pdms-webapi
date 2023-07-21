@@ -20,6 +20,7 @@ using PDMS.Project.IRepositories;
 using Microsoft.Extensions.Options;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using PDMS.Core.ManageUser;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -43,17 +44,20 @@ namespace PDMS.Project.Services
 
         public WebResponseContent ResponseContent = new WebResponseContent();
 
-        public List<view_cmc_plan_exec_gantt> GetGanttInfo(SaveModel saveModel)
+        public List<view_cmc_plan_exec_gantt> GetGanttInfo(object saveModel)
         {
             List<view_cmc_plan_exec_gantt> info = new List<view_cmc_plan_exec_gantt>();
-            var data = saveModel.MainData;
-            string status = data["status"] == null ? "" : data["status"].ToString();
-            string part_no = data["part_no"] == null ? "" : data["part_no"].ToString();
-            string start_date = data["start_date"] == null ? "" : data["start_date"].ToString();
-            string end_date = data["end_date"] == null ? "" : data["end_date"].ToString();
-            string gate_code = data["gate_code"] == null ? "" : data["gate_code"].ToString();
-            string set_value = data["set_value"] == null ? "" : data["set_value"].ToString();
-            string task_name = data["task_name"] == null ? "" : data["task_name"].ToString();
+            var data = JArray.Parse(saveModel.ToString());
+            string part_no = data[0]["part_no"] == null ? "" : data[0]["part_no"].ToString();
+            string part_name = data[1]["part_name"] == null ? "" : data[1]["part_name"].ToString();
+            string start_date = data[2]["start_date"] == null ? "" : data[2]["start_date"].ToString();        
+            string end_date = data[3]["end_date"] == null ? "" : data[3]["end_date"].ToString();
+            string gate_code = data[4]["gate_code"] == null ? "" : data[4]["gate_code"].ToString();
+            string set_value = data[5]["set_value"] == null ? "" : data[5]["set_value"].ToString();
+            string task_name = data[6]["task_name"] == null ? "" : data[6]["task_name"].ToString();
+            string status = data[7]["status"] == null ? "" : data[7]["status"].ToString();
+
+
 
             string sql= @$"SELECT 
 task.task_id,
@@ -96,7 +100,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             }
             if (!string.IsNullOrEmpty(gate_code))
             {
-                sql += @$" and gate.gate_code='{gate_code}' ";
+                sql += @$" and sl3.DicValue='{gate_code}' ";
             }
             if (!string.IsNullOrEmpty(set_value))
             {
@@ -132,25 +136,48 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
 
 
-        public List<GanttInfo> BindGanttInfo(SaveModel saveModel)
+        public List<GanttInfo> BindGanttInfo(object saveModel)
         {
             List<GanttInfo> info = new List<GanttInfo>();
-            ////先查出數據
-            //List<view_cmc_plan_exec_gantt> getinfo= GetGanttInfo(saveModel);
-            ////再組裝數據
-            //if (getinfo.Count != 0)
-            //{
-            //   var GateInfo = getinfo.GroupBy(x=>new {x.gate_code,x.gate_name,x.gate_start_date,x.gate_end_date }).ToList();
-            //   var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name });
-            //   var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name });
-            //   foreach (var item in GateInfo)
-            //   {
-               
-            //   }
+            //先查出數據
+            List<view_cmc_plan_exec_gantt> getinfo = GetGanttInfo(saveModel);
+            //再組裝數據
+            if (getinfo.Count != 0)
+            {
+                var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
+                var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId }).ToList();
+                //大日程装箱
+                foreach (var item in GateInfo)
+                {
+                    var gate_code = item.Key.gate_code;
+                    var gate_name = item.Key.gate_name;
+                    var gate_start_date = item.Key.gate_start_date;
+                    var gate_end_date = item.Key.gate_end_date;
+
+                }
+                //阶段装修
+                foreach (var item in SetInfo)
+                {
+                    var set_value = item.Key.set_value;
+                    var set_name = item.Key.set_name;
+        
+                }
+                //任务装箱
+                foreach (var item in taskInfo)
+                {
+                    var task_id = item.Key.task_id;
+                    var task_name = item.Key.task_name;
+                    var approve_status = item.Key.approve_status;
+                    var FormId = item.Key.FormId;
+                    var FormCode = item.Key.FormCode;
+                    var FormCollectionId = item.Key.FormCollectionId;
+
+                }
 
 
-            //}
-         
+            }
+
 
             return info;
         }

@@ -224,6 +224,17 @@ namespace PDMS.Core.Filters
         protected Func<List<T>, WebResponseContent> ImportOnExecuting;
 
         /// <summary>
+        /// 导入保存前
+        /// </summary>
+        protected Func<WebResponseContent> ImportOnExecutBefore;
+
+
+        /// <summary>
+        /// 导入时默认走框架，如果自定义，则false,不走框架校验
+        /// </summary>
+        public bool bCheckImportCustom = false;
+
+        /// <summary>
         /// 2022.06.20增加原生excel读取方法(导入时可以自定义读取excel内容)
         /// string=当前读取的excel单元格的值
         /// ExcelWorksheet=excel对象
