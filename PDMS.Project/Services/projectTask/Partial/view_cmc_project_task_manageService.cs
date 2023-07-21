@@ -6,23 +6,15 @@
 *用户信息、权限、角色等使用UserContext.Current操作
 *view_cmc_project_task_manageService对增、删、改查、导入、导出、审核业务代码扩展参照ServiceFunFilter
 */
-using PDMS.Core.BaseProvider;
-using PDMS.Core.Extensions.AutofacManager;
 using PDMS.Entity.DomainModels;
-using System.Linq;
 using PDMS.Core.Utilities;
-using System.Linq.Expressions;
 using PDMS.Core.Extensions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
-using System.Net;
 using PDMS.Project.IServices;
-using Newtonsoft.Json;
-using PDMS.Project.Repositories;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using PDMS.Core.DBManager;
+using System.Text.Json;
 
 namespace PDMS.Project.Services
 {
@@ -49,18 +41,18 @@ namespace PDMS.Project.Services
             //base.Init(dbRepository);
         }
 
-        public WebResponseContent UpdateCustInfo(SaveModel saveModel)
+        public WebResponseContent setPartTaker(SaveModel saveModel, Dictionary<string, object> mainData)
         {
-            var MainDatas = saveModel.MainDatas;
-            List<String> eplidList = new List<String>();
+            var MainData = saveModel.MainData;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            eplidList = (List<string>)saveModel.MainData["epl_id"];
-            var userId = saveModel.MainData["User_Id"];
-            if (MainDatas.Count != 0)
+            string[] eplidList = JsonSerializer.Deserialize<string[]>((string)mainData["epl_id"]);
+            //string json = JsonSerializer.Serialize(MainData);
+            var userId = MainData["User_Id"];
+            if (MainData.Count != 0)
             {
                 try
                 {
-                    foreach (var item in eplList)
+                    foreach (var item in eplidList)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.ToString())).FirstOrDefault();
