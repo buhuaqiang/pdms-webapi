@@ -181,6 +181,145 @@ namespace PDMS.Core.Utilities
             return responseContent.OK(null, entities);
         }
 
+
+
+        //旧框架迁移
+        public static WebResponseContent ReadToDataTable<T>(bool bCheckImportCustom, string path, Expression<Func<T, object>> exportColumns = null, List<string> ignoreTemplate = null)
+        {
+            WebResponseContent responseContent = new WebResponseContent();
+
+            FileInfo file = new FileInfo(path);
+            if (!file.Exists) return responseContent.Error("no file, please select file");
+
+            List<T> entities = new List<T>();
+            using (ExcelPackage package = new ExcelPackage(file))
+            {
+                if (package.Workbook.Worksheets.Count == 0 ||
+                    package.Workbook.Worksheets.FirstOrDefault().Dimension.End.Row <= 1)
+                    return responseContent.Error("no import data");
+                //2020.08.11修复获取表结构信息时，表为别名时查不到数据的问题
+                //typeof(T).GetEntityTableName()
+                List<CellOptions> cellOptions = GetExportColumnInfo(typeof(T).Name, false, false, columns: exportColumns?.GetExpressionToArray());
+                //设置忽略的列
+                if (exportColumns != null)
+                {
+                    cellOptions = cellOptions
+                        .Where(x => exportColumns.GetExpressionToArray().Select(s => s.ToLower()).Contains(x.ColumnName.ToLower()))
+                        .ToList();
+                }
+                else if (ignoreTemplate != null)
+                {
+                    cellOptions = cellOptions
+                        .Where(x => !ignoreTemplate.Select(s => s.ToLower()).Contains(x.ColumnName.ToLower()))
+                        .ToList();
+                }
+
+
+                ExcelWorksheet sheetFirst = package.Workbook.Worksheets.FirstOrDefault();
+
+                for (int j = sheetFirst.Dimension.Start.Column, k = sheetFirst.Dimension.End.Column; j <= k; j++)
+                {
+                    string columnCNName = sheetFirst.Cells[1, j].Value?.ToString()?.Trim();
+                    if (!string.IsNullOrEmpty(columnCNName))
+                    {
+                        CellOptions options = cellOptions.Where(x => x.ColumnCNName.Trim() == columnCNName).FirstOrDefault();
+                        if (options == null)
+                        {
+                            return responseContent.Error("import column[" + columnCNName + "]is invalid column");
+                        }
+                        if (options.Index > 0)
+                        {
+                            return responseContent.Error("importcolumn[" + columnCNName + "] double");
+                        }
+                        options.Index = j;
+                    }
+                }
+                if (cellOptions.Exists(x => x.Index == 0))
+                {
+                    return responseContent.Error("import column must same with template");
+                }
+
+                PropertyInfo[] propertyInfos = typeof(T).GetProperties()
+                       .Where(x => cellOptions.Select(s => s.ColumnName).Contains(x.Name))
+                       .ToArray();
+                ExcelWorksheet sheet = package.Workbook.Worksheets.FirstOrDefault();
+                for (int m = sheet.Dimension.Start.Row + 1, n = sheet.Dimension.End.Row; m <= n; m++)
+                {
+                    var row = sheet.Cells[string.Format("{0}:{0}", m)];
+                    bool allEmpty = row.All(c => string.IsNullOrWhiteSpace(c.Text));
+                    if (allEmpty)
+                        continue;
+                    T entity = Activator.CreateInstance<T>();
+
+
+                    //如果不是自定义校验，则走框架
+                    for (int j = sheet.Dimension.Start.Column, k = sheet.Dimension.End.Column; j <= k; j++)
+                    {
+                        string value = sheet.Cells[m, j].Value?.ToString();
+
+                        CellOptions options = cellOptions.Where(x => x.Index == j).FirstOrDefault();
+                        PropertyInfo property = propertyInfos.Where(x => x.Name == options.ColumnName).FirstOrDefault();
+                        //2021.06.04优化判断
+                        if (string.IsNullOrEmpty(value))
+                        {
+                            if (options.Requierd)
+                            {
+                                return responseContent.Error($"at{m}row[{options.ColumnCNName}]is empty。");
+                            }
+                            continue;
+                        }
+
+
+                        //验证字典数据    
+                        //2020.09.20增加判断数据源是否有值
+                        if (!string.IsNullOrEmpty(options.DropNo) && !string.IsNullOrEmpty(value))
+                        {
+                            if (options.KeyValues == null)
+                            {
+                                return responseContent.Error($"[{options.ColumnCNName}]dictionary no[{options.DropNo}]deficiency,please check dictionary");
+                            }
+                            string key = options.KeyValues.Where(x => x.Key.ToUpper() == value.ToUpper())
+                                  .Select(s => s.Key)
+                                  .FirstOrDefault();
+                            if (key == null && bCheckImportCustom == false)//&& options.Requierd
+                            {
+                                //小于20个字典项，直接提示所有可选value
+                                string values = options.KeyValues.Count < 20 ? (string.Join(',', options.KeyValues.Select(s => s.Value))) : options.ColumnCNName;
+                                return responseContent.Error($"at{m}row[{options.ColumnCNName}]check nopass,must in dictionar[{values}]value。");
+                            }
+                            //将值设置为数据字典的Key,如果导入为是/否字典项，存在表中应该对为1/0
+                            value = key;
+                        }
+                        else if (property.PropertyType == typeof(DateTime) || property.PropertyType == typeof(DateTime?))
+                        {
+                            //2021.06.04增加日期格式处理
+                            if (value.Length == 5 && int.TryParse(value, out int days))
+                            {
+                                property.SetValue(entity, new DateTime(1900, 1, 1).AddDays(days - 2));
+                            }
+                            else
+                            {
+                                property.SetValue(entity, value.ChangeType(property.PropertyType));
+                            }
+                            continue;
+                        }
+
+                        //验证导入与实体数据类型是否相同
+                        (bool, string, object) result = property.ValidationProperty(value, options.Requierd);
+
+                        if (!result.Item1 && bCheckImportCustom == false)
+                        {
+                            return responseContent.Error($"at{m}row[{options.ColumnCNName}]check failed,{result.Item2}");
+                        }
+
+                        property.SetValue(entity, value.ChangeType(property.PropertyType));
+                    }
+                    entity.SetCreateDefaultVal();
+                    entities.Add(entity);
+                }
+            }
+            return responseContent.OK(null, entities);
+        }
         /// <summary>
         /// 
         /// </summary>
