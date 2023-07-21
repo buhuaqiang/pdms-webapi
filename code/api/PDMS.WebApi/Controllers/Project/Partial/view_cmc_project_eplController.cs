@@ -13,6 +13,7 @@ using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
 using PDMS.Core.Utilities;
+using PDMS.Core.Enums;
 
 namespace PDMS.Project.Controllers
 {
@@ -46,6 +47,13 @@ namespace PDMS.Project.Controllers
         public WebResponseContent submit([FromBody] SaveModel saveModel)
         {
             return Service.submit(saveModel);
+        }
+
+
+        [HttpPost, Route("save")]
+        public  ActionResult save1([FromBody] SaveModel saveModel)
+        {
+            return base.Update(saveModel);
         }
     }
 }
