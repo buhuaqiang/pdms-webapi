@@ -135,21 +135,21 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
         public List<GanttInfo> BindGanttInfo(SaveModel saveModel)
         {
             List<GanttInfo> info = new List<GanttInfo>();
-            //先查出數據
-            List<view_cmc_plan_exec_gantt> getinfo= GetGanttInfo(saveModel);
-            //再組裝數據
-            if (getinfo.Count != 0)
-            {
-               var GateInfo = getinfo.GroupBy(x=>new {x.gate_code,x.gate_name,x.gate_start_date,x.gate_end_date }).ToList();
-               var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name });
-               var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name });
-               foreach (var item in GateInfo)
-               {
+            ////先查出數據
+            //List<view_cmc_plan_exec_gantt> getinfo= GetGanttInfo(saveModel);
+            ////再組裝數據
+            //if (getinfo.Count != 0)
+            //{
+            //   var GateInfo = getinfo.GroupBy(x=>new {x.gate_code,x.gate_name,x.gate_start_date,x.gate_end_date }).ToList();
+            //   var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name });
+            //   var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name });
+            //   foreach (var item in GateInfo)
+            //   {
                
-               }
+            //   }
 
 
-            }
+            //}
          
 
             return info;
