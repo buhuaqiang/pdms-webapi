@@ -139,5 +139,67 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "int")]
         [Editable(true)]
         public int work_days { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "template_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        public Guid template_id { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "set_type")]
+        [Column(TypeName = "varchar(10)")]
+        public string set_type { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "set_value")]
+        [Column(TypeName = "varchar(10)")]
+        public string set_value { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+           [Display(Name = "FormId")]
+        [Column(TypeName = "uniqueidentifier")]
+        public Guid FormId { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "FormCode")]
+        [Column(TypeName = "varchar(20)")]
+        public string FormCode { get; set; }
+
+
+        /// <summary>
+        ///is_part_handle
+        /// </summary>
+        [Display(Name = "is_part_handle")]
+        [MaxLength(1)]
+        [Column(TypeName = "char(1)")]
+        public string is_part_handle { get; set; }
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "start_date")]
+        [Column(TypeName = "datetime")]
+        public DateTime? start_date { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "end_date")]
+        [Column(TypeName = "datetime")]
+        public DateTime? end_date { get; set; }
+
     }
 }
