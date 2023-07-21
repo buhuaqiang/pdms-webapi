@@ -298,7 +298,7 @@ namespace PDMS.System.Services
         {
             string sql = "";
             var deful = repository.DbContext.Set<Sys_Dictionary>().Where(x => x.Dic_ID == dic_id || x.DicNo== dic_no).FirstOrDefault();
-            if (deful != null)
+            if (deful != null && dic_id!=-1)
             {
                 sql = deful.DbSql;
                 if (!string.IsNullOrEmpty(sql))
@@ -314,7 +314,7 @@ namespace PDMS.System.Services
             }
             else if (!string.IsNullOrEmpty(dic_no))
             {
-                sql = $@" select  d.DicName as 'key' ,d.DicValue as 'value' from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID 
+                sql = $@" select  d.DicName as 'value' ,d.DicValue as 'key' from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID 
                 where s.DicNo='{dic_no}' and d.Enable='1'  and s.Enable='1' ";
                 return repository.DapperContext.QueryList<DictionaryInfo>(sql, null);
             }
