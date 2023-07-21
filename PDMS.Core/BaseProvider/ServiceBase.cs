@@ -759,6 +759,40 @@ namespace PDMS.Core.BaseProvider
             return Response.OK("文件上传成功".Translator());
         }
 
+
+        public WebResponseContent ImportList(List<Microsoft.AspNetCore.Http.IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+                return new WebResponseContent { Status = true, Message = "please select file" };
+            Microsoft.AspNetCore.Http.IFormFile formFile = files[0];
+            string dicPath = $"c:/home/site/Upload/{DateTime.Now.ToString("yyyMMdd")}/{typeof(T).Name}/".MapPath();
+            if (!Directory.Exists(dicPath)) Directory.CreateDirectory(dicPath);
+            dicPath = $"{dicPath}{Guid.NewGuid().ToString()}_{formFile.FileName}";
+
+            if (ImportOnExecutBefore != null)
+            {
+                ImportOnExecutBefore.Invoke();
+            }
+
+            using (var stream = new FileStream(dicPath, FileMode.Create))
+            {
+                formFile.CopyTo(stream);
+            }
+            try
+            {
+                Response = EPPlusHelper.ReadToDataTable<T>(bCheckImportCustom, dicPath, DownLoadTemplateColumns, GetIgnoreTemplate());
+            }
+            catch (Exception)
+            {
+                new WebResponseContent { Status = true, Message = "please check file correct" };
+            }
+            finally
+            {
+                File.Delete(dicPath);
+            }
+            return Response;
+        }
+
         /// <summary>
         /// 导出
         /// </summary>
