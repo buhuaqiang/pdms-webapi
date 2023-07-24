@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Core.DBManager;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 
 namespace PDMS.Project.Services
 {
@@ -169,6 +170,75 @@ namespace PDMS.Project.Services
                 }
 
             }
+            return ResponseContent.OK();
+        }
+
+        public WebResponseContent addEpl(Guid project_id,String glno)
+        {
+
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (1==2) {//從plm系統抓取到數據做邏輯處理
+
+            }
+            else {//從plm系統未抓取到數據，取最終版的假版epl數據形成一個正式版epl
+                var List = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.project_id == project_id && x.epl_phase == "01").ToList();
+                foreach (var item in List)
+                {
+                    try
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl.epl_id = Guid.NewGuid();
+                        epl.project_id = item.project_id;
+                        epl.main_plan_id = item.main_plan_id;
+                        epl.epl_source = item.epl_source;
+                        epl.epl_phase = "02";
+                        epl.upg_id = item.upg_id;
+                        epl.level = item.level;
+                        epl.part_no = item.part_no;
+                        epl.part_name = item.part_name;
+                        epl.company_code = item.company_code;
+                        epl.kd_type = item.kd_type;
+                        epl.org_code = item.org_code;
+                        epl.new_org_code = item.new_org_code;
+                        epl.group_code = item.group_code;
+                        epl.dev_taker_id = item.dev_taker_id;
+                        epl.part_taker_id = item.part_taker_id;
+                        epl.fs_1 = item.fs_1;
+                        epl.fs_2 = item.fs_2;
+                        epl.fs_3 = item.fs_3;
+                        epl.fs_remark = item.fs_remark;
+                        epl.is_eo = item.is_eo;
+                        epl.original_part_no = item.original_part_no;
+                        epl.del_flag = item.del_flag;
+                        epl.currency = item.currency;
+                        epl.action_type = item.action_type;
+                        eplList.Add(epl);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->foreach：" + DateTime.Now + ":" + ex.Message);
+
+                        return ResponseContent.Error(ex.Message);
+                    }
+
+                }
+            }
+            
+            try
+            {
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.BulkInsert(eplList, "cmc_pdms_project_epl");
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                return ResponseContent.Error();
+            }
+
             return ResponseContent.OK();
         }
     }
