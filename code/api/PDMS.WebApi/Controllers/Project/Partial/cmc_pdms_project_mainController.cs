@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
+using PDMS.Core.Utilities;
 
 namespace PDMS.Project.Controllers
 {
@@ -28,6 +30,13 @@ namespace PDMS.Project.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        [ApiActionPermission]
+        [HttpPost, Route("loadDate")]
+        public WebResponseContent loadDate([FromBody] SaveModel saveModel)
+        {
+            return Service.loadDate(saveModel);
         }
     }
 }
