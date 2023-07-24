@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
+using static PDMS.Project.Services.view_cmc_plan_exec_ganttService;
 
 namespace PDMS.Project.Controllers
 {
@@ -36,7 +37,8 @@ namespace PDMS.Project.Controllers
         [HttpPost, Route("BindGanttInfo")]
         public ActionResult BindGanttInfo([FromBody] object saveModel)
         {
-            return Json(Service.BindGanttInfo(saveModel));
+            List<GanttInfo> data = Service.BindGanttInfo(saveModel);
+            return Json(data);
         }
 
     }
