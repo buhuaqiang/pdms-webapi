@@ -135,14 +135,14 @@ namespace PDMS.Project.Services
                              left  join cmc_pdms_project_main main on main.project_id=epl.project_id
                              left join  cmc_pdms_project_org org  on org.project_id=main.project_id and epl.org_code=org.org_code
                             left join cmc_group_model_set mset on mset.DepartmentCode=epl.group_code and mset.model_type=main.model_type and mset.set_type='01'
-                            where 1=1  ";
+                            where 1=1 and epl_phase='02'  ";
                 QuerySql += where;
             }
             if (path == "/view_cmc_project_epl_group")
             { //組車型窗口查詢
                 QuerySql = @" select  epl.* , (select  UserTrueName from sys_user where  User_Id=epl.dev_taker_id) as UserTrueName,
                                 (select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserName   
-                            from   cmc_pdms_project_epl epl  where  epl.submit_status='1'  
+                            from   cmc_pdms_project_epl epl  where  epl.submit_status='1' and epl_phase='02'  
                         ";
                 QuerySql += where;
 
