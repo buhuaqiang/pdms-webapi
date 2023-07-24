@@ -66,6 +66,7 @@ sl2.DicValue as set_value,
 sl2.DicName as set_name,
 sl3.DicValue as gate_code,
 sl3.DicName as gate_name,
+tsk.project_task_id,
 tsk.start_date,
 tsk.end_date,
 tsk.FormCode,
@@ -146,7 +147,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name,x.gate_code }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date}).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date,x.project_task_id }).ToList();
 
                 var gateIndex = 0;
                 var SetIndex = 1;
@@ -244,8 +245,11 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.type = "task";
                     data.status = "task";
                     data.StatusInfo = GetStatusText(item.Key.approve_status);
-                    data.text = item.Key.task_id.ToString();
-                    data.name = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
+                    data.task_id = item.Key.task_id.ToString();
+                    data.FormCollectionId = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
+                    data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
+                    data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
+                    data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
                     info.Add(data);
                 }
             }
@@ -317,10 +321,20 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             public string text { get; set; }
 
+            public string project_task_id { get; set; }
+
+            public string task_id { get; set; }
+
+            public string FormCode { get; set; }
+
+            public string FormId { get; set; }
+
+            public string FormCollectionId { get; set; }
 
 
 
-            
+
+
 
         }
   }
