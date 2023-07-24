@@ -145,41 +145,137 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             if (getinfo.Count != 0)
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
-                var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId }).ToList();
+                var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name,x.gate_code }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date}).ToList();
+
+                var gateIndex = 0;
+                var SetIndex = 0;
+                var taskIndex = 0;
+
+                List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
+                List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
+
                 //大日程装箱
                 foreach (var item in GateInfo)
                 {
-                    var gate_code = item.Key.gate_code;
-                    var gate_name = item.Key.gate_name;
-                    var gate_start_date = item.Key.gate_start_date;
-                    var gate_end_date = item.Key.gate_end_date;
+                    gateIndex++;
+                    //var gate_code = item.Key.gate_code;
+                    //var gate_name = item.Key.gate_name;
+                    //var gate_start_date = item.Key.gate_start_date;
+                    //var gate_end_date = item.Key.gate_end_date;
+                    GanttInfo data = new GanttInfo();
+                    data.id = gateIndex;
+                    data.task_name= item.Key.gate_name;
+                    data.start_date = item.Key.gate_start_date.ToString("yyyy-MM-dd");
+                    data.end_date= item.Key.gate_end_date.ToString("yyyy-MM-dd");
+                    data.open = false;
+                    data.type = "project";
+                    data.status = "project";
+                    data.StatusInfo = "";
+                    info.Add(data);
+
+                    Dictionary<string, object> obj = new Dictionary<string, object>();
+                    obj.Add(item.Key.gate_code, gateIndex);
+                    GetaobjList.Add(obj);
+
+
 
                 }
-                //阶段装修
+                //阶段装箱
                 foreach (var item in SetInfo)
                 {
-                    var set_value = item.Key.set_value;
-                    var set_name = item.Key.set_name;
-        
+                    SetIndex++;
+                    //var set_value = item.Key.set_value;
+                    //var set_name = item.Key.set_name;
+                    //var gate = item.Key.gate_code;
+                    var index = 0;
+                    //大日程的index
+                    foreach (var temp in GetaobjList)
+                    {
+                        if (temp.Keys.Contains(item.Key.gate_code))
+                        {
+                            index = Convert.ToInt32(temp[item.Key.gate_code]);
+                            break;
+                        }
+                    }           
+                    GanttInfo data = new GanttInfo();
+                    data.id = SetIndex;
+                    data.task_name = item.Key.set_name;
+                    data.parent = index;
+                    data.type = "project";
+                    data.status = "phase";
+                    info.Add(data);
+
+                    Dictionary<string, object> obj = new Dictionary<string, object>();
+                    obj.Add(item.Key.set_value, SetIndex);
+                    SetobjList.Add(obj);
+
+
                 }
                 //任务装箱
                 foreach (var item in taskInfo)
                 {
-                    var task_id = item.Key.task_id;
-                    var task_name = item.Key.task_name;
-                    var approve_status = item.Key.approve_status;
-                    var FormId = item.Key.FormId;
-                    var FormCode = item.Key.FormCode;
-                    var FormCollectionId = item.Key.FormCollectionId;
+                    taskIndex++;
+                    var index = 0;
+                    //大日程的index
+                    foreach (var temp in SetobjList)
+                    {
+                        if (temp.Keys.Contains(item.Key.set_value))
+                        {
+                            index = Convert.ToInt32(temp[item.Key.set_value]);
+                            break;
+                        }
+                    }
 
+                   //var task_id = item.Key.task_id;
+                   //var task_name = item.Key.task_name;
+                   //var approve_status = item.Key.approve_status;
+                   //var FormId = item.Key.FormId;
+                   //var FormCode = item.Key.FormCode;
+                   //var FormCollectionId = item.Key.FormCollectionId;
+
+                    GanttInfo data = new GanttInfo();
+                    data.id = taskIndex;
+                    data.start_date = item.Key.start_date.ToString("yyyy-MM-dd");
+                    data.start_date = item.Key.end_date.ToString("yyyy-MM-dd");
+                    data.parent = index;
+                    data.type = "task";
+                    data.status = "task";
+                    data.StatusInfo = GetStatusText(item.Key.approve_status);
+                    data.text = item.Key.FormId.ToString();
+                    data.name = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
+                    info.Add(data);
                 }
-
-
             }
 
 
             return info;
+        }
+
+        private string GetStatusText(string index)
+        {
+            string str = "";
+            switch (index)
+            {
+                case "00":
+                    str = "草稿";
+                    break;
+                case "01":
+                    str = "審核中";
+                    break;
+                case "02":
+                    str = "通過";
+                    break;
+                case "03":
+                    str = "拒絕";
+                    break;
+                case "04":
+                    str = "待提交";
+                    break;
+                default:
+                    break;
+            }
+            return str;
         }
 
 
@@ -195,10 +291,10 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             public string task_name { get; set; }
 
             //开始时间
-            public Date start_date { get; set; }
+            public string start_date { get; set; }
 
             //结束时间
-            public Date end_date { get; set; }
+            public string end_date { get; set; }
 
             //是否默认打开
             public bool open { get; set; }
@@ -214,6 +310,15 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             //审核状态，针对于任务：通過、审核中
             public string StatusInfo { get; set; }
 
+
+            public string name { get; set; }
+
+            public string text { get; set; }
+
+
+
+
+            
 
         }
   }
