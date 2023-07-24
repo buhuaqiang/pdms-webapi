@@ -9,5 +9,7 @@ namespace PDMS.Project.IServices
 {
     public partial interface Icmc_pdms_project_mainService
     {
+
+        public WebResponseContent loadDate(SaveModel saveModel);
     }
  }
