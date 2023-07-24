@@ -17,6 +17,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
+using PDMS.Core.DBManager;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 
 namespace PDMS.Project.Services
 {
@@ -37,5 +39,56 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+
+        public WebResponseContent ResponseContent = new WebResponseContent();
+        public  WebResponseContent loadDate(SaveModel saveModel)
+        {
+            var MainDatas = saveModel.MainDatas;
+            List<cmc_pdms_project_main> projectMain = new List<cmc_pdms_project_main>();
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        cmc_pdms_project_main project = new cmc_pdms_project_main();
+                        project = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_id == Guid.Parse(item["project_id"].ToString())).FirstOrDefault();
+
+                        if (project != null)
+                        {
+                            // project.epl_load_date = Convert.ToDateTime(ConvertTime(Now date()));
+
+                            project.epl_load_date = Convert.ToDateTime(DateTime.Now);
+                            project.project_status = "02";
+                        }
+                        projectMain.Add(project);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件：projectMain：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(projectMain, x => new { x.epl_load_date, x.project_status});
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_main 表，cmc_pdms_project_main 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+                ResponseContent = cmc_pdms_project_eplService.Instance.addEpl(Guid.Parse(MainDatas[0]["project_id"].ToString()), MainDatas[0]["glno"].ToString());
+            }
+             return ResponseContent.OK();
+        }
+    }
 }
