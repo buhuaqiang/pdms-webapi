@@ -58,6 +58,7 @@ namespace PDMS.Sys.Services
             {
                 sql += $" and st.template_id= '"+template_id+"'";
             }
+            sql += " order by st.order_no desc";
             Result = repository.DapperContext.QueryList<cmc_common_task_template_set>(sql, null);
             return Result;
         }

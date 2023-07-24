@@ -58,8 +58,8 @@ namespace PDMS.Sys.Services
             cmc_common_task_template template = new cmc_common_task_template();
             template.template_id = newid;
             template.template_name = saveModel.MainData["template_name"].ToString();
-            template.suit_org_codes = String.IsNullOrEmpty(saveModel.MainData["suit_org_codes"].ToString())?null: saveModel.MainData["suit_org_codes"].ToString();
-            template.template_desc = String.IsNullOrEmpty(saveModel.MainData["template_desc"].ToString())?null: saveModel.MainData["template_desc"].ToString();
+            template.suit_org_codes =  saveModel.MainData["suit_org_codes"].ToString();
+            template.template_desc = saveModel.MainData["template_desc"].ToString();
             queueResult.optionType = SaveModel.MainOptionType.add;
             queueResult.detailType = typeof(cmc_common_task_template);
             queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(template)));

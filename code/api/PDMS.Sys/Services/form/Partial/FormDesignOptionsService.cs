@@ -46,7 +46,8 @@ namespace PDMS.System.Services
 
         public override PageGridData<FormDesignOptions> GetPageData(PageDataOptions options)
         {
-            //查询所有del_flag!=1
+            //查询所有未删除的
+            QuerySql = $@"SELECT * FROM FormDesignOptions WHERE (del_flag=0 or del_flag is null)";
             return base.GetPageData(options);
         }
 
@@ -54,7 +55,7 @@ namespace PDMS.System.Services
         {
             //要确认已发布状态下表单code不可以重复           
             string code = saveDataModel.MainData["FormCode"].ToString();
-            List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormCode ==code).ToList();
+            List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormCode ==code ).ToList();
             //自定义逻辑
             if (orderLists != null && orderLists.Count > 0)
             {//
@@ -62,6 +63,7 @@ namespace PDMS.System.Services
             }
             //设置默认status=0(暂存)
             saveDataModel.MainData["status"] = "0";
+            saveDataModel.MainData["del_flag"] = "0";
             return base.Add(saveDataModel);
         }
 

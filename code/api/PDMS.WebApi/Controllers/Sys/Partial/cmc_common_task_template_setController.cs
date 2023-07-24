@@ -56,8 +56,20 @@ namespace PDMS.Sys.Controllers
             return Json(data);
         }
 
+        [ApiActionPermission()]
+        [Route("Add"), HttpPost]
+        public override ActionResult Add([FromBody] SaveModel saveModel)
+        {
+            return Json(_service.Add(saveModel));
+        }
+
         //delSet
-           
+        [ApiActionPermission()]
+        [Route("del"), HttpPost]
+        public override ActionResult Del([FromBody] object[] keys)
+        {
+            return Json(_service.Del(keys));
+        }
 
     }
 }

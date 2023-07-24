@@ -41,5 +41,18 @@ namespace PDMS.Project.Controllers
             return Json(data);
         }
 
+        [ApiActionPermission()]
+        [HttpGet,Route("setAuditKey")]
+        public ActionResult setAuditKey(string project_task_id)
+        {
+            return Json("");
+        }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("saveFormData")]
+        public ActionResult saveFormData([FromBody] object saveModel)
+        {
+            return Json("");
+        }
     }
 }

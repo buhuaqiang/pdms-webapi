@@ -73,7 +73,14 @@ namespace PDMS.System.Services
                 });
                 user.Token = token;
                 //DepartmentCode="D148",//擋板，後期修改為動態查詢用戶部門
-                webResponse.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl, DepartmentCode="D148" };
+                string getDeptCode=@$"SELECT * from Sys_Department where DepartmentId=(SELECT top 1 DepartmentId from Sys_UserDepartment WHERE UserId={user.User_Id})";
+                Sys_Department dept = repository.DapperContext.QueryFirst<Sys_Department>(getDeptCode, null);
+                string deptCode = "";
+                if (dept != null)
+                {
+                    deptCode = dept.DepartmentCode;
+                }
+                webResponse.Data = new { token, userName = user.UserTrueName, img = user.HeadImageUrl, DepartmentCode= deptCode };
                 repository.Update(user, x => x.Token, true);
                 UserContext.Current.LogOut(user.User_Id);
 
