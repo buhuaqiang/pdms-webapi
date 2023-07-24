@@ -151,10 +151,18 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="varchar(20)")]
        public string version { get; set; }
 
-       /// <summary>
-       ///CreateID
-       /// </summary>
-       [Display(Name ="CreateID")]
+        /// <summary>
+        ///專案啟動 EPL載入日期
+        /// </summary>
+        [Display(Name = "專案啟動 EPL載入日期")]
+        [Column(TypeName = "date")]
+        [Editable(true)]
+        public DateTime? epl_load_date { get; set; }
+
+        /// <summary>
+        ///CreateID
+        /// </summary>
+        [Display(Name ="CreateID")]
        [Column(TypeName="int")]
        public int? CreateID { get; set; }
 
