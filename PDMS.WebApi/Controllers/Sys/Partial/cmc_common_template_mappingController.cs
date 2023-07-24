@@ -34,15 +34,15 @@ namespace PDMS.Sys.Controllers
 
         // 
         //批量新增任務數據
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("bathAddData")]
         public ActionResult bathSaveCheckData([FromBody] object saveModel)
         {
             return Json(_service.bathAddData(saveModel));
         }
         // 
-        //批量修改任務數據
-        [ApiActionPermission]
+        //批量修改任務數據,页面保存按钮调用方法
+        [ApiActionPermission()]
         [HttpPost, Route("bathUpdateData")]
         public ActionResult bathUpdateData([FromBody] object saveModel)
         {
@@ -50,11 +50,17 @@ namespace PDMS.Sys.Controllers
         }
 
         //批量修改任務属性（是否可删除，是否重点审核）
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("bathSet")]
         public ActionResult bathSeta([FromBody] object saveModel)
         {
             return Json(_service.bathSet(saveModel));
+        }
+        [ApiActionPermission()]
+        [HttpPost, Route("del")]
+        public override ActionResult Del([FromBody] object[] keys)
+        {
+            return base.Del(keys);
         }
     }
 }

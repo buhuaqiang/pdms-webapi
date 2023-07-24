@@ -147,6 +147,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "status")]
         [MaxLength(1000)]
         [Column(TypeName = "nvarchar(20)")]
+        [Editable(true)]
         public string status { get; set; }
 
 
@@ -156,6 +157,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "del_flag")]
         [MaxLength(1000)]
         [Column(TypeName = "nvarchar(2)")]
+        [Editable(true)]
         public string del_flag { get; set; }
         
 

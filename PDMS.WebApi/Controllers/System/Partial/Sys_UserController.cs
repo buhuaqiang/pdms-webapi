@@ -179,7 +179,7 @@ namespace PDMS.System.Controllers
 
 
 
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("getUserList")]
         public ActionResult getUserList([FromBody] LoginInfo lgf)
         {
