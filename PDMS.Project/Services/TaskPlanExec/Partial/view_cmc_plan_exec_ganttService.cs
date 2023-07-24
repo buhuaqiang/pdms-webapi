@@ -149,8 +149,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date}).ToList();
 
                 var gateIndex = 0;
-                var SetIndex = 0;
-                var taskIndex = 0;
+                var SetIndex = 1;
+                var taskIndex =2;
 
                 List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
@@ -168,7 +168,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.task_name= item.Key.gate_name;
                     data.start_date = item.Key.gate_start_date.ToString("yyyy-MM-dd");
                     data.end_date= item.Key.gate_end_date.ToString("yyyy-MM-dd");
-                    data.open = false;
+                    data.open = true;
                     data.type = "project";
                     data.status = "project";
                     data.StatusInfo = "";
@@ -202,6 +202,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.id = SetIndex;
                     data.task_name = item.Key.set_name;
                     data.parent = index;
+                    data.open = true;
                     data.type = "project";
                     data.status = "phase";
                     info.Add(data);
@@ -236,13 +237,14 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
                     GanttInfo data = new GanttInfo();
                     data.id = taskIndex;
+                    data.task_name= item.Key.task_name;
                     data.start_date = item.Key.start_date.ToString("yyyy-MM-dd");
-                    data.start_date = item.Key.end_date.ToString("yyyy-MM-dd");
+                    data.end_date = item.Key.end_date.ToString("yyyy-MM-dd");
                     data.parent = index;
                     data.type = "task";
                     data.status = "task";
                     data.StatusInfo = GetStatusText(item.Key.approve_status);
-                    data.text = item.Key.FormId.ToString();
+                    data.text = item.Key.task_id.ToString();
                     data.name = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
                     info.Add(data);
                 }
