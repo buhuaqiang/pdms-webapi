@@ -11,6 +11,6 @@ namespace PDMS.Project.IServices
 {
     public partial interface Iview_cmc_plan_exec_ganttService
     {
-      public   List<GanttInfo> BindGanttInfo(object saveModel);
+      public   List<GanttInfo> BindGanttInfo(SaveModel saveModel);
     }
  }
