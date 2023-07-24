@@ -179,6 +179,16 @@ namespace PDMS.Entity.DomainModels
         /// <summary>
         ///
         /// </summary>
+        [Display(Name = "project_task_id")]
+        [JsonIgnore]
+        [Column(TypeName = "uniqueidentifier")]
+        [Required(AllowEmptyStrings = false)]
+        public Guid project_task_id { get; set; }
+        
+
+        /// <summary>
+        ///
+        /// </summary>
         [Display(Name = "FormCode")]
         [JsonIgnore]
         [Column(TypeName = "string")]
@@ -202,5 +212,8 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
         public Guid FormCollectionId { get; set; }
+
+
+
     }
 }
