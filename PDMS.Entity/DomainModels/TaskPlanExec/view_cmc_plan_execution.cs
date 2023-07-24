@@ -74,7 +74,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="開始時間")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? p_start_date { get; set; }
 
        /// <summary>
@@ -82,7 +81,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="結束時間")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? p_end_date { get; set; }
 
        /// <summary>
@@ -99,7 +97,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="t_start_date")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? t_start_date { get; set; }
 
        /// <summary>
@@ -107,7 +104,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="t_end_date")]
        [Column(TypeName="datetime")]
-       [Editable(true)]
        public DateTime? t_end_date { get; set; }
 
        /// <summary>
