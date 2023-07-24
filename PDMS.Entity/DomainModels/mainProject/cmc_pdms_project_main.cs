@@ -234,7 +234,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="專案內容描述")]
        [MaxLength(255)]
-       [Column(TypeName="varbinary(255)")]
+       [Column(TypeName= "varchar(255)")]
        [Editable(true)]
        public string project_describe { get; set; }
 
@@ -243,7 +243,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="專案狀態 01:專案建立 02:專案啟動 03:專案工作管理 04:工作計劃管理 05:結案")]
        [MaxLength(2)]
-       [Column(TypeName="varbinary(2)")]
+       [Column(TypeName= "varchar(2)")]
        [Editable(true)]
        public string project_status { get; set; }
 
