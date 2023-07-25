@@ -43,5 +43,7 @@ namespace PDMS.Project.IServices
         public int getRepeatPart(Object obj);
 
         public WebResponseContent finaliza(Object obj);
+
+        public WebResponseContent saveAll(Object obj);
     }
  }
