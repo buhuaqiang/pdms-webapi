@@ -42,7 +42,7 @@ namespace PDMS.Project.Controllers
         }
 
         //提交功能
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("submit")]
         public WebResponseContent submit([FromBody] SaveModel saveModel)
         {
@@ -55,7 +55,6 @@ namespace PDMS.Project.Controllers
         {
             return base.Update(saveModel);
         }
-
 
     }
 }
