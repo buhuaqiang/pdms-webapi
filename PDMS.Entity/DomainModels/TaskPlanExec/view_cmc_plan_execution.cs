@@ -97,14 +97,16 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="t_start_date")]
        [Column(TypeName="datetime")]
-       public DateTime? t_start_date { get; set; }
+       [NotMapped]
+        public DateTime? t_start_date { get; set; }
 
        /// <summary>
        ///
        /// </summary>
        [Display(Name ="t_end_date")]
        [Column(TypeName="datetime")]
-       public DateTime? t_end_date { get; set; }
+       [NotMapped]
+        public DateTime? t_end_date { get; set; }
 
        /// <summary>
        ///狀態
@@ -137,8 +139,29 @@ namespace PDMS.Entity.DomainModels
         public int warn_leader { get; set; }
 
 
-        
 
-            
+        /// <summary>
+        ///廠商代碼
+        /// </summary>
+        [Display(Name = "廠商代碼")]
+        [MaxLength(1)]
+        [Column(TypeName = "varchar(100)")]
+        [Required(AllowEmptyStrings = false)]
+        public string company_code { get; set; }
+
+
+
+        /// <summary>
+        ///狀態
+        /// </summary>
+        [Display(Name = "專案建立、專案啟動")]
+        [MaxLength(1)]
+        [Column(TypeName = "varchar(100)")]
+        [Required(AllowEmptyStrings = false)]
+        public string epl_phase { get; set; }
+
+
+
+
     }
 }
