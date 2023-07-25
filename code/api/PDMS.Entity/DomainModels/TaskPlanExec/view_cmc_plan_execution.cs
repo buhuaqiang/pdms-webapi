@@ -144,9 +144,7 @@ namespace PDMS.Entity.DomainModels
         ///廠商代碼
         /// </summary>
         [Display(Name = "廠商代碼")]
-        [MaxLength(1)]
         [Column(TypeName = "varchar(100)")]
-        [Required(AllowEmptyStrings = false)]
         public string company_code { get; set; }
 
 
@@ -155,9 +153,7 @@ namespace PDMS.Entity.DomainModels
         ///狀態
         /// </summary>
         [Display(Name = "專案建立、專案啟動")]
-        [MaxLength(1)]
         [Column(TypeName = "varchar(100)")]
-        [Required(AllowEmptyStrings = false)]
         public string epl_phase { get; set; }
 
 
