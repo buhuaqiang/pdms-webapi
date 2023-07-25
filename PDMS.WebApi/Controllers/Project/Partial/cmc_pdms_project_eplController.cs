@@ -71,6 +71,14 @@ namespace PDMS.Project.Controllers
             return Service.finaliza(obj);
         }
 
+        //根據查詢結果批量維護
+        [ApiActionPermission()]
+        [HttpPost, Route("saveAll")]
+        public WebResponseContent saveAll([FromBody] Object obj)
+        {
+            return Service.saveAll(obj);
+        }
+
 
     }
 }
