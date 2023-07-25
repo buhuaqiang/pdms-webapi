@@ -19,6 +19,9 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Core.DBManager;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using PDMS.Core.ManageUser;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -57,11 +60,13 @@ namespace PDMS.Project.Services
 
                         if (epl != null)
                         {
-                            if (Extra.Equal("/view_cmc_project_epl_group") ) {//組窗口保存操作
+                            if (Extra.Equal("/view_cmc_project_epl_group"))
+                            {//組窗口保存操作
                                 epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
 
                             }
-                            else {//部車型窗口保存操作
+                            else
+                            {//部車型窗口保存操作
                                 if (item["org_code"].ToString() == item["new_org_code"].ToString())
                                 {
                                     epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
@@ -82,7 +87,7 @@ namespace PDMS.Project.Services
                                 }
                             }
 
-                           
+
                         }
                         eplList.Add(epl);
                     }
@@ -102,7 +107,8 @@ namespace PDMS.Project.Services
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
-                    else {
+                    else
+                    {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
                             DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
@@ -111,7 +117,7 @@ namespace PDMS.Project.Services
                     }
 
 
-                       
+
                 }
                 catch (Exception ex)
                 {
@@ -119,13 +125,14 @@ namespace PDMS.Project.Services
 
                     return ResponseContent.Error();
                 }
-        
+
             }
             return ResponseContent.OK();
 
         }
 
-        public  WebResponseContent submit(SaveModel saveModel) {
+        public WebResponseContent submit(SaveModel saveModel)
+        {
 
             var MainDatas = saveModel.MainDatas;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
@@ -144,7 +151,7 @@ namespace PDMS.Project.Services
 
 
                             //部門變更邏輯待完善
-                          
+
                         }
                         eplList.Add(epl);
                     }
@@ -173,14 +180,16 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
         }
 
-        public WebResponseContent addEpl(Guid project_id,String glno)
+        public WebResponseContent addEpl(Guid project_id, String glno)
         {
 
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            if (1==2) {//從plm系統抓取到數據做邏輯處理
+            if (1 == 2)
+            {//從plm系統抓取到數據做邏輯處理
 
             }
-            else {//從plm系統未抓取到數據，取最終版的假版epl數據形成一個正式版epl
+            else
+            {//從plm系統未抓取到數據，取最終版的假版epl數據形成一個正式版epl
                 var List = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.project_id == project_id && x.epl_phase == "01").ToList();
                 foreach (var item in List)
                 {
@@ -223,7 +232,7 @@ namespace PDMS.Project.Services
 
                 }
             }
-            
+
             try
             {
                 repository.DapperContext.BeginTransaction((r) =>
@@ -240,6 +249,168 @@ namespace PDMS.Project.Services
             }
 
             return ResponseContent.OK();
+        }
+
+        public int getDepartCount(Object obj)//部門定版時判斷數據是否維護完整
+        {
+            int count = 0;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
+                            where epl.project_id='" + projectId + "'";
+            sql += " and epl.epl_phase='02' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' )";
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
+
+        public WebResponseContent departFinal(Object obj)//部門定版
+        {
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            eplLists = getDepartList(projectId);
+
+            if (eplLists.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in eplLists)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.epl_id.ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            epl.Final_version_status = "1";
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.Final_version_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+            }
+
+            return ResponseContent.OK();
+        }
+
+
+        public List<cmc_pdms_project_epl> getDepartList(string project_id)//獲取部門的epl
+        {
+            UserInfo userInfo = UserContext.Current.UserInfo;
+            String departmentCode = userInfo.DepartmentCode;
+            var projectId = project_id;
+
+            List<cmc_pdms_project_epl> departList = new List<cmc_pdms_project_epl>();
+            string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
+
+            departList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+            return departList;
+        }
+
+        public int getDepartFinaliza(Object obj)//最終定版時判斷各部門是否進行了定版
+        {
+            int count = 0;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
+                            where epl.project_id='" + projectId + "'";
+            sql += " and epl.epl_phase='02' and  Final_version_status not in ('1','2') ";
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
+
+        public int getRepeatPart(Object obj)//最終定版時判斷各部門的新件的零件號是否重複
+        {
+            int count = 0;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+
+            string sql = $@"select count(*)  from (
+	                            select  row_number() over(partition by part_no order by upg_id,part_no)rn ,*  from  cmc_pdms_project_epl 
+	                                where project_id='" + projectId + "'";
+            sql += "and company_code is null  and epl_phase='02' ) tab where tab.rn>1   ";
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
+
+        public WebResponseContent finaliza(Object obj)//最終定版
+        {
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            eplLists = getEplList(projectId);
+
+            if (eplLists.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in eplLists)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.epl_id.ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            epl.Final_version_status = "2";
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.Final_version_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+            }
+            return ResponseContent.OK();
+
+        }
+        public List<cmc_pdms_project_epl> getEplList(string project_id)//獲取專案的epl
+        {
+            var projectId = project_id;
+
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
+
+            eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+            return eplList;
         }
     }
 }
