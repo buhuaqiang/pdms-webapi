@@ -13,5 +13,16 @@ namespace PDMS.Project.IServices
         public WebResponseContent submit(SaveModel saveModel);
 
         public WebResponseContent addEpl(Guid guid,String glno);
+
+
+        public int getDepartCount(Object obj);
+
+        public WebResponseContent departFinal(Object obj);
+
+        public int getDepartFinaliza(Object obj);
+
+        public int getRepeatPart(Object obj);
+
+        public WebResponseContent finaliza(Object obj);
     }
  }
