@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Project.Services
 {
@@ -75,6 +76,7 @@ namespace PDMS.Project.Services
             string submit_status = "";
             string path = "";
             string where = " ";
+            UserInfo userInfo = UserContext.Current.UserInfo;
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
             if (!string.IsNullOrEmpty(options.Wheres))
             {
@@ -147,8 +149,20 @@ namespace PDMS.Project.Services
                 QuerySql += where;
 
             }
+            if (path == "/view_cmc_project_epl_finalization")
+            { //部門定版
+                QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserTrueName   
+	                            from cmc_pdms_project_epl epl
+                                left  join cmc_pdms_project_main main on main.project_id=epl.project_id
+                                left join cmc_pdms_project_epl_car_model model on model.epl_id=epl.epl_id
+                                left join cmc_group_model_set mset on mset.DepartmentCode=epl.group_code and mset.model_type=main.model_type and mset.set_type='01'
+                                where epl_phase='02' 
+                        ";
+                QuerySql += where;
 
-                return base.GetPageData(options);
+            }
+
+            return base.GetPageData(options);
         }
 
       
