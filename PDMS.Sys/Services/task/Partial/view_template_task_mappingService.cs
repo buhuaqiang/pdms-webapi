@@ -86,8 +86,8 @@ namespace PDMS.Sys.Services
 	                task.FormId,
 	                task.FormCode,
 	                task.is_part_handle,
-	                null AS start_date,
-	                null AS end_date,
+	                '' AS start_date,
+	                '' AS end_date,
 					task.warn,
 	                task.warn_leader                
               FROM
