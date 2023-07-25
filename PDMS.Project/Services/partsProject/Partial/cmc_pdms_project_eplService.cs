@@ -131,6 +131,142 @@ namespace PDMS.Project.Services
 
         }
 
+
+        public WebResponseContent saveAll(Object obj)//根據查詢結果進行批量維護
+        {
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            var path = data["path"].ToString();
+            eplLists = getEpl(obj);
+
+            if (eplLists.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in eplLists)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.epl_id.ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            if (path.Equal("/view_cmc_project_epl_group"))
+                            {//組窗口保存操作
+                                epl.dev_taker_id = item.dev_taker_id == null ? null : item.dev_taker_id.ToInt();
+
+                            }
+                            if (path.Equal("/view_cmc_project_epl"))
+                            {//部車型窗口保存操作
+                                if (item.org_code.ToString() == item.new_org_code.ToString())
+                                {
+                                    epl.kd_type = item.kd_type == null ? "" : item.kd_type.ToString();
+                                    epl.group_code = item.group_code == null ? "" : item.group_code.ToString();
+                                    epl.original_part_no = item.original_part_no == null ? "" : item.original_part_no.ToString();
+                                    epl.new_org_code = epl.new_org_code;
+                                    epl.submit_status = "0";
+                                    epl.org_change_approve_status = "02";
+                                }
+                                else
+                                {
+                                    epl.kd_type = item.kd_type == null ? "" : item.kd_type.ToString();
+                                    epl.group_code = item.group_code == null ? "" : item.group_code.ToString();
+                                    epl.new_org_code = item.new_org_code == null ? "" : item.new_org_code.ToString();
+                                    epl.original_part_no = item.original_part_no == null ? "" : item.original_part_no.ToString();
+                                    epl.submit_status = "0";
+                                    epl.org_change_approve_status = "00";
+                                }
+                            }
+
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    if (path.Equal("/view_cmc_project_epl_group"))
+                    {
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.dev_taker_id });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                    if (path.Equal("/view_cmc_project_epl"))
+                    {
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+            }
+            return ResponseContent.OK();
+
+        }
+
+        public List<cmc_pdms_project_epl> getEpl(Object obj)//根據條件查詢epl
+        {
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            var path = data["path"] == null ? "" : data["path"].ToString();
+            var upgId = data["upgId"] == null ? "" : data["upgId"].ToString();
+            var partNo = data["partNo"] == null ? "" : data["partNo"].ToString();
+            var submitStatus = data["submitStatus"] == null ? "" : data["submitStatus"].ToString();
+            UserInfo userInfo = UserContext.Current.UserInfo;
+            String departmentCode = userInfo.DepartmentCode;
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+
+
+            string where = "";
+            if (!string.IsNullOrEmpty(projectId))
+            {
+                where += " and project_id='" + projectId + "'";
+            }
+            if (!string.IsNullOrEmpty(upgId))
+            {
+                where += " and upg_id like '%" + upgId + "%'";
+            }
+            if (!string.IsNullOrEmpty(partNo))
+            {
+                where += " and part_no like '%" + partNo + "%'";
+            }
+            if (!string.IsNullOrEmpty(submitStatus))
+            {
+                where += " and submit_status='" + submitStatus + "'";
+            }
+
+            if (path == "/view_cmc_project_epl")
+            {//部車型窗口
+                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                sql += where;
+                eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+            }
+            if (path == "/view_cmc_project_epl_group")
+            {//組窗口維護
+                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                sql += where;
+                eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+            }
+            return eplList;
+        }
+
+
+
         public WebResponseContent submit(SaveModel saveModel)
         {
 
