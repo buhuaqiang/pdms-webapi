@@ -86,8 +86,8 @@ namespace PDMS.Sys.Services
 	                task.FormId,
 	                task.FormCode,
 	                task.is_part_handle,
-	                '' AS start_date,
-	                '' AS end_date
+	                null AS start_date,
+	                null AS end_date
                 FROM
 	                cmc_common_template_mapping map
 	                LEFT JOIN cmc_common_task task ON map.task_id= task.task_id 
