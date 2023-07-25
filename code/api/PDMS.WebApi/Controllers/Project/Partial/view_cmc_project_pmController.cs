@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
+using PDMS.Core.Extensions;
 
 namespace PDMS.Project.Controllers
 {
@@ -29,5 +31,13 @@ namespace PDMS.Project.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
+
+
+
+        public override ActionResult Import(List<IFormFile> fileInput)
+        {
+            return Json(_service.Upload(fileInput));
+        }
+
     }
 }

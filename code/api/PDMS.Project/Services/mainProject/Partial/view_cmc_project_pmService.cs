@@ -29,12 +29,14 @@ namespace PDMS.Project.Services
 
         private readonly Icmc_pdms_project_mainService _cmc_pdms_project_mainService;
         private readonly Icmc_pdms_project_mainRepository _cmc_pdms_project_mainRepository;
+        private readonly Icmc_pdms_project_eplService _cmc_pdms_project_eplService;
 
         [ActivatorUtilitiesConstructor]
         public view_cmc_project_pmService(
             Iview_cmc_project_pmRepository dbRepository,
             IHttpContextAccessor httpContextAccessor,
             Icmc_pdms_project_mainService cmc_pdms_project_mainService,
+            Icmc_pdms_project_eplService cmc_pdms_project_eplService,
             Icmc_pdms_project_mainRepository cmc_pdms_project_mainRepository
             )
         : base(dbRepository)
@@ -43,6 +45,7 @@ namespace PDMS.Project.Services
             _repository = dbRepository;
             _cmc_pdms_project_mainService = cmc_pdms_project_mainService;
             _cmc_pdms_project_mainRepository = cmc_pdms_project_mainRepository;
+            _cmc_pdms_project_eplService= cmc_pdms_project_eplService;
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
@@ -65,5 +68,18 @@ namespace PDMS.Project.Services
         //{
         //    return _cmc_pdms_project_mainService.Del(keys, delList);
         //}
+
+
+        public override WebResponseContent DownLoadTemplate()
+        {
+            return _cmc_pdms_project_eplService.DownLoadTemplateByFlag("1");
+        }
+
+        public override WebResponseContent Upload(List<IFormFile> files)
+        {
+            string project_id = Core.Utilities.HttpContext.Current.Request("project_id");
+            return _cmc_pdms_project_eplService.UploadEpl(files, "1", project_id);
+        }
+
     }
 }

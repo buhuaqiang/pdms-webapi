@@ -251,6 +251,55 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
         }
 
+
+
+        public  WebResponseContent DownLoadTemplateByFlag(string flag)
+        {
+            if (flag == "1")
+            {//假EPL阶段
+                DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
+            }
+            
+            return base.DownLoadTemplate();
+        }
+       /// <summary>
+       /// 上传epl
+       /// </summary>
+       /// <param name="files"></param>
+       /// <param name="flag"></param>
+       /// <param name="project_id"></param>
+       /// <returns></returns>
+        public WebResponseContent UploadEpl(List<IFormFile> files, string flag, string project_id)
+        {
+            if (flag == "1")//和模版下载设置一致
+            {//假EPL阶段
+                DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
+            }
+            if(files.Count > 0)
+            {
+                WebResponseContent Response=ImportList(files);
+                List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
+                 foreach(cmc_pdms_project_epl epl in list)
+                {
+                    epl.epl_id = Guid.NewGuid();
+                    if (flag == "1")
+                    {
+                        epl.epl_phase = "01";
+                    }
+                    else if (flag == "2")
+                    {
+                        epl.epl_phase = "02";
+                    }
+                    epl.project_id = Guid.Parse(project_id);
+                    //设置数据状态：新增、删除、不变
+
+                }
+                DBServerProvider.SqlDapper.BulkInsert(list, "cmc_pdms_project_epl");
+                return ResponseContent.OK();
+            }
+            return ResponseContent.Error("no data");
+        }
+
         public int getDepartCount(Object obj)//部門定版時判斷數據是否維護完整
         {
             int count = 0;
