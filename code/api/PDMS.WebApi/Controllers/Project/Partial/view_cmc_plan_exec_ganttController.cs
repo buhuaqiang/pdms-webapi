@@ -13,6 +13,7 @@ using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
 using static PDMS.Project.Services.view_cmc_plan_exec_ganttService;
+using PDMS.System.Services;
 
 namespace PDMS.Project.Controllers
 {
@@ -41,6 +42,12 @@ namespace PDMS.Project.Controllers
             return Json(data);
         }
 
+
+        /// <summary>
+        /// 雙擊設置重點項目
+        /// </summary>
+        /// <param name="project_task_id"></param>
+        /// <returns></returns>
         [ApiActionPermission()]
         [HttpGet,Route("setAuditKey")]
         public ActionResult setAuditKey(string project_task_id)
@@ -48,11 +55,31 @@ namespace PDMS.Project.Controllers
             return Json("");
         }
 
+        //保存
         [ApiActionPermission()]
         [HttpPost, Route("saveFormData")]
-        public ActionResult saveFormData([FromBody] object saveModel)
+        public ActionResult saveFormData([FromBody] SaveModel saveModel)
         {
-            return Json("");
+            return Json(Service.TsSave(saveModel, "04"));
         }
+
+
+        //暫存
+        [ApiActionPermission()]
+        [HttpPost, Route("TsSave")]
+        public IActionResult TsSave([FromBody] SaveModel saveModel)
+        {      
+            return Json(Service.TsSave(saveModel, "00"));
+        }
+
+        //保存並提交
+        [ApiActionPermission()]
+        [HttpPost, Route("SaveAndSubmit")]
+        public IActionResult SaveAndSubmit([FromBody] SaveModel saveModel)
+        {
+            return Json(Service.SaveAndSubmit(saveModel));
+        }
+
+
     }
 }

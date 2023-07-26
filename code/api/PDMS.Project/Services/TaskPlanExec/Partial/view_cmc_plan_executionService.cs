@@ -65,7 +65,7 @@ namespace PDMS.Project.Services
                     }
                 }
             }
-            QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_plan_execution where 1=1 ";
+            QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_plan_execution where 1=1  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
             if (User_Id != 1)
