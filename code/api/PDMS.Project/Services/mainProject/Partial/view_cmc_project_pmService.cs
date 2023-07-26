@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Project.IServices;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Project.Services
 {
@@ -79,6 +80,109 @@ namespace PDMS.Project.Services
         {
             string project_id = Core.Utilities.HttpContext.Current.Request("project_id");
             return _cmc_pdms_project_eplService.UploadEpl(files, "1", project_id);
+        }
+
+        public override PageGridData<view_cmc_project_pm> GetPageData(PageDataOptions options)
+        {
+            string project_name = "";
+            string glno = "";
+            string project_type = "";
+            string project_status = "";
+            string path = "";
+            string where = " ";
+            UserInfo userInfo = UserContext.Current.UserInfo;
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "project_name".ToLower())
+                        {
+                            project_name = sp.Value;
+                            if (!string.IsNullOrEmpty(project_name))
+                            {
+                                where += " and pm.project_name like '%" + project_name + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "glno".ToLower())
+                        {
+                            glno = sp.Value;
+                            if (!string.IsNullOrEmpty(glno))
+                            {
+                                where += " and pm.glno like '%" + glno + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "project_type".ToLower())
+                        {
+                            project_type = sp.Value;
+                            if (!string.IsNullOrEmpty(project_type))
+                            {
+                                where += " and pm.project_type like '%" + project_type + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "project_status".ToLower())
+                        {
+                            project_status = sp.Value;
+                            if (!string.IsNullOrEmpty(project_status))
+                            {
+                                where += " and pm.project_status='" + project_status + "'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "path".ToLower())
+                        {
+                            path = sp.Value;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            if (path == "/view_cmc_project_pm")//
+            {
+                QuerySql = @" SELECT  pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
+	                            pm.release_status,pm.model_type,pm.epl_load_date,
+                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
+	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
+                            FROM cmc_pdms_project_main AS pm
+	                        LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
+                QuerySql += where;
+            }
+            if (path == "/view_cmc_project_start")
+            { //專案啟動部車型窗口查詢
+                QuerySql = @" SELECT  pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
+	                            pm.release_status,pm.model_type,pm.epl_load_date,
+                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
+	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
+                            FROM cmc_pdms_project_main AS pm
+	                        LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  
+                        ";
+                QuerySql += where;
+
+            }
+            if (path == "/view_cmc_project_group_start")
+            { //專案啟動組車型窗口查詢
+                QuerySql = @"  SELECT  pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
+	                            pm.release_status,pm.model_type,pm.epl_load_date,
+                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
+	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
+                            FROM cmc_pdms_project_main AS pm
+	                        LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1 
+                        ";
+                QuerySql += where;
+
+            }
+           
+            return base.GetPageData(options);
         }
 
     }
