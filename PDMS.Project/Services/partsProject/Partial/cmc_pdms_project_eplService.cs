@@ -398,26 +398,48 @@ namespace PDMS.Project.Services
             
             return base.DownLoadTemplate();
         }
-       /// <summary>
-       /// 上传epl
-       /// </summary>
-       /// <param name="files"></param>
-       /// <param name="flag"></param>
-       /// <param name="project_id"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// 上传epl
+        /// </summary>
+        /// <param name="files"></param>
+        /// <param name="flag"></param>
+        /// <param name="project_id"></param>
+        /// <returns></returns>
         public WebResponseContent UploadEpl(List<IFormFile> files, string flag, string project_id)
         {
             if (flag == "1")//和模版下载设置一致
             {//假EPL阶段
                 DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
             }
-            if(files.Count > 0)
+            if (files.Count > 0)
             {
-                WebResponseContent Response=ImportList(files);
+
+                WebResponseContent Response = ImportList(files);
                 List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
-                 foreach(cmc_pdms_project_epl epl in list)
+                DateTime now = DateTime.Now;
+                List<string> strings = new List<string>();
+                foreach (cmc_pdms_project_epl epl in list)
                 {
+                    //设置数据状态：新增、删除、不变
+                    var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == epl.project_id).OrderByDescending(x => x.CreateDate).FirstOrDefault();
+                    if (oldlist == null)
+                    {
+                        epl.action_type = "add";
+                        //TODO
+                        //接口查询kd区分和厂商代码
+                    }
+                    else
+                    {
+                        //epl = oldlist;
+                        epl.action_type = "";//
+                        //旧数据带入
+
+                    }
+
+                    
                     epl.epl_id = Guid.NewGuid();
+                    strings.Add(epl.epl_id.ToString());
+                    epl.CreateDate = now;
                     if (flag == "1")
                     {
                         epl.epl_phase = "01";
@@ -427,10 +449,50 @@ namespace PDMS.Project.Services
                         epl.epl_phase = "02";
                     }
                     epl.project_id = Guid.Parse(project_id);
-                    //设置数据状态：新增、删除、不变
-
+                  
+                    
                 }
-                DBServerProvider.SqlDapper.BulkInsert(list, "cmc_pdms_project_epl");
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.BulkInsert(list, "cmc_pdms_project_epl");
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量写入cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+
+                string epls = string.Join("','", strings);
+                //
+                string updateAction = @$"UPDATE cmc_pdms_project_epl 
+                                SET action_type = 'delete' 
+                                WHERE
+	                                epl_id IN ( '{epls}' ) 
+	                                AND part_no NOT IN (
+	                                SELECT
+		                                part_no 
+	                                FROM
+		                                cmc_pdms_project_epl 
+	                                WHERE
+		                                project_id = '{project_id}' 
+	                                AND CreateDate = ( SELECT TOP 1 CreateDate FROM cmc_pdms_project_epl WHERE project_id = '{project_id}' and  CreateDate<'{now}'    ORDER BY CreateDate DESC ) 
+	                                )";
+                try
+                {
+                    var count = repository.DapperContext.ExcuteNonQuery(updateAction, null);
+                }
+                catch (Exception ex)
+                {
+
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量写入cmc_pdms_project_epl 表后更新action_type，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+
                 return ResponseContent.OK();
             }
             return ResponseContent.Error("no data");
