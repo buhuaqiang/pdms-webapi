@@ -22,6 +22,8 @@ using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PDMS.Core.ManageUser;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml.ConditionalFormatting;
+using Newtonsoft.Json;
 
 namespace PDMS.Project.Services
 {
@@ -420,6 +422,9 @@ namespace PDMS.Project.Services
                 List<string> strings = new List<string>();
                 foreach (cmc_pdms_project_epl epl in list)
                 {
+                    //臨時實體變量
+                    cmc_pdms_project_epl tempEpl = new cmc_pdms_project_epl();
+                    tempEpl = epl;
                     //设置数据状态：新增、删除、不变
                     var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == epl.project_id).OrderByDescending(x => x.CreateDate).FirstOrDefault();
                     if (oldlist == null)
@@ -430,13 +435,11 @@ namespace PDMS.Project.Services
                     }
                     else
                     {
-                        //epl = oldlist;
+                        tempEpl = JsonConvert.DeserializeObject<cmc_pdms_project_epl >(JsonConvert.SerializeObject(oldlist));
                         epl.action_type = "";//
                         //旧数据带入
-
                     }
 
-                    
                     epl.epl_id = Guid.NewGuid();
                     strings.Add(epl.epl_id.ToString());
                     epl.CreateDate = now;
