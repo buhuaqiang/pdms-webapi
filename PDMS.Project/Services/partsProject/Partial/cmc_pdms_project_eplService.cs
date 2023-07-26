@@ -415,9 +415,14 @@ namespace PDMS.Project.Services
             }
             if (files.Count > 0)
             {
-
+                //查詢是否有舊數據，用於判斷是否需要寫曆史表
+                string sqlExist = $@"select count(0) from cmc_pdms_project_epl where project_id='{project_id}'";
+                object obj = _repository.DapperContext.ExecuteScalar(sqlExist, null);
+              
                 WebResponseContent Response = ImportList(files);
                 List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
+                List<cmc_pdms_project_epl> addList = new List<cmc_pdms_project_epl>();
+                List<cmc_pdms_project_epl> updateList = new List<cmc_pdms_project_epl>();
                 DateTime now = DateTime.Now;
                 List<string> strings = new List<string>();
                 foreach (cmc_pdms_project_epl epl in list)
@@ -426,41 +431,64 @@ namespace PDMS.Project.Services
                     cmc_pdms_project_epl tempEpl = new cmc_pdms_project_epl();
                     tempEpl = epl;
                     //设置数据状态：新增、删除、不变
-                    var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == epl.project_id).OrderByDescending(x => x.CreateDate).FirstOrDefault();
+                    var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag=="0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
                     if (oldlist == null)
                     {
-                        epl.action_type = "add";
+                        tempEpl.epl_id = Guid.NewGuid();
+                        strings.Add(tempEpl.epl_id.ToString());
+                        tempEpl.CreateDate = now;
+                        if (flag == "1")
+                        {
+                            tempEpl.epl_phase = "01";
+                        }
+                        else if (flag == "2")
+                        {
+                            tempEpl.epl_phase = "02";
+                        }
+                        tempEpl.project_id = Guid.Parse(project_id);
+
+                        tempEpl.action_type = "add";
+                        tempEpl.del_flag= "0";
                         //TODO
                         //接口查询kd区分和厂商代码
+
+                        addList.Add(tempEpl);
                     }
                     else
-                    {
-                        tempEpl = JsonConvert.DeserializeObject<cmc_pdms_project_epl >(JsonConvert.SerializeObject(oldlist));
-                        epl.action_type = "";//
+                    {                       
                         //旧数据带入
+                        tempEpl = JsonConvert.DeserializeObject<cmc_pdms_project_epl>(JsonConvert.SerializeObject(oldlist));
+                        strings.Add(tempEpl.epl_id.ToString());
+                        //如何判断是否修改？
+                        tempEpl.action_type = "";//
+                        updateList.Add(tempEpl);
                     }
 
-                    epl.epl_id = Guid.NewGuid();
-                    strings.Add(epl.epl_id.ToString());
-                    epl.CreateDate = now;
-                    if (flag == "1")
-                    {
-                        epl.epl_phase = "01";
-                    }
-                    else if (flag == "2")
-                    {
-                        epl.epl_phase = "02";
-                    }
-                    epl.project_id = Guid.Parse(project_id);
-                  
-                    
                 }
+                //删除上一版本，把act_type=delete 的del_flag=1
+                string deleteSQL = $@"UPDATE cmc_pdms_project_epl 
+                                SET del_flag = 1 
+                                WHERE
+	                                project_id = '{project_id}' 
+	                                AND action_type = 'delete' and del_flag='0'";
+                try
+                {
+                    var count3 = repository.DapperContext.ExcuteNonQuery(deleteSQL, null);
+                }
+                catch (Exception ex)
+                {
+
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传 删除上个版本状态为delete的数据，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+
+
                 try
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.BulkInsert(list, "cmc_pdms_project_epl");
-                        return true;
+                        DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_epl");
+                    return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
                 catch (Exception ex)
@@ -469,33 +497,64 @@ namespace PDMS.Project.Services
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量写入cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error();
                 }
-
-                string epls = string.Join("','", strings);
-                //
-                string updateAction = @$"UPDATE cmc_pdms_project_epl 
-                                SET action_type = 'delete' 
-                                WHERE
-	                                epl_id IN ( '{epls}' ) 
-	                                AND part_no NOT IN (
-	                                SELECT
-		                                part_no 
-	                                FROM
-		                                cmc_pdms_project_epl 
-	                                WHERE
-		                                project_id = '{project_id}' 
-	                                AND CreateDate = ( SELECT TOP 1 CreateDate FROM cmc_pdms_project_epl WHERE project_id = '{project_id}' and  CreateDate<'{now}'    ORDER BY CreateDate DESC ) 
-	                                )";
                 try
                 {
-                    var count = repository.DapperContext.ExcuteNonQuery(updateAction, null);
+                    if(updateList.Count > 0)
+                    {
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.action_type });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
 
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量写入cmc_pdms_project_epl 表后更新action_type，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量更新cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error();
                 }
 
+
+                if (Convert.ToInt32(obj) > 0)
+                {
+                    string epls = string.Join("','", strings);
+                    //
+                    string updateAction = @$"UPDATE cmc_pdms_project_epl 
+                                SET action_type = 'delete' 
+                                WHERE project_id = '{project_id}' 
+	                                and epl_id not IN ( '{epls}' ) and del_flag='0'";
+                    try
+                    {
+                        var count = repository.DapperContext.ExcuteNonQuery(updateAction, null);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传  批量写入cmc_pdms_project_epl 表后更新action_type，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                        return ResponseContent.Error();
+                    }
+
+
+                    //写入历史表:data_source(具體含義參考數據字典配置)
+                    string inserHis = $@"INSERT INTO  [dbo].[cmc_pdms_project_epl_his] ([epl_his_id],[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase], [epl_import_date], [upg_id], [level], [part_no], [part_name], [company_code], [kd_type], [org_code], [new_org_code], [group_code], [dev_taker_id], [part_taker_id], [fs_1], [fs_2], [fs_3], [fs_remark], [Final_version_status], [fs_approve_status], [task_define_approve_status], [org_change_approve_status], [gate_type], [is_eo], [original_part_no], [CreateID], [Creator], [CreateDate], [ModifyID], [Modifier], [ModifyDate], [del_flag], [currency], [submit_status], [action_type],[data_source])  
+SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase], [epl_import_date], [upg_id], [level], [part_no], [part_name], [company_code], [kd_type], [org_code], [new_org_code], [group_code], [dev_taker_id], [part_taker_id], [fs_1], [fs_2], [fs_3], [fs_remark], [Final_version_status], [fs_approve_status], [task_define_approve_status], [org_change_approve_status], [gate_type], [is_eo], [original_part_no], [CreateID], [Creator], [CreateDate], [ModifyID], [Modifier], [ModifyDate], [del_flag], [currency], [submit_status], [action_type],'1' from cmc_pdms_project_epl where project_id = '{project_id}'   AND action_type IN ( 'add', 'modify', 'delete' ) and del_flag='0'";
+                    try
+                    {
+                        var count2 = repository.DapperContext.ExcuteNonQuery(inserHis, null);
+                    }
+                    catch (Exception ex)
+                    {
+
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "假EPL上传 写入历史表cmc_pdms_project_epl_his，cmc_pdms_project_eplService 文件：UploadEpl：" + DateTime.Now + ":" + ex.Message);
+                        return ResponseContent.Error();
+                    }
+
+                   
+                }
+                
+               
                 return ResponseContent.OK();
             }
             return ResponseContent.Error("no data");
