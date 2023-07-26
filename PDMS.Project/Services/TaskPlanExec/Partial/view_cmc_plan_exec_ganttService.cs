@@ -21,6 +21,9 @@ using Microsoft.Extensions.Options;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using PDMS.Core.ManageUser;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System;
 
 namespace PDMS.Project.Services
 {
@@ -57,8 +60,6 @@ namespace PDMS.Project.Services
             string task_name = data[6]["task_name"] == null ? "" : data[6]["task_name"].ToString();
             string status = data[7]["status"] == null ? "" : data[7]["status"].ToString();
 
-
-
             string sql= @$"SELECT 
 task.task_id,
 task.task_name,
@@ -82,14 +83,14 @@ gate.gate_end_date
 from cmc_pdms_project_task tsk
 left join cmc_common_task  task on tsk.task_id=task.task_id
 left join cmc_common_template_mapping map on map.task_id=tsk.task_id and 
-set_id in (SELECT set_id from cmc_common_task_template_set where template_id=(SELECT main_plan_id from cmc_pdms_project_epl where part_no='{part_no}'))
+set_id in (SELECT set_id from cmc_common_task_template_set where template_id=(SELECT main_plan_id from cmc_pdms_project_epl where part_no='{part_no}' and company_code is null  and  epl_phase='02'))
 left join cmc_common_task_template_set sets on map.set_id=sets.set_id
 left join Sys_DictionaryList sl2 ON ( sl2.DicValue= sets.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = sets.set_type ))
 left join cmc_common_task_template_set parent on sets.parent_set_id=parent.set_id
 left join Sys_DictionaryList sl3 ON ( sl3.DicValue= parent.set_value AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
-left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}')
-left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}')
-where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}')";
+left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and company_code is null  and  epl_phase='02')
+left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and company_code is null  and  epl_phase='02')
+where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and company_code is null  and  epl_phase='02')";
 
             if (!string.IsNullOrEmpty(start_date))
             {
@@ -133,9 +134,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             return info;
         }
-
-
-
 
         public List<GanttInfo> BindGanttInfo(object saveModel)
         {
@@ -244,6 +242,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.parent = index;
                     data.type = "task";
                     data.status = "task";
+                    data.approve_status = item.Key.approve_status;
                     data.StatusInfo = GetStatusText(item.Key.approve_status);
                     data.task_id = item.Key.task_id.ToString();
                     data.FormCollectionId = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
@@ -283,7 +282,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             }
             return str;
         }
-
 
         public class GanttInfo {
 
@@ -331,11 +329,121 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             public string FormCollectionId { get; set; }
 
+            public string approve_status { get; set; }
+
 
 
 
 
 
         }
+
+
+
+        //表單彈窗 保存並提交按鈕
+        public WebResponseContent SaveAndSubmit(SaveModel saveModel)
+        {
+            //List<string> temp = new List<string>();
+            //List<string> temp2 =new List<string>();
+            ////取交集
+            //var lists = temp.Intersect(temp2).ToList();
+            ////取差集
+            //var lis= temp.Except(temp2).ToList();
+
+            return ResponseContent.OK();
+        }
+
+
+        //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
+        public WebResponseContent TsSave(SaveModel saveModel,string status="")
+        {
+            var FormData = saveModel.MainData["FormData"].ToString();
+            var FormId = saveModel.MainData["FormId"].ToString();
+            var FormCollectionId = saveModel.MainData["FormCollectionId"]==null?"": saveModel.MainData["FormCollectionId"].ToString();
+            var project_task_id = saveModel.MainData["project_task_id"].ToString();
+            var task_id = saveModel.MainData["task_id"].ToString();
+            var title = saveModel.MainData["title"].ToString();
+            var start_date =Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
+            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            var approve_status = saveModel.MainData["approve_status"].ToString();
+            
+            var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x=>x.project_task_id==Guid.Parse( project_task_id)).FirstOrDefault();
+
+            if (Data != null)
+            {
+                try
+                {
+                    var isnull = Data.FormCollectionId;
+                    if (isnull == null)
+                    {
+                        var guid = Guid.NewGuid();
+
+                        #region  新增 FormCollectionObject
+                        FormCollectionObject ListTemp = new FormCollectionObject();
+                        ListTemp.FormCollectionId = guid;
+                        ListTemp.FormId = Guid.Parse(FormId);
+                        ListTemp.FormData = FormData;
+                        ListTemp.Title = title;
+                        SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
+                        queueResult.optionType = SaveModel.MainOptionType.add;
+                        queueResult.detailType = typeof(FormDesignOptions);
+                        queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ListTemp)));
+                        saveModel.DetailListData.Add(queueResult);
+
+                        #endregion
+
+                        #region   修改 cmc_pdms_project_task  FormCollectionId 欄位
+
+                        Data.FormCollectionId = guid;
+                        SaveModel.DetailListDataResult FormResult = new SaveModel.DetailListDataResult();
+                        FormResult.optionType = SaveModel.MainOptionType.update;
+                        FormResult.detailType = typeof(cmc_pdms_project_task);
+                        FormResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(Data)));
+                        saveModel.DetailListData.Add(FormResult);
+
+                        #endregion
+                    }
+                    else
+                    {
+                        #region   修改 FormCollectionObject  FormData 欄位
+
+                        var datas = repository.DbContext.Set<FormCollectionObject>().Where(x => x.FormCollectionId == Guid.Parse(FormCollectionId)).FirstOrDefault();
+                        if (datas != null)
+                        {
+                            datas.FormData = FormData;
+                            SaveModel.DetailListDataResult FormResult = new SaveModel.DetailListDataResult();
+                            FormResult.optionType = SaveModel.MainOptionType.update;
+                            FormResult.detailType = typeof(FormCollectionObject);
+                            FormResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(datas)));
+                            saveModel.DetailListData.Add(FormResult);
+                        }
+                        #endregion
+
+                        #region  cmc_pdms_project_task  start_date /end_date /approve_status欄位
+                        Data.start_date = start_date;
+                        Data.end_date = end_date;
+                        Data.approve_status = status;
+                        SaveModel.DetailListDataResult taskResult = new SaveModel.DetailListDataResult();
+                        taskResult.optionType = SaveModel.MainOptionType.update;
+                        taskResult.detailType = typeof(cmc_pdms_project_task);
+                        taskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(Data)));
+                        saveModel.DetailListData.Add(taskResult);
+                        #endregion
+                    }
+
+                    ResponseContent = base.CustomBatchProcessEntity(saveModel);
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "主工作計劃執行，表單->暫存按鈕 ，新增：FormCollectionObject 表  或  修改 cmc_pdms_project_task  FormCollectionId/FormData 欄位，view_cmc_plan_exec_ganttService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    ResponseContent.Error(ex.Message);
+                }
+            }
+
+         
+              
+            return ResponseContent.OK();
+        }
+
   }
 }
