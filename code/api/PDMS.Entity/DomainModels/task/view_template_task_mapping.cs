@@ -16,10 +16,11 @@ namespace PDMS.Entity.DomainModels
     [Entity(TableCnName = "模板任務映射",TableName = "view_template_task_mapping",DBServer = "SysDbContext")]
     public partial class view_template_task_mapping:SysEntity
     {
+
         /// <summary>
-       ///階段
-       /// </summary>
-       [Display(Name ="階段")]
+        ///階段
+        /// </summary>
+        [Display(Name ="階段")]
        [MaxLength(100)]
        [Column(TypeName="nvarchar(100)")]
        public string dicName { get; set; }
@@ -33,11 +34,30 @@ namespace PDMS.Entity.DomainModels
        public string task_name { get; set; }
 
        /// <summary>
+       ///日程設定(起)
+       /// </summary>
+       [Display(Name ="日程設定(起)")]
+       [MaxLength(1)]
+       [Column(TypeName="varchar(1)")]
+       [Required(AllowEmptyStrings=false)]
+       public string start_date { get; set; }
+
+       /// <summary>
+       ///日程設定(迄)
+       /// </summary>
+       [Display(Name ="日程設定(迄)")]
+       [MaxLength(1)]
+       [Column(TypeName="varchar(1)")]
+       [Required(AllowEmptyStrings=false)]
+       public string end_date { get; set; }
+
+       /// <summary>
        ///是否允許刪除
        /// </summary>
        [Display(Name ="是否允許刪除")]
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
+       [Editable(true)]
        public string is_delete_able { get; set; }
 
        /// <summary>
@@ -46,6 +66,7 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="是否重點審核項目")]
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
+       [Editable(true)]
        public string is_audit_key { get; set; }
 
        /// <summary>
@@ -79,17 +100,17 @@ namespace PDMS.Entity.DomainModels
        public int? CreateID { get; set; }
 
        /// <summary>
-       ///
+       ///創建人
        /// </summary>
-       [Display(Name ="Creator")]
+       [Display(Name ="創建人")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        public string Creator { get; set; }
 
        /// <summary>
-       ///
+       ///創建日
        /// </summary>
-       [Display(Name ="CreateDate")]
+       [Display(Name ="創建日")]
        [Column(TypeName="datetime")]
        public DateTime? CreateDate { get; set; }
 
@@ -101,17 +122,17 @@ namespace PDMS.Entity.DomainModels
        public int? ModifyID { get; set; }
 
        /// <summary>
-       ///
+       ///修改人
        /// </summary>
-       [Display(Name ="Modifier")]
+       [Display(Name ="修改人")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        public string Modifier { get; set; }
 
        /// <summary>
-       ///
+       ///修改日
        /// </summary>
-       [Display(Name ="ModifyDate")]
+       [Display(Name ="修改日")]
        [Column(TypeName="datetime")]
        public DateTime? ModifyDate { get; set; }
 
@@ -130,76 +151,73 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="int")]
        public int? order_no { get; set; }
 
+       /// <summary>
+       ///預警工期(天)
+       /// </summary>
+       [Display(Name ="預警工期(天)")]
+       [Column(TypeName="int")]
+       public int? work_days { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "預計工期")]
-        [MaxLength(1)]
-        [Column(TypeName = "int")]
-        [Editable(true)]
-        public int work_days { get; set; }
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="template_id")]
+       [Column(TypeName="uniqueidentifier")]
+       public Guid? template_id { get; set; }
 
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="set_type")]
+       [MaxLength(10)]
+       [Column(TypeName="varchar(10)")]
+       public string set_type { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "template_id")]
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid template_id { get; set; }
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="set_value")]
+       [MaxLength(10)]
+       [Column(TypeName="varchar(10)")]
+       public string set_value { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "set_type")]
-        [Column(TypeName = "varchar(10)")]
-        public string set_type { get; set; }
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="FormId")]
+       [Column(TypeName="uniqueidentifier")]
+       public Guid? FormId { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "set_value")]
-        [Column(TypeName = "varchar(10)")]
-        public string set_value { get; set; }
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="FormCode")]
+       [MaxLength(20)]
+       [Column(TypeName="varchar(20)")]
+       public string FormCode { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-           [Display(Name = "FormId")]
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid FormId { get; set; }
+       /// <summary>
+       ///零品審核
+       /// </summary>
+       [Display(Name ="零品審核")]
+       [MaxLength(1)]
+       [Column(TypeName="char(1)")]
+       public string is_part_handle { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "FormCode")]
-        [Column(TypeName = "varchar(20)")]
-        public string FormCode { get; set; }
+       /// <summary>
+       ///承辦預警(天)
+       /// </summary>
+       [Display(Name ="承辦預警(天)")]
+       [Column(TypeName="int")]
+       public int? warn { get; set; }
 
+       /// <summary>
+       ///上級預警(天)
+       /// </summary>
+       [Display(Name ="上級預警(天)")]
+       [Column(TypeName="int")]
+       public int? warn_leader { get; set; }
 
-        /// <summary>
-        ///is_part_handle
-        /// </summary>
-        [Display(Name = "is_part_handle")]
-        [MaxLength(1)]
-        [Column(TypeName = "char(1)")]
-        public string is_part_handle { get; set; }
-
-
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "start_date")]
-        [Column(TypeName = "datetime")]
-        public DateTime? start_date { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "end_date")]
-        [Column(TypeName = "datetime")]
-        public DateTime? end_date { get; set; }
-
+       
     }
 }
