@@ -156,6 +156,7 @@ namespace PDMS.Project.Services
                             WHERE epl_id='" + epl_id + "'";
             checkTemplate = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
             bool templateExists = checkTemplate.Any(b => b.template_id.ToString() == template_id.ToString());
+            //如果沒有相同模板 => 1.還沒選任務 2.選了不同模板的任務 故刪除舊有資料後面再新增
             if (!templateExists) {
                 string deleteAction = @$"
                             DELETE FROM
@@ -173,6 +174,7 @@ namespace PDMS.Project.Services
                 }
             }
 
+            //把已選擇之任務挑出來
             string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='" + epl_id + "' AND template_id = '" + template_id + "";
             existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql2, null);
 
