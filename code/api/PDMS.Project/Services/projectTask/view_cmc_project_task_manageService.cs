@@ -25,14 +25,21 @@ namespace PDMS.Project.Services
     {
       get { return AutofacContainerModule.GetService<Iview_cmc_project_task_manageService>(); } }
 
-        public WebResponseContent setPartTaker(SaveModel saveModel)
+        public WebResponseContent addMissionData(object obj)
         {
-            return Instance.setPartTaker(saveModel);
+            return Instance.addMissionData(obj);
         }
-
-        public List<view_cmc_project_task_manage> submitReview(object saveModel)
+        public WebResponseContent setPartTaker(object obj)
         {
-            throw new NotImplementedException();
+            return Instance.setPartTaker(obj);
+        }
+        public List<view_cmc_project_task_manage> submitReview(object obj)
+        {
+            return Instance.submitReview(obj);
+        }
+        public WebResponseContent updateMissionData(object obj)
+        {
+            return Instance.updateMissionData(obj);
         }
     }
  }

@@ -40,7 +40,7 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-
+       
         public WebResponseContent setPartTaker(SaveModel saveModel, Dictionary<string, object> mainData)
         {
             var MainData = saveModel.MainData;
@@ -78,11 +78,71 @@ namespace PDMS.Project.Services
                 catch (Exception ex)
                 {
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
-
                     return ResponseContent.Error();
                 }
             }
             return ResponseContent.OK();
         }
+
+        public WebResponseContent updateMissionData(SaveModel saveModel)
+        {
+            var MainDatas = saveModel.MainDatas;
+            var Extra = saveModel.Extra;
+            List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
+            Console.WriteLine("");
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
+                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+
+                        if (pTask != null)
+                        {
+                            if (item["start_date"] != null && item["end_date"] != null) 
+                            {
+                                pTask.start_date = (DateTime?)item["start_date"];
+                                pTask.end_date = (DateTime?)item["end_date"];
+                            }
+                            /*if (item["end_date"] != null)
+                            {
+                                pTask.end_date = (DateTime?)item["end_date"];
+                                //pTask.end_date = item["end_date"] == null ? "" : item["end_date"];
+                            }*/
+                        }
+                        projectTaskLisk.Add(pTask);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：projectTaskLisk：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(projectTaskLisk, x => new {  x.start_date,x.end_date });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
+            return ResponseContent.OK();
+        }
+
+        public WebResponseContent addMissionData(SaveModel saveModel, Dictionary<string, object> mainData)
+        {
+
+
+            return ResponseContent.OK();
+        }
+
     }
 }
