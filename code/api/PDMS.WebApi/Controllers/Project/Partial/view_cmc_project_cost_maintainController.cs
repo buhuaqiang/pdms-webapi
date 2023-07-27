@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Project.Controllers
 {
@@ -29,11 +30,19 @@ namespace PDMS.Project.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
-
+        [ApiActionPermission()]
         [HttpPost, Route("save")]
         public ActionResult save1([FromBody] SaveModel saveModel)
         {
             return base.Update(saveModel);
         }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("costConfirm")]
+        public ActionResult costConfirm([FromBody] object[] keys)
+        {
+            return Json(_service.costConfirm(keys));
+        }
+
     }
 }

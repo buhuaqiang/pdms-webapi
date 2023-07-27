@@ -794,6 +794,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_2 = item["fs_2"] == null ? null : item["fs_2"].ToDecimal();
                                 epl.fs_3 = item["fs_3"] == null ? null : item["fs_3"].ToDecimal();
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
+                                epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = "00";
 
                                 eplHisList.Add(eplHis);
@@ -803,6 +804,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_2 = item["fs_2"] == null ? null : item["fs_2"].ToDecimal();
                                 epl.fs_3 = item["fs_3"] == null ? null : item["fs_3"].ToDecimal();
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
+                                epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = epl.fs_approve_status;
                             }
                             
@@ -821,7 +823,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                     if (eplList.Count > 0) {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
