@@ -15,6 +15,9 @@ using PDMS.Project.IRepositories;
 using PDMS.Project.IServices;
 using PDMS.Core.DBManager;
 using System.Text.Json;
+using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Mvc;
+using SkiaSharp;
 
 namespace PDMS.Project.Services
 {
@@ -87,7 +90,6 @@ namespace PDMS.Project.Services
         public WebResponseContent updateMissionData(SaveModel saveModel)
         {
             var MainDatas = saveModel.MainDatas;
-            var Extra = saveModel.Extra;
             List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
             Console.WriteLine("");
             if (MainDatas.Count != 0)
@@ -137,10 +139,75 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
         }
 
-        public WebResponseContent addMissionData(SaveModel saveModel, Dictionary<string, object> mainData)
+        public WebResponseContent addMissionData(SaveModel saveModel)
         {
+            Console.WriteLine("addMissionData");
+            var MainDatas = saveModel.MainDatas;
+            var epl_id = saveModel.Extra;
+            var template_id = MainDatas[0]["template_id"];
+            //1.檢查此epl是否已經有選擇過模板、任務
+            int count = 0;
+            string sql = $@"SELECT  epl_id , template_id , count(task_id) AS task_count FROM cmc_pdms_project_task
+                            WHERE epl_id='" + epl_id + "'";
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+
+            List<cmc_pdms_project_task> addList = new List<cmc_pdms_project_task>();
+            List<cmc_pdms_project_task> existTaskList = new List<cmc_pdms_project_task>();
+            List<view_template_task_mapping> frontEndTaskLisk = new List<view_template_task_mapping>();
+
+            string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='" + epl_id + "' AND template_id = '" + template_id + "";
+            existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
 
 
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        //判斷此任務是否已經被選擇了
+                        bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
+                        if (taskExists)
+                        {
+                            cmc_pdms_project_task pTask = new cmc_pdms_project_task();
+                            
+                            if (item["start_date"] != null && item["end_date"] != null)
+                            {
+                                pTask.start_date = (DateTime?)item["start_date"];
+                                pTask.end_date = (DateTime?)item["end_date"];
+                            }
+                            pTask.epl_id = (Guid?)epl_id;
+                            pTask.template_id = (Guid?)item["template_id"];
+                            pTask.task_id = (Guid?)item["task_id"];
+                            pTask.action_type = "add";
+                            pTask.approve_status = "00";
+                            pTask.is_part_handle = item["is_part_handle"].ToString();
+                            pTask.is_delete_able = item["is_delete_able"].ToString();
+                            pTask.FormId = (Guid?)item["FormId"];
+                            pTask.FormCode = item["FormCode"].ToString();
+                            addList.Add(pTask);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：addList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_task");
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
             return ResponseContent.OK();
         }
 
