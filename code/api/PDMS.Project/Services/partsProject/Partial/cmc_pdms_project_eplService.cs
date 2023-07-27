@@ -721,5 +721,68 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             return eplList;
         }
+
+
+        public WebResponseContent updateCost(SaveModel saveModel)
+        {
+
+            var MainDatas = saveModel.MainDatas;
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            if (item["fs_approve_status"] == "02")
+                            { //審批通過更新時更新epl表並寫入數據到log表
+                                epl.fs_1 = item["fs_1"] == null ? null : item["fs_1"].ToDecimal();
+                                epl.fs_2 = item["fs_2"] == null ? null : item["fs_2"].ToDecimal();
+                                epl.fs_3 = item["fs_3"] == null ? null : item["fs_3"].ToDecimal();
+                                epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
+                                epl.fs_approve_status = "00";
+
+                            }
+                            else{ //審批為草稿或拒絕時直接更新epl表
+                                epl.fs_1 = item["fs_1"] == null ? null : item["fs_1"].ToDecimal();
+                                epl.fs_2 = item["fs_2"] == null ? null : item["fs_2"].ToDecimal();
+                                epl.fs_3 = item["fs_3"] == null ? null : item["fs_3"].ToDecimal();
+                                epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
+                                epl.fs_approve_status = epl.fs_approve_status;
+                            }
+
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+            }
+            return ResponseContent.OK();
+        }
+
     }
 }
