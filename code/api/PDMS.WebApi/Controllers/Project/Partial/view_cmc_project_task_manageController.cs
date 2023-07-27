@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
+using PDMS.Core.Utilities;
 
 namespace PDMS.Project.Controllers
 {
@@ -41,23 +42,23 @@ namespace PDMS.Project.Controllers
 
         [Route("SetPartTakerData"), HttpPost]
         [ApiActionPermission()]
-        public ActionResult SetPartTakerData([FromBody] Object obj)
+        public WebResponseContent SetPartTakerData([FromBody] Object obj)
         {
-            return Json(Service.setPartTaker(obj));
+            return Service.setPartTaker(obj);
         }
 
         [Route("updateMissionData"), HttpPost]
         [ApiActionPermission()]
-        public ActionResult updateMissionData([FromBody] Object obj)
+        public WebResponseContent updateMissionData([FromBody] Object obj)
         {
-            return Json(Service.updateMissionData(obj));
+            return Service.updateMissionData(obj);
         }
 
         [Route("addMissionData"), HttpPost]
         [ApiActionPermission()]
-        public ActionResult addMissionData([FromBody] Object obj)
+        public WebResponseContent addMissionData([FromBody] Object obj)
         {
-            return Json(Service.addMissionData(obj));
+            return Service.addMissionData(obj);
         }
 
     }
