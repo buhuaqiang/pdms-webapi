@@ -129,7 +129,16 @@ namespace PDMS.Project.Services
                     }
                 }
             }
-
+            if (path == "/view_cmc_project_epl_build")//專案建立部車型窗口查詢
+            {
+                QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName ,'' as UserTrueName,'' as user_code    
+                             from cmc_pdms_project_epl epl
+                             left  join cmc_pdms_project_main main on main.project_id=epl.project_id
+                             left join  cmc_pdms_project_org org  on org.project_id=main.project_id and epl.org_code=org.org_code
+                            left join cmc_group_model_set mset on mset.DepartmentCode=epl.group_code and mset.model_type=main.model_type and mset.set_type='01'
+                            where 1=1 and epl_phase='01'  ";
+                QuerySql += where;
+            }
             if (path == "/view_cmc_project_epl")//部車型窗口查詢
             {
                 QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName ,'' as UserTrueName,'' as user_code    

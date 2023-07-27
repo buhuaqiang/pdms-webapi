@@ -69,7 +69,7 @@ namespace PDMS.Project.Services
                             }
                             else
                             {//部車型窗口保存操作
-                                if (item["org_code"].ToString() == item["new_org_code"].ToString())
+                                if (item["org_code"] != null && item["org_code"].ToString() == item["new_org_code"].ToString())
                                 {
                                     epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
                                     epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
@@ -141,6 +141,10 @@ namespace PDMS.Project.Services
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
             var path = data["path"].ToString();
+            var kdType = data["kdType"] == null ? "" : data["kdType"].ToString();
+            var orgCode = data["orgCode"] == null ? "" : data["orgCode"].ToString();
+            var groupCode = data["groupCode"] == null ? "" : data["groupCode"].ToString();
+            var devTaker = data["devTaker"]?.ToInt();
             eplLists = getEpl(obj);
 
             if (eplLists.Count != 0)
@@ -156,26 +160,24 @@ namespace PDMS.Project.Services
                         {
                             if (path.Equal("/view_cmc_project_epl_group"))
                             {//組窗口保存操作
-                                epl.dev_taker_id = item.dev_taker_id == null ? null : item.dev_taker_id.ToInt();
+                                epl.dev_taker_id = devTaker;
 
                             }
-                            if (path.Equal("/view_cmc_project_epl"))
+                            if (path.Equal("/view_cmc_project_epl") || path.Equal("/view_cmc_project_epl_build"))
                             {//部車型窗口保存操作
-                                if (item.org_code.ToString() == item.new_org_code.ToString())
+                                if (item.org_code.ToString() == orgCode)
                                 {
-                                    epl.kd_type = item.kd_type == null ? "" : item.kd_type.ToString();
-                                    epl.group_code = item.group_code == null ? "" : item.group_code.ToString();
-                                    epl.original_part_no = item.original_part_no == null ? "" : item.original_part_no.ToString();
-                                    epl.new_org_code = epl.new_org_code;
+                                    epl.kd_type = kdType;
+                                    epl.group_code = groupCode;
+                                    epl.new_org_code = orgCode;
                                     epl.submit_status = "0";
                                     epl.org_change_approve_status = "02";
                                 }
                                 else
                                 {
-                                    epl.kd_type = item.kd_type == null ? "" : item.kd_type.ToString();
-                                    epl.group_code = item.group_code == null ? "" : item.group_code.ToString();
-                                    epl.new_org_code = item.new_org_code == null ? "" : item.new_org_code.ToString();
-                                    epl.original_part_no = item.original_part_no == null ? "" : item.original_part_no.ToString();
+                                    epl.kd_type = kdType;
+                                    epl.group_code = groupCode;
+                                    epl.new_org_code = orgCode;
                                     epl.submit_status = "0";
                                     epl.org_change_approve_status = "00";
                                 }
@@ -200,11 +202,11 @@ namespace PDMS.Project.Services
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
-                    if (path.Equal("/view_cmc_project_epl"))
+                    if (path.Equal("/view_cmc_project_epl") || path.Equal("/view_cmc_project_epl_build"))
                     {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.submit_status, x.org_change_approve_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
@@ -252,9 +254,15 @@ namespace PDMS.Project.Services
                 where += " and submit_status='" + submitStatus + "'";
             }
 
-            if (path == "/view_cmc_project_epl")
-            {//部車型窗口
+            if (path == "/view_cmc_project_epl" )
+            {//專案啟動部車型窗口
                 string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                sql += where;
+                eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+            }
+            if (path == "/view_cmc_project_epl_build")
+            {//專案建立部車型窗口
+                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='01' ";
                 sql += where;
                 eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             }
