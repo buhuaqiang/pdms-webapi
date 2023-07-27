@@ -33,17 +33,31 @@ namespace PDMS.Project.Controllers
 
         [Route("submitReview"), HttpPost]
         [ApiActionPermission()]
-        public ActionResult submit([FromBody] object saveModel)
+        public ActionResult submit([FromBody] Object obj)
         {
-            List<view_cmc_project_task_manage> list = _service.submitReview(saveModel);
+            List<view_cmc_project_task_manage> list = Service.submitReview(obj);
             return Json(list);
         }
 
         [Route("SetPartTakerData"), HttpPost]
         [ApiActionPermission()]
-        public ActionResult SetPartTakerData([FromBody] SaveModel saveModel)
+        public ActionResult SetPartTakerData([FromBody] Object obj)
         {
-            return Json(_service.setPartTaker(saveModel));
+            return Json(Service.setPartTaker(obj));
+        }
+
+        [Route("updateMissionData"), HttpPost]
+        [ApiActionPermission()]
+        public ActionResult updateMissionData([FromBody] Object obj)
+        {
+            return Json(Service.updateMissionData(obj));
+        }
+
+        [Route("addMissionData"), HttpPost]
+        [ApiActionPermission()]
+        public ActionResult addMissionData([FromBody] Object obj)
+        {
+            return Json(Service.addMissionData(obj));
         }
 
     }
