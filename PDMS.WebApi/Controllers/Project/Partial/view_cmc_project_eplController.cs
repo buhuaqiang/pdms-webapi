@@ -56,5 +56,13 @@ namespace PDMS.Project.Controllers
             return base.Update(saveModel);
         }
 
+
+        [ApiActionPermission()]
+        [HttpPost, Route("GetPageData")]
+        public override ActionResult GetPageData(PageDataOptions options)
+        {
+            return base.GetPageData(options);
+        }
+
     }
 }
