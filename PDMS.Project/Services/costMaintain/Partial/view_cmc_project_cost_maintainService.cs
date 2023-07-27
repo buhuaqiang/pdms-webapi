@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Core.ManageUser;
+using Microsoft.VisualBasic;
 
 namespace PDMS.Project.Services
 {
@@ -25,6 +26,9 @@ namespace PDMS.Project.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Iview_cmc_project_cost_maintainRepository _repository;//访问数据库
+
+
+        WebResponseContent webContent=new WebResponseContent();
 
         [ActivatorUtilitiesConstructor]
         public view_cmc_project_cost_maintainService(
@@ -122,5 +126,28 @@ namespace PDMS.Project.Services
             return cmc_pdms_project_eplService.Instance.updateCost(saveModel);
         }
 
+        /// <summary>
+        /// 成本編列確認
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        public WebResponseContent costConfirm(object[] keys)
+        {
+            string epls = string.Join("','", keys);
+            string sql = $@"update cmc_pdms_project_epl set fs_approve_status='01' where epl_id in ('{epls}')";
+            try
+            {
+                var count3 = repository.DapperContext.ExcuteNonQuery(sql, null);
+            }
+            catch (Exception ex)
+            {
+
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "開發清冊成本編列確認，view_cmc_project_cost_maintainService 文件：costConfirm：" + DateTime.Now + ":" + ex.Message);
+                return webContent.Error();
+            }
+            //todo寫入審批流程表 cmc_pdms_wf_master和cmc_pdms_wf_epl_fs
+
+            return webContent.OK("");
+        }
     }
 }

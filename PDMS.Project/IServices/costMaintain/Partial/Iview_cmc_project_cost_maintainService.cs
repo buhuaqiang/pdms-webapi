@@ -9,5 +9,6 @@ namespace PDMS.Project.IServices
 {
     public partial interface Iview_cmc_project_cost_maintainService
     {
+        public WebResponseContent costConfirm(object[] keys);
     }
  }
