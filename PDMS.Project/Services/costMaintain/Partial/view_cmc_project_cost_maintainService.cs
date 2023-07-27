@@ -51,6 +51,7 @@ namespace PDMS.Project.Services
             string part_name = "";
             string fs_approve_status = "";
             string path = "";
+            string project_status = "";
             string where = " ";
             UserInfo userInfo = UserContext.Current.UserInfo;
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
@@ -106,16 +107,30 @@ namespace PDMS.Project.Services
                             }
                             continue;
                         }
-                       
+                        if (sp.Name.ToLower() == "project_status".ToLower())
+                        {
+                            project_status = sp.Value;
+                            continue;
+                        }
+
                     }
                 }
             }
 
-            
+            if (project_status == "01")
+            {
+                QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
+	                               where epl_phase='01'
+	                                    and company_code is null 
+	                                    and Final_version_status='2'  ";
+            }
+            else {
                 QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
 	                               where epl_phase='02'
 	                                    and company_code is null 
 	                                    and Final_version_status='2'  ";
+            }
+               
                 QuerySql += where;
             
             return base.GetPageData(options);
