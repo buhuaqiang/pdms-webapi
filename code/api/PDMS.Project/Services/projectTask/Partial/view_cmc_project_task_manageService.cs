@@ -145,19 +145,36 @@ namespace PDMS.Project.Services
             var MainDatas = saveModel.MainDatas;
             var epl_id = saveModel.Extra;
             var template_id = MainDatas[0]["template_id"];
-            //1.檢查此epl是否已經有選擇過模板、任務
-            int count = 0;
-            string sql = $@"SELECT  epl_id , template_id , count(task_id) AS task_count FROM cmc_pdms_project_task
-                            WHERE epl_id='" + epl_id + "'";
-            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
-
+            
+            List<cmc_pdms_project_task> checkTemplate = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> addList = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> existTaskList = new List<cmc_pdms_project_task>();
             List<view_template_task_mapping> frontEndTaskLisk = new List<view_template_task_mapping>();
 
-            string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='" + epl_id + "' AND template_id = '" + template_id + "";
-            existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
+            //1.檢查此epl是否已經有選擇過模板,跟現在選的是否一樣
+            string sql = $@"SELECT  epl_id , template_id  FROM cmc_pdms_project_task
+                            WHERE epl_id='" + epl_id + "'";
+            checkTemplate = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
+            bool templateExists = checkTemplate.Any(b => b.template_id.ToString() == template_id.ToString());
+            if (!templateExists) {
+                string deleteAction = @$"
+                            DELETE FROM
+	                            cmc_pdms_project_task 
+                            WHERE
+	                            epl_id ='{epl_id}' '";
+                try
+                {
+                    var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理選擇模板任務  更換模板刪除舊模板 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：addMissionData：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
 
+            string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='" + epl_id + "' AND template_id = '" + template_id + "";
+            existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql2, null);
 
             if (MainDatas.Count != 0)
             {
