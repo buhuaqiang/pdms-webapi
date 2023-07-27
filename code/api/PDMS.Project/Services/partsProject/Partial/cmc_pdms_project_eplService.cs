@@ -231,6 +231,7 @@ namespace PDMS.Project.Services
             var upgId = data["upgId"] == null ? "" : data["upgId"].ToString();
             var partNo = data["partNo"] == null ? "" : data["partNo"].ToString();
             var submitStatus = data["submitStatus"] == null ? "" : data["submitStatus"].ToString();
+            var projectStatus = data["projectStatus"] == null ? "" : data["projectStatus"].ToString();
             UserInfo userInfo = UserContext.Current.UserInfo;
             String departmentCode = userInfo.DepartmentCode;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
@@ -255,20 +256,29 @@ namespace PDMS.Project.Services
             }
 
             if (path == "/view_cmc_project_epl" )
-            {//專案啟動部車型窗口
-                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
-                sql += where;
-                eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
-            }
-            if (path == "/view_cmc_project_epl_build")
-            {//專案建立部車型窗口
-                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='01' ";
+            {//專案部車型窗口
+                string sql = "";
+                if (projectStatus == "01")
+                {//專案啟動
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' ";
+                }
+                else {
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                }
                 sql += where;
                 eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             }
             if (path == "/view_cmc_project_epl_group")
             {//組窗口維護
-                string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                string sql = "";
+                if (projectStatus == "01")
+                {
+                     sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' ";
+                }
+                else {
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' ";
+                }
+              
                 sql += where;
                 eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             }
@@ -573,10 +583,17 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             int count = 0;
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
+            var projectStatus = data["projectStatus"].ToString();
 
             string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
                             where epl.project_id='" + projectId + "'";
-            sql += " and epl.epl_phase='02' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' )";
+            if (projectStatus=="01") {
+                sql += " and epl.epl_phase='01' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' )";
+            }
+            else {
+                sql += " and epl.epl_phase='02' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' )";
+            }
+           
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
             return count;
         }
@@ -587,7 +604,8 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
-            eplLists = getDepartList(projectId);
+            var projectStatus = data["projectStatus"].ToString();
+            eplLists = getDepartList(projectId, projectStatus);
 
             if (eplLists.Count != 0)
             {
@@ -631,15 +649,22 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
         }
 
 
-        public List<cmc_pdms_project_epl> getDepartList(string project_id)//獲取部門的epl
+        public List<cmc_pdms_project_epl> getDepartList(string project_id,string project_status)//獲取部門的epl
         {
             UserInfo userInfo = UserContext.Current.UserInfo;
             String departmentCode = userInfo.DepartmentCode;
             var projectId = project_id;
+            var projectStatus = project_status;
 
             List<cmc_pdms_project_epl> departList = new List<cmc_pdms_project_epl>();
-            string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
-
+            string sql = "";
+            if (projectStatus=="01") {
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and project_id='" + projectId + "'";
+            }
+            else {
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
+            }
+           
             departList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             return departList;
         }
@@ -649,10 +674,17 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             int count = 0;
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
+            var projectStatus = data["projectStatus"].ToString();
 
             string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
                             where epl.project_id='" + projectId + "'";
-            sql += " and epl.epl_phase='02' and  Final_version_status not in ('1','2') ";
+
+            if (projectStatus=="01") {
+                sql += " and epl.epl_phase='01' and  Final_version_status not in ('1','2') ";
+            } else {
+                sql += " and epl.epl_phase='02' and  Final_version_status not in ('1','2') ";
+            }
+         
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
             return count;
         }
@@ -662,11 +694,22 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             int count = 0;
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
+            var projectStatus = data["projectStatus"].ToString();
 
             string sql = $@"select count(*)  from (
 	                            select  row_number() over(partition by part_no order by upg_id,part_no)rn ,*  from  cmc_pdms_project_epl 
 	                                where project_id='" + projectId + "'";
-            sql += "and company_code is null  and epl_phase='02' ) tab where tab.rn>1   ";
+
+            if (projectStatus == "01")
+            {
+                sql += "and company_code is null  and epl_phase='01' ) tab where tab.rn>1   ";
+            }
+            else
+            {
+                sql += "and company_code is null  and epl_phase='02' ) tab where tab.rn>1   ";
+            }
+          
+            
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
             return count;
         }
@@ -677,7 +720,8 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
-            eplLists = getEplList(projectId);
+            var projectStatus = data["projectStatus"].ToString();
+            eplLists = getEplList(projectId, projectStatus);
 
             if (eplLists.Count != 0)
             {
@@ -719,12 +763,19 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             return ResponseContent.OK();
 
         }
-        public List<cmc_pdms_project_epl> getEplList(string project_id)//獲取專案的epl
+        public List<cmc_pdms_project_epl> getEplList(string project_id,string project_status)//獲取專案的epl
         {
             var projectId = project_id;
+            var projectStatus = project_status;
 
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            string sql = @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
+            string sql = "";
+            if (projectStatus=="01") {
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and project_id='" + projectId + "'";
+            } else {
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'";
+            }
+           
 
             eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
             return eplList;
