@@ -13,6 +13,7 @@ using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
 using PDMS.Core.Extensions;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PDMS.Project.Controllers
 {
@@ -37,6 +38,13 @@ namespace PDMS.Project.Controllers
         public override ActionResult Import(List<IFormFile> fileInput)
         {
             return Json(_service.Upload(fileInput));
+        }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("GetPageData")]
+        public  override ActionResult GetPageData(PageDataOptions options)
+        {
+            return base.GetPageData(options);
         }
 
     }
