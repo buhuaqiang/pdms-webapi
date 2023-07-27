@@ -45,5 +45,7 @@ namespace PDMS.Project.IServices
         public WebResponseContent finaliza(Object obj);
 
         public WebResponseContent saveAll(Object obj);
+
+        public WebResponseContent updateCost(SaveModel saveModel);
     }
  }
