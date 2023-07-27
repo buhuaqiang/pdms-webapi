@@ -46,10 +46,10 @@ namespace PDMS.Project.Services
        
         public WebResponseContent setPartTaker(SaveModel saveModel, Dictionary<string, object> mainData)
         {
+            Console.WriteLine("setPartTaker");
             var MainData = saveModel.MainData;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             string[] eplidList = JsonSerializer.Deserialize<string[]>((string)mainData["epl_id"]);
-            //string json = JsonSerializer.Serialize(MainData);
             var userId = MainData["User_Id"];
             if (MainData.Count != 0)
             {
@@ -74,7 +74,7 @@ namespace PDMS.Project.Services
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status });
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.part_taker_id });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
@@ -91,7 +91,7 @@ namespace PDMS.Project.Services
         {
             var MainDatas = saveModel.MainDatas;
             List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
-            Console.WriteLine("");
+            Console.WriteLine("updateMissionData");
             if (MainDatas.Count != 0)
             {
                 try
@@ -189,21 +189,20 @@ namespace PDMS.Project.Services
                         if (taskExists)
                         {
                             cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                            
                             if (item["start_date"] != null && item["end_date"] != null)
                             {
                                 pTask.start_date = (DateTime?)item["start_date"];
                                 pTask.end_date = (DateTime?)item["end_date"];
                             }
-                            pTask.epl_id = (Guid?)epl_id;
-                            pTask.template_id = (Guid?)item["template_id"];
-                            pTask.task_id = (Guid?)item["task_id"];
+                            pTask.epl_id = epl_id == null ? Guid.Parse("") : Guid.Parse(epl_id.ToString());
+                            pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
+                            pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString()); 
                             pTask.action_type = "add";
                             pTask.approve_status = "00";
-                            pTask.is_part_handle = item["is_part_handle"].ToString();
-                            pTask.is_delete_able = item["is_delete_able"].ToString();
-                            pTask.FormId = (Guid?)item["FormId"];
-                            pTask.FormCode = item["FormCode"].ToString();
+                            pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
+                            pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString(); 
+                            pTask.FormId = item["FormId"] == null ? Guid.Parse("") : Guid.Parse(item["FormId"].ToString()); 
+                            pTask.FormCode = item["FormCode"] == null ? "" : item["FormCode"].ToString();
                             addList.Add(pTask);
                         }
                     }
