@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
+using System.Collections.Generic;
 
 namespace PDMS.Sys.Services
 {
@@ -24,6 +25,7 @@ namespace PDMS.Sys.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Icmc_common_task_ruleRepository _repository;//访问数据库
+        WebResponseContent webResponse=new WebResponseContent();
 
         [ActivatorUtilitiesConstructor]
         public cmc_common_task_ruleService(
@@ -37,5 +39,21 @@ namespace PDMS.Sys.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        public override WebResponseContent Add(SaveModel saveDataModel)
+        {
+            // 在保存数据库前的操作，所有数据都验证通过了，这一步执行完就执行数据库保存
+            AddOnExecuting = (cmc_common_task_rule or, object list) =>
+            {
+                List<cmc_common_task_rule> orderLists = repository.DbContext.Set<cmc_common_task_rule>().Where(x => x.rule_code == or.rule_code).ToList();
+                //自定义逻辑
+                if (orderLists != null && orderLists.Count > 0)
+                {//
+                    return webResponse.Error("規則編碼重複");
+                }
+
+                return webResponse.OK();
+            };
+            return base.Add(saveDataModel);
+        }
+    }
 }

@@ -93,6 +93,9 @@ namespace PDMS.Sys.Services
         {
             
             string sSql = $@"SELECT count(0) from cmc_common_task_template_set where  template_id='{saveDataModel.MainData["template_id"].ToString()}' and set_type='{saveDataModel.MainData["set_type"].ToString()}' and set_value ='{saveDataModel.MainData["set_value"].ToString()}'";
+            if (saveDataModel.MainData.ContainsKey("parent_set_id") && !string.IsNullOrEmpty(saveDataModel.MainData["parent_set_id"].ToString())  ){
+                sSql += $@"and parent_set_id='{saveDataModel.MainData["parent_set_id"].ToString()}'";
+            }
             object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
             if (Convert.ToInt32(obj) > 0)
             {
