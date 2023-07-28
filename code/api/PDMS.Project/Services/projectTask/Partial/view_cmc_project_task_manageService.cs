@@ -44,18 +44,31 @@ namespace PDMS.Project.Services
             //base.Init(dbRepository);
         }
        
-        public WebResponseContent setPartTaker(SaveModel saveModel, Dictionary<string, object> mainData)
+        public WebResponseContent setPartTaker(SaveModel saveModel)
         {
-            Console.WriteLine("setPartTaker");
+            Console.WriteLine("setPartTaker3");
             var MainData = saveModel.MainData;
-            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            string[] eplidList = JsonSerializer.Deserialize<string[]>((string)mainData["epl_id"]);
+            var epl_id = MainData["epl_id"].ToString();
             var userId = MainData["User_Id"];
-            if (MainData.Count != 0)
+            var eplIdArray = Array.Empty<string>(); 
+            // 使用 System.Text.Json 將 JSON 字串轉成匿名物件
+            var jsonObject = JsonSerializer.Deserialize<object>(epl_id);
+
+            // 取得 epl_id 的值，並轉成陣列
+            if (jsonObject is JsonElement rootElement &&
+                rootElement.TryGetProperty("epl_id", out JsonElement eplIdElement) &&
+                eplIdElement.ValueKind == JsonValueKind.Array)
+            {
+                eplIdArray = eplIdElement.EnumerateArray().Select(x => x.GetString()).ToArray();
+            }
+
+                List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            //string[] eplidList = JsonSerializer.Deserialize<string[]>((string)mainData["epl_id"]);
+            if (eplIdArray != null && eplIdArray.Length > 0)
             {
                 try
                 {
-                    foreach (var item in eplidList)
+                    foreach (var item in eplIdArray)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.ToString())).FirstOrDefault();
