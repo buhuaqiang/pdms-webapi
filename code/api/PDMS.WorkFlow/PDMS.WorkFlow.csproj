@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\PDMS.Builder\PDMS.Builder.csproj" />
+    <ProjectReference Include="..\PDMS.Core\PDMS.Core.csproj" />
+    <ProjectReference Include="..\PDMS.Entity\PDMS.Entity.csproj" />
+    <ProjectReference Include="..\PDMS.Sys\PDMS.Sys.csproj" />
+  </ItemGroup>
+
 </Project>
