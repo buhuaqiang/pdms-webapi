@@ -31,6 +31,7 @@ namespace PDMS.Project.Services
         }
         public WebResponseContent setPartTaker(object obj)
         {
+            Console.WriteLine("SetPartTakerData2");
             return Instance.setPartTaker(obj);
         }
         public List<view_cmc_project_task_manage> submitReview(object obj)

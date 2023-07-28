@@ -32,30 +32,31 @@ namespace PDMS.Project.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [Route("submitReview"), HttpPost]
         [ApiActionPermission()]
+        [Route("submitReview"), HttpPost]
         public ActionResult submit([FromBody] Object obj)
         {
             List<view_cmc_project_task_manage> list = Service.submitReview(obj);
             return Json(list);
         }
 
-        [Route("SetPartTakerData"), HttpPost]
         [ApiActionPermission()]
+        [Route("SetPartTakerData"), HttpPost]
         public WebResponseContent SetPartTakerData([FromBody] Object obj)
         {
+            Console.WriteLine("SetPartTakerData1");
             return Service.setPartTaker(obj);
         }
 
-        [Route("updateMissionData"), HttpPost]
         [ApiActionPermission()]
+        [Route("updateMissionData"), HttpPost]
         public WebResponseContent updateMissionData([FromBody] Object obj)
         {
             return Service.updateMissionData(obj);
         }
 
-        [Route("addMissionData"), HttpPost]
         [ApiActionPermission()]
+        [Route("addMissionData"), HttpPost]
         public WebResponseContent addMissionData([FromBody] Object obj)
         {
             return Service.addMissionData(obj);
