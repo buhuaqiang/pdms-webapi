@@ -15,6 +15,6 @@ namespace PDMS.Project.IServices
 
       public WebResponseContent TsSave(SaveModel saveModel,string status);
 
-      public WebResponseContent SaveAndSubmit(SaveModel saveModel);
+      public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status);
     }
  }
