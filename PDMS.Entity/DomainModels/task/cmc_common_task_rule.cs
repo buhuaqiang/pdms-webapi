@@ -58,7 +58,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="規則說明")]
        [MaxLength(50)]
-       [Column(TypeName="varchar(50)")]
+       [Column(TypeName="varchar(500)")]
        [Editable(true)]
        public string rule_desc { get; set; }
 

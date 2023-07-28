@@ -55,7 +55,7 @@ namespace PDMS.System.Services
         {
             //要确认已发布状态下表单code不可以重复           
             string code = saveDataModel.MainData["FormCode"].ToString();
-            List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormCode ==code ).ToList();
+            List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => x.FormCode ==code && x.del_flag=="0" ).ToList();
             //自定义逻辑
             if (orderLists != null && orderLists.Count > 0)
             {//

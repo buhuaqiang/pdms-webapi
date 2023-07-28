@@ -30,7 +30,7 @@ namespace PDMS.Project.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("GetPageData")]
         public override ActionResult GetPageData([FromBody] PageDataOptions loadData)
         {
