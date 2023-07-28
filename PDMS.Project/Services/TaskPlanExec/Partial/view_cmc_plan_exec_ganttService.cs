@@ -24,6 +24,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PDMS.Project.Services
 {
@@ -131,6 +132,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 sql += @$" and users.User_Id='{User_Id}'";
             }
             info= repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
+
+            repository.DapperContext.ExcuteNonQuery(sql, null);
 
             return info;
         }
@@ -341,17 +344,33 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
 
         //表單彈窗 保存並提交按鈕
-        public WebResponseContent SaveAndSubmit(SaveModel saveModel)
+        public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status)
         {
-            //List<string> temp = new List<string>();
-            //List<string> temp2 =new List<string>();
-            ////取交集
-            //var lists = temp.Intersect(temp2).ToList();
-            ////取差集
-            //var lis= temp.Except(temp2).ToList();
+            var FormData = saveModel.MainData["FormData"].ToString();
+            var FormId = saveModel.MainData["FormId"].ToString();
+            var FormCollectionId = saveModel.MainData["FormCollectionId"] == null ? "" : saveModel.MainData["FormCollectionId"].ToString();
+            var project_task_id = saveModel.MainData["project_task_id"].ToString();
+            var task_id = saveModel.MainData["task_id"].ToString();
+            var title = saveModel.MainData["title"].ToString();
+            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
+            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            var approve_status = saveModel.MainData["approve_status"].ToString();
+
+            if (status == "02")
+            {
+                //var dd = repository.DbContext.Set<Cmc_pdms_wf_master>();
+            }
+            else
+            { 
+            
+            }
 
             return ResponseContent.OK();
         }
+
+
+
+
 
 
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
@@ -441,7 +460,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             }
 
          
-              
+   
             return ResponseContent.OK();
         }
 
