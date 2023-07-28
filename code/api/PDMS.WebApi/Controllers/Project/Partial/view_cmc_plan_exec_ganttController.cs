@@ -77,7 +77,11 @@ namespace PDMS.Project.Controllers
         [HttpPost, Route("SaveAndSubmit")]
         public IActionResult SaveAndSubmit([FromBody] SaveModel saveModel)
         {
-            return Json(Service.SaveAndSubmit(saveModel));
+            //執行保存按鈕走基礎邏輯，審核狀態調整為01
+            var info = Service.TsSave(saveModel, "01");
+
+            //再走審批流程
+            return Json(Service.SaveAndSubmit(saveModel,"01"));
         }
 
 
