@@ -37,5 +37,22 @@ namespace PDMS.WorkFlow.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
+
+        WebResponseContent ResponseContent = new WebResponseContent();
+        public WebResponseContent AddMaster(SaveModel saveModel,string apply_type,string approve_status)
+        {
+            var FormData = saveModel.MainData["FormData"].ToString();
+            var FormId = saveModel.MainData["FormId"].ToString();
+            var FormCollectionId = saveModel.MainData["FormCollectionId"] == null ? "" : saveModel.MainData["FormCollectionId"].ToString();
+            var project_task_id = saveModel.MainData["project_task_id"].ToString();
+            var task_id = saveModel.MainData["task_id"].ToString();
+            var title = saveModel.MainData["title"].ToString();
+            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
+            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            //var approve_status = saveModel.MainData["approve_status"].ToString();
+
+
+            return ResponseContent.OK();
+        }
   }
 }
