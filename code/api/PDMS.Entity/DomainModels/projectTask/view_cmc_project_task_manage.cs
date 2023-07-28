@@ -127,6 +127,13 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="varchar(20)")]
        public string user_code { get; set; }
 
+       /// <summary>
+       ///零品承辦
+       /// </summary>
+       [Display(Name ="零品承辦")]
+       [Column(TypeName="int")]
+       public int? part_taker_id { get; set; }
+
        
     }
 }
