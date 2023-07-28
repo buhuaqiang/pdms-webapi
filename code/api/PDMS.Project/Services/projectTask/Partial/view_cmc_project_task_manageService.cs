@@ -18,6 +18,7 @@ using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using SkiaSharp;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Project.Services
 {
@@ -43,7 +44,21 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-       
+
+        public override PageGridData<view_cmc_project_task_manage> GetPageData(PageDataOptions options)
+        {
+            PageGridData<view_cmc_project_task_manage> pageGridData = new PageGridData<view_cmc_project_task_manage>();
+
+            QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_project_task_manage where 1=1  ";
+            UserInfo userList = UserContext.Current.UserInfo;
+            var User_Id = userList.User_Id;
+            if (User_Id != 1)
+            {
+                QuerySql += @$" AND dev_taker_id='{User_Id}'";
+            }
+            return base.GetPageData(options);
+        }
+
         public WebResponseContent setPartTaker(SaveModel saveModel)
         {
             Console.WriteLine("setPartTaker3");
