@@ -80,8 +80,9 @@ namespace PDMS.Project.Controllers
             //執行保存按鈕走基礎邏輯，審核狀態調整為01
             var info = Service.TsSave(saveModel, "01");
 
+            return Json(info);
             //再走審批流程
-            return Json(Service.SaveAndSubmit(saveModel,"01"));
+            //return Json(Service.SaveAndSubmit(saveModel,"01"));
         }
 
 
