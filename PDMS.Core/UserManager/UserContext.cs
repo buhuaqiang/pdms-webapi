@@ -117,7 +117,19 @@ namespace PDMS.Core.ManageUser
                     RoleIds = s.Role_Id == 1 ? new int[] { 1 } : (string.IsNullOrEmpty(s.RoleIds) ? new int[] { } : s.RoleIds.Split(",").Select(x => x.GetInt()).ToArray()),
                     DeptIds = string.IsNullOrEmpty(s.DeptIds) ? new List<Guid>() : s.DeptIds.Split(",").Select(x => (Guid)x.GetGuid()).ToList(),
                 }).FirstOrDefault();
-
+            var info = DBServerProvider.DbContext.Set<Sys_UserDepartment>().Where(x => x.UserId == _userInfo.User_Id).FirstOrDefault();
+            if (info != null)
+            {
+                var DepartmentId = info.DepartmentId==null?"": info.DepartmentId.ToString();
+                if (!string.IsNullOrEmpty(DepartmentId))
+                {
+                    var infos = DBServerProvider.DbContext.Set<Sys_Department>().Where(x => x.DepartmentId == Guid.Parse(DepartmentId)).FirstOrDefault();
+                    if (infos != null)
+                    {
+                        _userInfo.DepartmentCode = infos.DepartmentCode;
+                    }    
+                }          
+            }        
             if (_userInfo != null && _userInfo.User_Id > 0)
             {
                 CacheService.AddObject(key, _userInfo);
