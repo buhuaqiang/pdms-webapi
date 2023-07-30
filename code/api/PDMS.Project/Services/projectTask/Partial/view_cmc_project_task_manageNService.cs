@@ -20,6 +20,7 @@ using PDMS.Project.IRepositories;
 using PDMS.Core.ManageUser;
 using System.Text.Json;
 using PDMS.Core.DBManager;
+using Microsoft.AspNetCore.Mvc;
 
 namespace PDMS.Project.Services
 {
@@ -62,39 +63,49 @@ namespace PDMS.Project.Services
         {
             Console.WriteLine("setPartTaker9999995555");
             var MainData = saveModel.MainData;
-            var epl_id = (string[])MainData["epl_id"];
-            var userId = saveModel.MainData["Extra"];
-            var eplIdArray = Array.Empty<string>();
+            var epl_id = MainData["epl_id"] == null ? "" : saveModel.MainData["epl_id"].ToString();
+            var userId = 0;
+            string[] epl_idArray = epl_id.Split(',');
+            //var epl_idArray = MainData["epl_id"] as JsonElement[];
             // 使用 System.Text.Json 將 JSON 字串轉成匿名物件
-            //var jsonObject = JsonSerializer.Deserialize<object>(epl_id);
 
-            //// 取得 epl_id 的值，並轉成陣列
-            //if (jsonObject is JsonElement rootElement &&
-            //    rootElement.TryGetProperty("epl_id", out JsonElement eplIdElement) &&
-            //    eplIdElement.ValueKind == JsonValueKind.Array)
-            //{
-            //    eplIdArray = eplIdElement.EnumerateArray().Select(x => x.GetString()).ToArray();
-            //}
-
+            if (int.TryParse(MainData["UserID"].ToString(), out userId))
+            {
+                // 轉換成功，result 變數將儲存轉換後的整數值
+            }
+            else
+            {
+                return ResponseContent.Error();
+            }
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            string[] eplidList = JsonSerializer.Deserialize<string[]>((string)MainData["epl_id"]);
-            if (eplidList != null && eplidList.Length > 0)
+
+            if (epl_idArray != null && epl_idArray.Length > 0)
             {
                 try
                 {
-                    foreach (var item in eplidList)
+                    foreach (var item in epl_idArray)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.ToString())).FirstOrDefault();
+                        //if (Guid.TryParse(item, out Guid eplGuid))
+                        //{
+                        //    epl = repository.DbContext.Set<cmc_pdms_project_epl>().FirstOrDefault(x => x.epl_id == eplGuid);
+                        //    if (epl != null)
+                        //    {
+                        //        epl.part_taker_id = userId;
+                        //    }
+                        //    eplList.Add(epl);
+                        //}
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse("6380A8BA-EE1E-4357-AF48-C498E909D90A")).FirstOrDefault();
                         if (epl != null)
                         {
-                            epl.part_taker_id = (int?)userId;
+                            epl.part_taker_id = userId;
                         }
                         eplList.Add(epl);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error();
                 }
                 try
