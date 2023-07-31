@@ -73,7 +73,7 @@ namespace PDMS.System.Services
                 });
                 user.Token = token;
                 //DepartmentCode="D148",//擋板，後期修改為動態查詢用戶部門
-                string getDeptCode=@$"SELECT * from Sys_Department where DepartmentId=(SELECT top 1 DepartmentId from Sys_UserDepartment WHERE UserId={user.User_Id})";
+                string getDeptCode=@$"SELECT * from Sys_Department where DepartmentId=(SELECT top 1 DepartmentId from Sys_UserDepartment WHERE UserId={user.User_Id} order by CreateDate desc)";
                 Sys_Department dept = repository.DapperContext.QueryFirst<Sys_Department>(getDeptCode, null);
                 string deptCode = "";
                 if (dept != null)
@@ -528,7 +528,7 @@ namespace PDMS.System.Services
             string sql = $@"select * from sys_user where 1=1 ";
             if (!string.IsNullOrEmpty(loginInfo.DepartmentCode))
             {
-                sql += $" AND user_id IN ( SELECT UserId FROM Sys_UserDepartment WHERE DepartmentId = ( SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode = '"+loginInfo.DepartmentCode+"' ) ) ";            }
+                sql += $" AND user_id IN ( SELECT UserId FROM Sys_UserDepartment WHERE DepartmentId = ( SELECT DepartmentId FROM Sys_Department s WHERE DepartmentCode = '"+loginInfo.DepartmentCode+ "'  ) and  Enable='1' ) ";            }
             Result = repository.DapperContext.QueryList<Sys_User>(sql, null);
             return Result;
         }
