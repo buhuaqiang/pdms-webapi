@@ -14,6 +14,7 @@ using PDMS.Project.IServices;
 using PDMS.Core.Filters;
 using static PDMS.Project.Services.view_cmc_plan_exec_ganttService;
 using PDMS.System.Services;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace PDMS.Project.Controllers
 {
@@ -50,9 +51,9 @@ namespace PDMS.Project.Controllers
         /// <returns></returns>
         [ApiActionPermission()]
         [HttpGet,Route("setAuditKey")]
-        public ActionResult setAuditKey(string project_task_id)
+        public ActionResult setAuditKey(string project_task_id="")
         {
-            return Json("");
+            return Json(Service.setAuditKey(project_task_id));
         }
 
         //保存
