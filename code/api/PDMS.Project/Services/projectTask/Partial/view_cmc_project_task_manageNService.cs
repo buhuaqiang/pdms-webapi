@@ -21,6 +21,7 @@ using PDMS.Core.ManageUser;
 using System.Text.Json;
 using PDMS.Core.DBManager;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -61,13 +62,9 @@ namespace PDMS.Project.Services
         }
             public WebResponseContent setPartTaker(SaveModel saveModel)
         {
-            Console.WriteLine("setPartTaker9999995555");
             var MainData = saveModel.MainData;
-            var epl_id = MainData["epl_id"] == null ? "" : saveModel.MainData["epl_id"].ToString();
+            var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
             var userId = 0;
-            string[] epl_idArray = epl_id.Split(',');
-            //var epl_idArray = MainData["epl_id"] as JsonElement[];
-            // 使用 System.Text.Json 將 JSON 字串轉成匿名物件
 
             if (int.TryParse(MainData["UserID"].ToString(), out userId))
             {
@@ -78,12 +75,12 @@ namespace PDMS.Project.Services
                 return ResponseContent.Error();
             }
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-
-            if (epl_idArray != null && epl_idArray.Length > 0)
+            if (!string.IsNullOrEmpty(epl_id))
             {
                 try
                 {
-                    foreach (var item in epl_idArray)
+                    JArray epl_idArray = JArray.Parse(epl_id);
+                    foreach (string item in epl_idArray)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
                         //if (Guid.TryParse(item, out Guid eplGuid))
@@ -95,7 +92,8 @@ namespace PDMS.Project.Services
                         //    }
                         //    eplList.Add(epl);
                         //}
-                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse("6380A8BA-EE1E-4357-AF48-C498E909D90A")).FirstOrDefault();
+
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
                         if (epl != null)
                         {
                             epl.part_taker_id = userId;
