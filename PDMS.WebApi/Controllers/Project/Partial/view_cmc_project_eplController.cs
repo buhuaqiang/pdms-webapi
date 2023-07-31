@@ -49,7 +49,7 @@ namespace PDMS.Project.Controllers
             return Service.submit(saveModel);
         }
 
-
+        [ApiActionPermission()]
         [HttpPost, Route("save")]
         public  ActionResult save1([FromBody] SaveModel saveModel)
         {
