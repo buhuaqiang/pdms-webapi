@@ -22,6 +22,10 @@ namespace PDMS.Core.Utilities
         public WebResponseContent OK()
         {
             this.Status = true;
+            if (string.IsNullOrEmpty(this.Message))
+            {
+                this.Message = "Successful"; 
+            }        
             return this;
         }
         public WebResponseContent OKData(object data)
