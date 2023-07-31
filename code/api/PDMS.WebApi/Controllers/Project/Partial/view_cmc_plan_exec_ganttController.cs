@@ -86,6 +86,12 @@ namespace PDMS.Project.Controllers
             //return Json(Service.SaveAndSubmit(saveModel,"01"));
         }
 
-
+        //保存並提交
+        [ApiActionPermission()]
+        [HttpPost, Route("UpdateTaskDate")]
+        public IActionResult UpdateTaskDate([FromBody] SaveModel saveModel)
+        {
+            return Json(Service.UpdateTaskDate(saveModel));
+        }
     }
 }
