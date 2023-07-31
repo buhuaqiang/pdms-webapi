@@ -10,7 +10,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace PDMS.Project.IServices
 {
-    public partial interface Iview_cmc_project_pmService
+    public partial interface Iview_cmc_project_pmService : IService<view_cmc_project_pm>
     {
+        WebResponseContent release(SaveModel saveModel);
     }
 }

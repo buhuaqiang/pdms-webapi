@@ -19,6 +19,11 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Project.IServices;
 using PDMS.Core.ManageUser;
+using System.Security.Cryptography;
+using System;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace PDMS.Project.Services
 {
@@ -50,26 +55,309 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
+        List<string> gateModList = new List<string>();
 
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
             // 在保存数据库前的操作，所有数据都验证通过了，这一步执行完就执行数据库保存
-            return _cmc_pdms_project_mainService.Add(saveDataModel);
+
+            //把畫面上數據都寫入數據庫
+            var info = _cmc_pdms_project_mainService.Add(saveDataModel);
+            
+            //獲取專案project_id
+            var glno = saveDataModel.MainData["glno"].ToString();
+            string selectstr1 = $@"SELECT project_id FROM cmc_pdms_project_main WHERE glno= '{glno}'";
+            List<cmc_pdms_project_main> pidResult = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectstr1, null);
+            var pid = pidResult[0].project_id;
+
+            //改專案 發佈狀態 為草稿01
+            string releaseStatus = $@"UPDATE cmc_pdms_project_main  set release_status='01' WHERE project_id='{pid}'";
+            var succReleaseStatus = repository.DapperContext.ExcuteNonQuery(releaseStatus, null);
+            
+            return info;
         }
         public override WebResponseContent Update(SaveModel saveModel)
         {
-            UpdateOnExecuting = (view_cmc_project_pm order, object addList, object updateList, List<object> delKeys) =>
-            {
-                return webResponse.OK();
-            };
-            return _cmc_pdms_project_mainService.Update(saveModel);
-        }
+            //var d1 = saveModel.Details[0].Data[0];
+            //獲取點選專案的大日程
+            UserInfo userList = UserContext.Current.UserInfo;
+            var CreateID = userList.User_Id;
+            var Creator = userList.UserTrueName;
+            var pid = saveModel.MainData["project_id"].ToString();
+            //List<cmc_pdms_project_gate> gateModList = new List<cmc_pdms_project_gate>();
+            string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
+            var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
+            //var gateid2 = saveModel.Details[0].Data[0]["gate_id"].ToString();
+            //var gateId = saveModel.MainData["gate_id"].ToString();
 
+
+            var pageGateData = saveModel.Details[0].Data;//畫面上大日程數據pageGateData
+
+            //查出資料庫大日程數據addset
+            string selectSet = $@"SELECT * FROM cmc_pdms_project_gate WHERE project_id= '{pid}'";
+            List<cmc_pdms_project_gate> addset = _repository.DapperContext.QueryList<cmc_pdms_project_gate>(selectSet, null);
+            string selectreleaseStatus = $@"SELECT main.release_status FROM cmc_pdms_project_main main WHERE project_id= '{pid}'";
+            List<cmc_pdms_project_main> result = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
+            var releaseStatus = result[0].release_status;
+                if (releaseStatus == "02")
+                { 
+                bool changed = false;
+                string actype = "";
+                string delflag = "";
+                if (addset.Count != 0)
+                {
+                    //List<cmc_pdms_project_gate> setList = new List<cmc_pdms_project_gate>();
+                    try
+                    {
+                        foreach (var screen in pageGateData)//畫面上數據
+                        {
+                            string screenGateId = "";
+                            string screenGateVersion = "";
+                            if (screen.ContainsKey("gate_id"))
+                            {
+                                screenGateId = screen["gate_id"].ToString();
+                            }
+                            else {
+                                string newID = $@"SELECT NEWID()";
+                                var ID = repository.DapperContext.ExecuteScalar(newID, null);
+                                screenGateId = ID.ToString();
+                            }
+
+                            var screenProjectId = pid;
+                            var screenGateCode = screen["gate_code"].ToString();
+                            var screenGateStartDate = screen["gate_start_date"].ToString();
+                            var screenGateEndDate = screen["gate_end_date"].ToString();
+                            if (screen.ContainsKey("version"))
+                            {
+                                screenGateVersion = screen["version"].ToString();
+                            }
+                            else
+                            {
+                                screenGateVersion = newVersion.ToString();
+                            }
+
+                            //兩邊數據交集
+                            var str1 = addset.Where(x => x.gate_id.ToString() == screenGateId).FirstOrDefault();
+                           
+
+                            if (str1 == null)//增加
+                            {
+                                actype = "add";
+                                delflag = "0";
+                                gateModList.Add(screenGateId);
+                                string sqlGateHis = $@"insert into cmc_pdms_project_gate_his (
+                                gate_his_id,
+                                gate_id,
+                                project_id,
+                                gate_code,
+                                gate_start_date,
+                                gate_end_date,
+                                version,
+                                action_type)
+                                values
+                                (NEWID(),
+                                '{screenGateId}',
+                                '{screenProjectId}',
+                                '{screenGateCode}',
+                                '{screenGateStartDate}',
+                                '{screenGateEndDate}',
+                                '{screenGateVersion}',
+                                '{actype}'
+                                )";
+                                var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);                                
+                                //var screenGateId = screen["gate_id"].ToString();
+                                string sqlGate = $@"insert into cmc_pdms_project_gate (
+                                gate_id,
+                                project_id,
+                                gate_code,
+                                gate_start_date,
+                                gate_end_date,
+                                version,
+                                CreateID,
+                                Creator,
+                                CreateDate,
+                                del_flag)
+                                values
+                                ('{screenGateId}',
+                                '{screenProjectId}',
+                                '{screenGateCode}',
+                                '{screenGateStartDate}',
+                                '{screenGateEndDate}',
+                                '{screenGateVersion}',
+                                '{CreateID}',
+                                '{Creator}',
+                                GETDATE(),
+                                '{delflag}'
+                                )";
+                                var sccGate = repository.DapperContext.ExcuteNonQuery(sqlGate, null);
+                                if (changed==false)
+                                {
+                                    changed = true;
+                                }
+                            }
+                            else//修改
+                            {
+                                var oldGateId = str1.gate_id.ToString();
+                                var oldPid = str1.project_id.ToString();
+                                var oldGateCode = str1.gate_code.ToString();
+                                var oldGateStartDate = str1.gate_start_date.ToString();
+                                var oldGateEndDate = str1.gate_end_date.ToString();
+                                var oldVersion = str1.version.ToString();
+
+                                if ((screen["gate_start_date"].ToString() != str1.gate_start_date.ToString())|| (screen["gate_end_date"].ToString() != str1.gate_end_date.ToString()))
+                                {
+                                    actype = "modify";
+                                    delflag = "0";
+                                    gateModList.Add(oldGateId);
+                                    string sqlGateHis = $@"insert into cmc_pdms_project_gate_his (
+                                        gate_his_id,
+                                        gate_id,
+                                        project_id,
+                                        gate_code,
+                                        gate_start_date,
+                                        gate_end_date,
+                                        version,
+                                        action_type)
+                                        values
+                                        (NEWID(),
+                                        '{oldGateId}',
+                                        '{oldPid}',
+                                        '{oldGateCode}',
+                                        '{oldGateStartDate}',
+                                        '{oldGateEndDate}',
+                                        '{oldVersion}',
+                                        '{actype}'
+                                    )";
+                                    var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);
+
+                                    string sqlGate = $@"UPDATE cmc_pdms_project_gate set gate_code='{screenGateCode}', gate_start_date='{screenGateStartDate}', gate_end_date='{screenGateEndDate}' WHERE gate_id='{screenGateId}'";
+                                    var sccGate = repository.DapperContext.ExcuteNonQuery(sqlGate, null);
+                                    if (changed == false)
+                                    {
+                                        changed = true;
+                                    }
+                                }
+
+
+                            }
+
+                        }
+
+                        foreach (var a in addset)
+                        {
+                            
+                            var str2 = pageGateData.Where(x => x["gate_id"].ToString() == a.gate_id.ToString()).FirstOrDefault();
+                            var oldGateId = a.gate_id.ToString();
+                            var oldPid = a.project_id.ToString();
+                            var oldGateCode = a.gate_code.ToString();
+                            var oldGateStartDate = a.gate_start_date.ToString();
+                            var oldGateEndDate = a.gate_end_date.ToString();
+                            var oldVersion = a.version.ToString();
+                            if (str2 == null)//刪除
+                            {
+                                actype = "delete";                                
+                                string delHis = $@"insert into cmc_pdms_project_gate_his (
+                                        gate_his_id,
+                                        gate_id,
+                                        project_id,
+                                        gate_code,
+                                        gate_start_date,
+                                        gate_end_date,
+                                        version,
+                                        action_type)
+                                        values
+                                        (NEWID(),
+                                        '{oldGateId}',
+                                        '{oldPid}',
+                                        '{oldGateCode}',
+                                        '{oldGateStartDate}',
+                                        '{oldGateEndDate}',
+                                        '{oldVersion}',
+                                        '{actype}'
+                                    )";
+                                var sccDelGateHis = repository.DapperContext.ExcuteNonQuery(delHis, null);
+
+                                string delStr = $@"DELETE FROM cmc_pdms_project_gate WHERE gate_id='{oldGateId}'";
+                                var sccDelGate = repository.DapperContext.ExcuteNonQuery(delStr, null);
+                                if (changed == false)
+                                {
+                                    changed = true;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前的裝箱 cmc_common_task_template_set 表，cmc_common_task_templateService 文件-->" + DateTime.Now + ":" + ex.Message);
+                    }
+
+
+                }
+                
+                if (changed)//如果有改動就改狀態為03調整中
+                {
+                    string adjustStatusStr = $@"UPDATE cmc_pdms_project_main  set release_status='03' WHERE project_id='{pid}'";
+                    var adjustStatus = repository.DapperContext.ExcuteNonQuery(adjustStatusStr, null);
+                }
+
+            }
+            else
+            {
+                return _cmc_pdms_project_mainService.Update(saveModel);
+            }
+
+            return  webResponse.OK();
+        }
         //public override WebResponseContent Del(object[] keys, bool delList = true)
         //{
         //    return _cmc_pdms_project_mainService.Del(keys, delList);
         //}
+        public WebResponseContent release(SaveModel saveModel)
+        {
+            //UserInfo userList = UserContext.Current.UserInfo;
+            //var CreateID = userList.User_Id;
+            //var Creator = userList.UserTrueName;
+            var pid = saveModel.DetailData[0]["project_id"].ToString();
+            string gateId = "";
+            //List<cmc_pdms_project_gate> gateList = new List<cmc_pdms_project_gate>();
 
+            string selectSet = $@"SELECT * FROM cmc_pdms_project_gate WHERE project_id= '{pid}'";
+            List<cmc_pdms_project_gate> addset = _repository.DapperContext.QueryList<cmc_pdms_project_gate>(selectSet, null);
+
+            //初始化大日程版本
+            string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
+            var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
+            string newGateVersion = $@"UPDATE cmc_pdms_project_gate  set version='{newVersion}' WHERE project_id='{pid}'";
+            
+
+            //改專案發佈狀態為已發佈02
+            string releaseStatus = $@"UPDATE cmc_pdms_project_main  set release_status='02' WHERE project_id='{pid}'";
+            
+
+            string selectreleaseStatus = $@"SELECT main.release_status FROM cmc_pdms_project_main main WHERE project_id= '{pid}'";
+            List<cmc_pdms_project_main> result = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
+            var reStatus = result[0].release_status;
+            if (reStatus == "01")
+            {
+                var succReleaseStatus = repository.DapperContext.ExcuteNonQuery(releaseStatus, null);
+                var succGate = repository.DapperContext.ExcuteNonQuery(newGateVersion, null);
+            }else 
+            {
+                if (reStatus != "02")
+                {
+                    var succReleaseStatus = repository.DapperContext.ExcuteNonQuery(releaseStatus, null);//發布狀態改發布02
+                }                    
+                foreach (var m in gateModList) //版本給新的
+                {                      
+                    gateId = m;
+                    string updateGateVersion = $@"UPDATE cmc_pdms_project_gate  set version='{newVersion}' WHERE gate_id='{gateId}'";
+                    var succUpGateVersion = repository.DapperContext.ExcuteNonQuery(updateGateVersion, null);
+                }
+                
+            }
+
+            return webResponse.OK();
+        }
 
         public override WebResponseContent DownLoadTemplate()
         {
