@@ -56,14 +56,14 @@ namespace PDMS.Project.Services
             var data = JArray.Parse(saveModel.ToString());
             string part_no = data[0]["part_no"] == null ? "" : data[0]["part_no"].ToString();
             string part_name = data[1]["part_name"] == null ? "" : data[1]["part_name"].ToString();
-            string start_date = data[2]["start_date"] == null ? "" : data[2]["start_date"].ToString();        
+            string start_date = data[2]["start_date"] == null ? "" : data[2]["start_date"].ToString();
             string end_date = data[3]["end_date"] == null ? "" : data[3]["end_date"].ToString();
             string gate_code = data[4]["gate_code"] == null ? "" : data[4]["gate_code"].ToString();
             string set_value = data[5]["set_value"] == null ? "" : data[5]["set_value"].ToString();
             string task_name = data[6]["task_name"] == null ? "" : data[6]["task_name"].ToString();
             string status = data[7]["status"] == null ? "" : data[7]["status"].ToString();
 
-            string sql= @$"SELECT 
+            string sql = @$"SELECT 
 task.task_id,
 task.task_name,
 sl2.DicValue as set_value,
@@ -134,7 +134,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 sql += @$" and users.User_Id='{User_Id}'";
             }
-            info= repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
+            info = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
 
             repository.DapperContext.ExcuteNonQuery(sql, null);
 
@@ -150,12 +150,12 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             if (getinfo.Count != 0)
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
-                var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name,x.gate_code }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date,x.project_task_id ,x.task_status}).ToList();
+                var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.set_value, x.start_date, x.end_date, x.project_task_id, x.task_status }).ToList();
 
                 var gateIndex = 0;
                 var SetIndex = 1;
-                var taskIndex =2;
+                var taskIndex = 2;
 
                 List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
@@ -170,9 +170,9 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     //var gate_end_date = item.Key.gate_end_date;
                     GanttInfo data = new GanttInfo();
                     data.id = gateIndex;
-                    data.task_name= item.Key.gate_name;
+                    data.task_name = item.Key.gate_name;
                     data.start_date = item.Key.gate_start_date.ToString("yyyy-MM-dd");
-                    data.end_date= item.Key.gate_end_date.ToString("yyyy-MM-dd");
+                    data.end_date = item.Key.gate_end_date.ToString("yyyy-MM-dd");
                     data.open = true;
                     data.type = "project";
                     data.status = "project";
@@ -202,7 +202,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                             index = Convert.ToInt32(temp[item.Key.gate_code]);
                             break;
                         }
-                    }           
+                    }
                     GanttInfo data = new GanttInfo();
                     data.id = SetIndex;
                     data.task_name = item.Key.set_name;
@@ -233,16 +233,16 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         }
                     }
 
-                   //var task_id = item.Key.task_id;
-                   //var task_name = item.Key.task_name;
-                   //var approve_status = item.Key.approve_status;
-                   //var FormId = item.Key.FormId;
-                   //var FormCode = item.Key.FormCode;
-                   //var FormCollectionId = item.Key.FormCollectionId;
+                    //var task_id = item.Key.task_id;
+                    //var task_name = item.Key.task_name;
+                    //var approve_status = item.Key.approve_status;
+                    //var FormId = item.Key.FormId;
+                    //var FormCode = item.Key.FormCode;
+                    //var FormCollectionId = item.Key.FormCollectionId;
 
                     GanttInfo data = new GanttInfo();
                     data.id = taskIndex;
-                    data.task_name= item.Key.task_name;
+                    data.task_name = item.Key.task_name;
                     data.start_date = item.Key.start_date.ToString("yyyy-MM-dd");
                     data.end_date = item.Key.end_date.ToString("yyyy-MM-dd");
                     data.parent = index;
@@ -251,12 +251,12 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.approve_status = item.Key.approve_status;
                     data.StatusInfo = GetStatusText(item.Key.approve_status);
                     data.task_id = item.Key.task_id.ToString();
-                    data.FormCollectionId = item.Key.FormCollectionId==null?"": item.Key.FormCollectionId.ToString();
+                    data.FormCollectionId = item.Key.FormCollectionId == null ? "" : item.Key.FormCollectionId.ToString();
                     data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
                     data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
                     data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
                     data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
-                    
+
                     info.Add(data);
 
                 }
@@ -367,27 +367,27 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 //var dd = repository.DbContext.Set<Cmc_pdms_wf_master>();
             }
             else
-            { 
-            
+            {
+
             }
 
             return ResponseContent.OK();
         }
 
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
-        public WebResponseContent TsSave(SaveModel saveModel,string status="")
+        public WebResponseContent TsSave(SaveModel saveModel, string status = "")
         {
             var FormData = saveModel.MainData["FormData"].ToString();
             var FormId = saveModel.MainData["FormId"].ToString();
-            var FormCollectionId = saveModel.MainData["FormCollectionId"]==null?"": saveModel.MainData["FormCollectionId"].ToString();
+            var FormCollectionId = saveModel.MainData["FormCollectionId"] == null ? "" : saveModel.MainData["FormCollectionId"].ToString();
             var project_task_id = saveModel.MainData["project_task_id"].ToString();
             var task_id = saveModel.MainData["task_id"].ToString();
             var title = saveModel.MainData["title"].ToString();
-            var start_date =Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
+            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
             var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
             var approve_status = saveModel.MainData["approve_status"].ToString();
-            
-            var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x=>x.project_task_id==Guid.Parse( project_task_id)).FirstOrDefault();
+
+            var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
 
             if (Data != null)
             {
@@ -458,17 +458,17 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         Data.start_date = start_date;
                         Data.end_date = end_date;
                         Data.approve_status = status;
-                        List<cmc_pdms_project_task>List = new List<cmc_pdms_project_task>();
+                        List<cmc_pdms_project_task> List = new List<cmc_pdms_project_task>();
                         List.Add(Data);
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.start_date,x.end_date,x.approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.start_date, x.end_date, x.approve_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                         #endregion
                     }
 
-       
+
                 }
                 catch (Exception ex)
                 {
@@ -477,14 +477,14 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 }
             }
 
-         
-   
+
+
             return ResponseContent.OK();
         }
 
 
         //雙擊甘特圖任務：設置重點項目
-        public WebResponseContent setAuditKey(string project_task_id="")
+        public WebResponseContent setAuditKey(string project_task_id = "")
         {
             if (!string.IsNullOrEmpty(project_task_id))
             {
@@ -509,10 +509,41 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_plan_exec_ganttService 文件-->setAuditKey：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error(ex.Message);
                 }
-         
+
             }
             return ResponseContent.OK();
         }
 
-  }
+
+        //拖動甘特圖調整時間
+        public WebResponseContent UpdateTaskDate(SaveModel saveModel)
+        {
+            var project_task_id =Guid.Parse(saveModel.MainData["project_task_id"].ToString());
+            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
+            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            var approve_status = saveModel.MainData["approve_status"].ToString();
+            try
+            {
+                List<cmc_pdms_project_task> taskList = new List<cmc_pdms_project_task>();
+                var temp = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
+                temp.start_date = start_date;
+                temp.end_date = end_date;
+                taskList.Add(temp);
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(taskList, x => new { x.start_date, x.end_date });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，cmc_common_task_templateService 文件-->UpdateTaskDate：" + DateTime.Now + ":" + ex.Message);
+
+                return ResponseContent.Error();
+
+            }
+            return ResponseContent.OK();
+        }
+
+    }
 }
