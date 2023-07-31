@@ -77,7 +77,9 @@ namespace PDMS.Project.Services
             string path = "";
             string projectStatus = "";
             string where = " ";
+            string departMentCode = "";
             UserInfo userInfo = UserContext.Current.UserInfo;
+            departMentCode = userInfo.DepartmentCode;
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
             if (!string.IsNullOrEmpty(options.Wheres))
             {
@@ -150,6 +152,7 @@ namespace PDMS.Project.Services
             }*/
             if (path == "/view_cmc_project_epl")//部車型窗口查詢
             {
+                string orgCode = " and  epl.org_code='" + departMentCode + "'";
                 if (projectStatus == "01")
                 {//專案建立部車型窗口查詢
                     QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName ,'' as UserTrueName,'' as user_code    
@@ -167,11 +170,12 @@ namespace PDMS.Project.Services
                             left join cmc_group_model_set mset on mset.DepartmentCode=epl.group_code and mset.model_type=main.model_type and mset.set_type='01'
                             where 1=1 and epl_phase='02'  ";
                 }
-                
+                QuerySql += orgCode;
                 QuerySql += where;
             }
             if (path == "/view_cmc_project_epl_group")
             { //組車型窗口查詢
+                string orgCode = " and  epl.group_code='" + departMentCode + "'";
                 if (projectStatus == "01")
                 {//專案建立組車型窗口查詢
                     QuerySql = @" select  epl.* , (select  UserTrueName from sys_user where  User_Id=epl.dev_taker_id) as UserTrueName,
@@ -184,7 +188,7 @@ namespace PDMS.Project.Services
                             from   cmc_pdms_project_epl epl  where  epl.submit_status='1' and epl_phase='02'  
                         ";
                 }
-               
+                QuerySql += orgCode;
                 QuerySql += where;
 
             }
