@@ -85,7 +85,7 @@ namespace PDMS.Project.Services
 	                LEFT JOIN cmc_pdms_project_epl epl ON epl.project_id= '{project_id}' 
 	                AND epl.epl_phase= epl_phase1 
                 WHERE
-	                epl.kd_type= 'K+' " ;
+	                epl.kd_type like 'D%' " ;
             }
             
             return base.GetPageData(options);
