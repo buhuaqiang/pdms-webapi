@@ -56,9 +56,9 @@ namespace PDMS.Entity.DomainModels
        ///用戶ID
        /// </summary>
        [Display(Name ="用戶ID")]
-       [Column(TypeName="int")]
+       [Column(TypeName="varchar(20)")]
        [Editable(true)]
-       public int? user_id { get; set; }
+       public string? user_id { get; set; }
 
        /// <summary>
        ///用戶名

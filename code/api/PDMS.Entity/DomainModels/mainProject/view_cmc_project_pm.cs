@@ -213,6 +213,24 @@ namespace PDMS.Entity.DomainModels
        public List<cmc_pdms_project_org> cmc_pdms_project_org { get; set; }
 
 
-       
+
+
+        /// <summary>
+        ///年型
+        /// </summary>
+        [Display(Name = "年型")]
+        [MaxLength(20)]
+        [Column(TypeName = "varchar(20)")]
+        [Editable(true)]
+        public string model_year { get; set; }
+
+        /// <summary>
+        ///仕向地
+        /// </summary>
+        [Display(Name = "仕向地")]
+        [MaxLength(20)]
+        [Column(TypeName = "varchar(20)")]
+        [Editable(true)]
+        public string model_dest { get; set; }
     }
 }
