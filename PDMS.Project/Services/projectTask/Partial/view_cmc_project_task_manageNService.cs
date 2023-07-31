@@ -22,6 +22,8 @@ using System.Text.Json;
 using PDMS.Core.DBManager;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Globalization;
 
 namespace PDMS.Project.Services
 {
@@ -45,8 +47,6 @@ namespace PDMS.Project.Services
         WebResponseContent ResponseContent = new WebResponseContent();
         public override PageGridData<view_cmc_project_task_manageN> GetPageData(PageDataOptions options)
         {
-            //PageGridData<view_cmc_project_task_manageN> pageGridData = new PageGridData<view_cmc_project_task_manageN>();
-
             QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_project_task_manageN where 1=1  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
@@ -125,30 +125,46 @@ namespace PDMS.Project.Services
 
         public WebResponseContent updateMissionData(SaveModel saveModel)
         {
-            var MainDatas = saveModel.MainDatas;
+            var MainData = saveModel.MainDatas;
             List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
-            Console.WriteLine("updateMissionData");
-            if (MainDatas.Count != 0)
+            string format1 = "yyyy/MM/dd HH:mm:ss";
+            string format2 = "yyyy-MM-dd HH:mm:ss";
+            if (MainData.Count != 0)
             {
                 try
                 {
-                    foreach (var item in MainDatas)
+                    foreach (var item in MainData)
                     {
+                        Guid task_id = Guid.Parse(item["task_id"].ToString());
+                        Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.task_id == task_id && x.project_task_id == project_task_id).FirstOrDefault();
 
                         if (pTask != null)
                         {
-                            if (item["start_date"] != null && item["end_date"] != null)
+                            if (item["start_date"].ToString().Contains("/"))
                             {
-                                pTask.start_date = (DateTime?)item["start_date"];
-                                pTask.end_date = (DateTime?)item["end_date"];
+                                DateTime dateTimeValue = DateTime.ParseExact(item["start_date"].ToString(), format1, CultureInfo.InvariantCulture);
+                                string startDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                                pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
                             }
-                            /*if (item["end_date"] != null)
+                            else
                             {
-                                pTask.end_date = (DateTime?)item["end_date"];
-                                //pTask.end_date = item["end_date"] == null ? "" : item["end_date"];
-                            }*/
+                                var sd = item["start_date"].ToString();
+                                pTask.start_date = DateTime.ParseExact(sd, format2, CultureInfo.InvariantCulture);
+                            }
+
+                            if (item["end_date"].ToString().Contains("/"))
+                            {
+                                DateTime dateTimeValue = DateTime.ParseExact(item["end_date"].ToString(), format1, CultureInfo.InvariantCulture);
+                                string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                                pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                var ed = item["end_date"].ToString();
+                                pTask.end_date = DateTime.ParseExact(ed, format2, CultureInfo.InvariantCulture);
+                            }
                         }
                         projectTaskLisk.Add(pTask);
                     }
@@ -265,5 +281,47 @@ namespace PDMS.Project.Services
             }
             return ResponseContent.OK();
         }
+
+        public WebResponseContent deleteMissionData(SaveModel saveModel)
+        {
+            var MainData = saveModel.MainDatas;
+            List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
+            if (MainData.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainData)
+                    {
+                        Guid task_id = Guid.Parse(item["task_id"].ToString());
+                        Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
+                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
+                        //pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.task_id == task_id && x.project_task_id == project_task_id).FirstOrDefault();
+
+                        string deleteAction = @$"
+                            DELETE FROM
+	                            cmc_pdms_project_task 
+                            WHERE
+	                            project_task_id ='{project_task_id}' ";
+                        try
+                        {
+                            var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：deleteMissionData：" + DateTime.Now + ":" + ex.Message);
+                            return ResponseContent.Error();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：projectTaskLisk：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+               
+            }
+            return ResponseContent.OK();
+        }
+
     }
 }
