@@ -25,6 +25,8 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PDMS.Core.DBManager;
+using System.Threading.Tasks;
 
 namespace PDMS.Project.Services
 {
@@ -80,7 +82,8 @@ tsk.approve_status,
 tsk.done_status,
 users.User_Id,
 gate.gate_start_date,
-gate.gate_end_date
+gate.gate_end_date,
+case when ((DATEDIFF(day,  GETDATE(), tsk.end_date))<=tsk.warn and Convert(VARCHAR(10),GETDATE(),23) <=  tsk.end_date) then '0' when (DATEDIFF(day,tsk.end_date , GETDATE())>=tsk.warn_leader) then '1' else '-1' end 'task_status'
 from cmc_pdms_project_task tsk
 left join cmc_common_task  task on tsk.task_id=task.task_id
 left join cmc_common_template_mapping map on map.task_id=tsk.task_id and 
@@ -148,7 +151,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name,x.gate_code }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date,x.project_task_id }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name,x.approve_status,x.FormId,x.FormCode,x.FormCollectionId,x.set_value,x.start_date,x.end_date,x.project_task_id ,x.task_status}).ToList();
 
                 var gateIndex = 0;
                 var SetIndex = 1;
@@ -252,7 +255,10 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
                     data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
                     data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
+                    data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
+                    
                     info.Add(data);
+
                 }
             }
 
@@ -334,14 +340,14 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             public string approve_status { get; set; }
 
+            public string task_status { get; set; }
+
 
 
 
 
 
         }
-
-
 
         //表單彈窗 保存並提交按鈕
         public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status)
@@ -368,11 +374,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             return ResponseContent.OK();
         }
 
-
-
-
-
-
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
         public WebResponseContent TsSave(SaveModel saveModel,string status="")
         {
@@ -393,32 +394,38 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 try
                 {
                     var isnull = Data.FormCollectionId;
-                    if (isnull == null)
+                    if (isnull == null || isnull.ToString().Contains("000000"))
                     {
                         var guid = Guid.NewGuid();
 
                         #region  新增 FormCollectionObject
+                        List<FormCollectionObject> obj = new List<FormCollectionObject>();
                         FormCollectionObject ListTemp = new FormCollectionObject();
                         ListTemp.FormCollectionId = guid;
                         ListTemp.FormId = Guid.Parse(FormId);
                         ListTemp.FormData = FormData;
                         ListTemp.Title = title;
-                        SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
-                        queueResult.optionType = SaveModel.MainOptionType.add;
-                        queueResult.detailType = typeof(FormDesignOptions);
-                        queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ListTemp)));
-                        saveModel.DetailListData.Add(queueResult);
+                        obj.Add(ListTemp);
+
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(obj, "FormCollectionObject");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+
+
 
                         #endregion
 
                         #region   修改 cmc_pdms_project_task  FormCollectionId 欄位
-
+                        List<cmc_pdms_project_task> info = new List<cmc_pdms_project_task>();
                         Data.FormCollectionId = guid;
-                        SaveModel.DetailListDataResult FormResult = new SaveModel.DetailListDataResult();
-                        FormResult.optionType = SaveModel.MainOptionType.update;
-                        FormResult.detailType = typeof(cmc_pdms_project_task);
-                        FormResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(Data)));
-                        saveModel.DetailListData.Add(FormResult);
+                        info.Add(Data);
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(info, x => new { x.FormCollectionId });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
 
                         #endregion
                     }
@@ -435,6 +442,15 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                             FormResult.detailType = typeof(FormCollectionObject);
                             FormResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(datas)));
                             saveModel.DetailListData.Add(FormResult);
+
+
+                            List<FormCollectionObject> formList = new List<FormCollectionObject>();
+                            formList.Add(datas);
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.UpdateRange(formList, x => new { x.FormData });
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
                         }
                         #endregion
 
@@ -442,15 +458,17 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         Data.start_date = start_date;
                         Data.end_date = end_date;
                         Data.approve_status = status;
-                        SaveModel.DetailListDataResult taskResult = new SaveModel.DetailListDataResult();
-                        taskResult.optionType = SaveModel.MainOptionType.update;
-                        taskResult.detailType = typeof(cmc_pdms_project_task);
-                        taskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(Data)));
-                        saveModel.DetailListData.Add(taskResult);
+                        List<cmc_pdms_project_task>List = new List<cmc_pdms_project_task>();
+                        List.Add(Data);
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.start_date,x.end_date,x.approve_status });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
                         #endregion
                     }
 
-                    ResponseContent = base.CustomBatchProcessEntity(saveModel);
+       
                 }
                 catch (Exception ex)
                 {
@@ -461,6 +479,38 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
          
    
+            return ResponseContent.OK();
+        }
+
+
+        //雙擊甘特圖任務：設置重點項目
+        public WebResponseContent setAuditKey(string project_task_id="")
+        {
+            if (!string.IsNullOrEmpty(project_task_id))
+            {
+                try
+                {
+                    var Ptask_id = Guid.Parse(project_task_id);
+                    List<cmc_pdms_project_task> List = new List<cmc_pdms_project_task>();
+                    var temp = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Ptask_id).FirstOrDefault();
+                    if (temp != null)
+                    {
+                        temp.is_audit_key = "1";
+                    }
+                    List.Add(temp);
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.is_audit_key });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_plan_exec_ganttService 文件-->setAuditKey：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error(ex.Message);
+                }
+         
+            }
             return ResponseContent.OK();
         }
 
