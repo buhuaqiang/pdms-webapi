@@ -45,6 +45,7 @@ namespace PDMS.Project.Services
             //查询所有del_flag!=1
 
             PageGridData<view_cmc_plan_execution> pageGridData = new PageGridData<view_cmc_plan_execution>();
+            List<view_cmc_plan_execution> OCList = new List<view_cmc_plan_execution>();
             string status = "";
 
             /*解析查询条件*/
@@ -65,7 +66,22 @@ namespace PDMS.Project.Services
                     }
                 }
             }
-            QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_plan_execution where 1=1  ";
+            QuerySql = @"
+select epl.part_no,epl.part_name,epl.company_code,epl.epl_phase, main.project_id,us.User_id ,main.GLNO,main.project_name
+,main.start_date as 'p_start_date'
+,main.end_date as 'p_end_date',
+main.project_type 
+,task.start_date as 't_start_date'
+,task.end_date as 't_end_date'
+,'' status
+,task.warn
+,task.warn_leader
+from  cmc_pdms_project_task task
+left join cmc_pdms_project_epl epl on epl.epl_id=task.epl_id
+left join cmc_pdms_project_main main on main.project_id=epl.project_id
+left join Sys_User us on epl.dev_taker_id=us.User_id
+where epl.company_code is null  and  epl.epl_phase='02'
+ ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
             if (User_Id != 1)
@@ -83,8 +99,24 @@ namespace PDMS.Project.Services
                     QuerySql += @"  and DATEDIFF(day, t_end_date , GETDATE())>=warn_leader";
                 }
             }
-          
-            return base.GetPageData(options);
+            string sql = $@"SELECT Count(*) as dbid  FROM ( {QuerySql}) b ";
+            int TotalList =Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            var total = TotalList;
+            if (string.IsNullOrEmpty(options.Sort))
+            {
+                options.Sort = "glno";
+            }
+
+            var orderBy = $"order by {options.Sort} {options.Order}";
+            QuerySql = $@"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM ( {QuerySql}) b ";
+            string entitySql = @$"select * from (" +
+             QuerySql + $" ) as s where s.rowId between {((options.Page - 1) * options.Rows + 1)} and {options.Page * options.Rows}    {orderBy}";
+            OCList = repository.DapperContext.QueryList<view_cmc_plan_execution>(entitySql, null).ToList();
+            pageGridData.rows = OCList;
+            pageGridData.total = total;
+            return pageGridData;
+
+            //return base.GetPageData(options);
         }
     }
 }
