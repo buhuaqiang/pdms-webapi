@@ -704,11 +704,11 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
             if (projectStatus == "01")
             {
-                sql += "and company_code is null  and epl_phase='01' ) tab where tab.rn>1   ";
+                sql += "and kd_type like 'D%'  and epl_phase='01' ) tab where tab.rn>1   ";
             }
             else
             {
-                sql += "and company_code is null  and epl_phase='02' ) tab where tab.rn>1   ";
+                sql += "and kd_type like 'D%'  and epl_phase='02' ) tab where tab.rn>1   ";
             }
           
             
