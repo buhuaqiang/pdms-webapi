@@ -19,12 +19,12 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Project.IServices;
 using PDMS.Core.ManageUser;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Information;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-
 namespace PDMS.Project.Services
 {
     public partial class view_cmc_project_pmService
@@ -440,7 +440,7 @@ namespace PDMS.Project.Services
             {
                 QuerySql = @" SELECT  pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.epl_load_date,
+	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                                 ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
 	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
                             FROM cmc_pdms_project_main AS pm
@@ -452,7 +452,7 @@ namespace PDMS.Project.Services
                 string orgCode = " and  po.org_code='" + departMentCode + "'";
                 QuerySql = @" SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.epl_load_date,
+	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                                 ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
 	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
                             FROM cmc_pdms_project_main AS pm
@@ -467,7 +467,7 @@ namespace PDMS.Project.Services
                 string orgCode = " and  epl.group_code='" + departMentCode + "'";
                 QuerySql = @"  SELECT  distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.epl_load_date,
+	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                                 ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
 	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
                             FROM cmc_pdms_project_main AS pm
@@ -482,7 +482,7 @@ namespace PDMS.Project.Services
                 string devTaker = " and  epl.dev_taker_id='" + userId + "'";
                 QuerySql = @"  SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.epl_load_date,
+	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                                 ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
 	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
                             FROM cmc_pdms_project_main AS pm
@@ -496,5 +496,68 @@ namespace PDMS.Project.Services
             return base.GetPageData(options);
         }
 
+
+
+       public WebResponseContent getProjectInfoFromCMS(string glno)
+        {
+            view_cmc_project_pm pm=new view_cmc_project_pm();
+            if(!string.IsNullOrEmpty(glno))
+            {
+                if (glno == "GL123456")
+                {
+                    return webResponse.Error("查询不到信息");
+                }
+                pm.project_name= "專案名稱"+new Random().Next(100, 999);
+                pm.start_date= DateTime.Now;
+                pm.end_date= DateTime.Now;
+                return webResponse.OKData(pm);
+            }
+            else
+            {
+                return webResponse.Error("请输入GLNO");
+            }
+
+            return webResponse.OK("");
+        }
+
+        
+
+          public WebResponseContent getProjectOrgFromCMS(string glno)
+        {
+            List < cmc_pdms_project_org > list=new List<cmc_pdms_project_org>();
+            if (!string.IsNullOrEmpty(glno))
+            {
+                if (glno == "GL123456")
+                {
+                    return webResponse.Error("查询不到信息");
+                }
+                cmc_pdms_project_org org=new cmc_pdms_project_org();
+                org.org_code = "D157";
+                org.upg_id = "956125";
+                org.user_id = "201995";
+                org.user_name = "鄧宇柯";
+                org.user_role_id = "A1551";
+                org.user_role_name = "系統工程師";
+
+                cmc_pdms_project_org org1 = new cmc_pdms_project_org();
+                org1.org_code = "D148";
+                org1.upg_id = "956125";
+                org1.user_id = "775928";
+                org1.user_name = "林敏男";
+                org1.user_role_id = "A2582";
+                org1.user_role_name = "系統工程師";
+                list.Add(org1);
+                list.Add(org);
+                return webResponse.OKData(list);
+            }
+            else
+            {
+                return webResponse.Error("请输入GLNO");
+            }
+
+            return webResponse.OK("");
+        }
     }
+
+
 }

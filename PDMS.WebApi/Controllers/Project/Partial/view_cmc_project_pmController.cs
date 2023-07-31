@@ -54,5 +54,21 @@ namespace PDMS.Project.Controllers
             return base.GetPageData(options);
         }
 
+        [ApiActionPermission()]
+        [HttpPost, Route("getProjectInfoFromCMS")]
+        public ActionResult getProjectInfoFromCMS(string glno)
+        {
+
+            return Json(_service.getProjectInfoFromCMS(glno));
+        }
+        [ApiActionPermission()]
+        [HttpPost, Route("getProjectOrgFromCMS")]
+        public ActionResult getProjectOrgFromCMS(string glno)
+        {
+
+            return Json(_service.getProjectOrgFromCMS(glno));
+        }
+
+        
     }
 }

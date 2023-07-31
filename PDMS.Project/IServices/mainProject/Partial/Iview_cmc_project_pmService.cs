@@ -12,6 +12,19 @@ namespace PDMS.Project.IServices
 {
     public partial interface Iview_cmc_project_pmService : IService<view_cmc_project_pm>
     {
+        /// <summary>
+        /// 根据glno从cms系统查询专案信息
+        /// </summary>
+        /// <param name="glno"></param>
+        /// <returns></returns>
+        public WebResponseContent getProjectInfoFromCMS(string glno);
+
+        /// <summary>
+        /// 根據glno從cms系統查詢專案組織信息
+        /// </summary>
+        /// <param name="glno"></param>
+        /// <returns></returns>
+        public WebResponseContent getProjectOrgFromCMS(string glno);
         WebResponseContent release(SaveModel saveModel);
     }
 }
