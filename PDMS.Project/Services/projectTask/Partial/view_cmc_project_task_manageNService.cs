@@ -284,44 +284,26 @@ namespace PDMS.Project.Services
 
         public WebResponseContent deleteMissionData(SaveModel saveModel)
         {
-            var MainData = saveModel.MainDatas;
-            List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
-            if (MainData.Count != 0)
-            {
-                try
-                {
-                    foreach (var item in MainData)
-                    {
-                        Guid task_id = Guid.Parse(item["task_id"].ToString());
-                        Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
-                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                        //pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.task_id == task_id && x.project_task_id == project_task_id).FirstOrDefault();
+            Console.WriteLine("deleteMissionData");
+            var MainData = saveModel.MainData;
+            string task_id = MainData["task_id"] == null ? "" : MainData["task_id"].ToString();
+            string project_task_id = MainData["project_task_id"] == null ? "" : MainData["project_task_id"].ToString();
 
-                        string deleteAction = @$"
-                            DELETE FROM
-	                            cmc_pdms_project_task 
-                            WHERE
-	                            project_task_id ='{project_task_id}' ";
-                        try
-                        {
-                            var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：deleteMissionData：" + DateTime.Now + ":" + ex.Message);
-                            return ResponseContent.Error();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：projectTaskLisk：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
-                }
-               
+            string deleteAction = @$"
+                DELETE FROM
+	                cmc_pdms_project_task 
+                WHERE
+	                project_task_id ='{project_task_id}' AND task_id IN( '{task_id}')";
+            try
+            {
+                var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：deleteMissionData：" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error();
             }
             return ResponseContent.OK();
         }
-
     }
 }
