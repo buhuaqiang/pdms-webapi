@@ -13,7 +13,8 @@ using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
 using PDMS.Core.Extensions;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using PDMS.Core.Utilities;
+using PDMS.Core.Utilities;
 
 namespace PDMS.Project.Controllers
 {
@@ -33,7 +34,13 @@ namespace PDMS.Project.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-
+        //提交功能
+        [ApiActionPermission()]
+        [HttpPost, Route("release")]
+        public WebResponseContent release([FromBody] SaveModel saveModel)
+        {
+            return Service.release(saveModel);
+        }
 
         public override ActionResult Import(List<IFormFile> fileInput)
         {
