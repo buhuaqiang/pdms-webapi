@@ -93,5 +93,14 @@ namespace PDMS.Project.Controllers
         {
             return Json(Service.UpdateTaskDate(saveModel));
         }
+
+        //表單上傳文件
+        [ApiActionPermission()]
+        [HttpPost, Route("UpdateInfo")]
+        public ActionResult UpdateInfo(List<IFormFile> fileInput)
+        {
+            return Json(Service.Upload(fileInput));
+        }
+
     }
 }
