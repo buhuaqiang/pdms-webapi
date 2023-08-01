@@ -13,5 +13,7 @@ namespace PDMS.Project.IServices
         public WebResponseContent setPartTaker(SaveModel obj);
         public WebResponseContent updateMissionData(SaveModel obj);
         public WebResponseContent addMissionData(SaveModel obj);
+        public WebResponseContent deleteMissionData(SaveModel obj);
+
     }
  }
