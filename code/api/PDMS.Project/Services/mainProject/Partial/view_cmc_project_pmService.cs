@@ -73,7 +73,8 @@ namespace PDMS.Project.Services
             //改專案 發佈狀態 為草稿01
             string releaseStatus = $@"UPDATE cmc_pdms_project_main  set release_status='01' WHERE project_id='{pid}'";
             var succReleaseStatus = repository.DapperContext.ExcuteNonQuery(releaseStatus, null);
-            
+            string pStatus = $@"UPDATE cmc_pdms_project_main  set project_status='01' WHERE project_id='{pid}'";
+            var projStatus = repository.DapperContext.ExcuteNonQuery(pStatus, null);
             return info;
         }
         public override WebResponseContent Update(SaveModel saveModel)
@@ -129,11 +130,19 @@ namespace PDMS.Project.Services
                             var screenGateEndDate = screen["gate_end_date"].ToString();
                             if (screen.ContainsKey("version"))
                             {
-                                screenGateVersion = screen["version"].ToString();
+                                if (screen["version"]==null)
+                                {
+                                    //screenGateVersion = newVersion.ToString();
+                                }
+                                else
+                                {
+                                    screenGateVersion = screen["version"].ToString();
+                                }
+                                
                             }
                             else
                             {
-                                screenGateVersion = newVersion.ToString();
+                                //screenGateVersion = newVersion.ToString();
                             }
 
                             //兩邊數據交集
@@ -152,7 +161,7 @@ namespace PDMS.Project.Services
                                 gate_code,
                                 gate_start_date,
                                 gate_end_date,
-                                version,
+                                
                                 action_type)
                                 values
                                 (NEWID(),
@@ -161,18 +170,18 @@ namespace PDMS.Project.Services
                                 '{screenGateCode}',
                                 '{screenGateStartDate}',
                                 '{screenGateEndDate}',
-                                '{screenGateVersion}',
+                                
                                 '{actype}'
                                 )";
                                 var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);                                
-                                //var screenGateId = screen["gate_id"].ToString();
+                                
                                 string sqlGate = $@"insert into cmc_pdms_project_gate (
                                 gate_id,
                                 project_id,
                                 gate_code,
                                 gate_start_date,
                                 gate_end_date,
-                                version,
+                                
                                 CreateID,
                                 Creator,
                                 CreateDate,
@@ -183,7 +192,7 @@ namespace PDMS.Project.Services
                                 '{screenGateCode}',
                                 '{screenGateStartDate}',
                                 '{screenGateEndDate}',
-                                '{screenGateVersion}',
+                                
                                 '{CreateID}',
                                 '{Creator}',
                                 GETDATE(),
@@ -202,14 +211,21 @@ namespace PDMS.Project.Services
                                 var oldGateCode = str1.gate_code.ToString();
                                 var oldGateStartDate = str1.gate_start_date.ToString();
                                 var oldGateEndDate = str1.gate_end_date.ToString();
-                                var oldVersion = str1.version.ToString();
+                                string oldVersion = "";
+                               // if (str1.version!=null)
+                               // {
+                                    oldVersion = str1.version.ToString();
+                                //}
+                                
 
-                                if ((screen["gate_start_date"].ToString() != str1.gate_start_date.ToString())|| (screen["gate_end_date"].ToString() != str1.gate_end_date.ToString()))
+                                if ((screen["gate_start_date"].ToString() != str1.gate_start_date.ToString())|| (screen["gate_end_date"].ToString() != str1.gate_end_date.ToString())||(screen["gate_code"].ToString() != str1.gate_code.ToString()))
                                 {
                                     actype = "modify";
                                     delflag = "0";
                                     gateModList.Add(oldGateId);
-                                    string sqlGateHis = $@"insert into cmc_pdms_project_gate_his (
+                                    if (oldVersion != "")
+                                    {
+                                        string sqlGateHis = $@"insert into cmc_pdms_project_gate_his (
                                         gate_his_id,
                                         gate_id,
                                         project_id,
@@ -228,7 +244,8 @@ namespace PDMS.Project.Services
                                         '{oldVersion}',
                                         '{actype}'
                                     )";
-                                    var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);
+                                        var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);
+                                    }
 
                                     string sqlGate = $@"UPDATE cmc_pdms_project_gate set gate_code='{screenGateCode}', gate_start_date='{screenGateStartDate}', gate_end_date='{screenGateEndDate}' WHERE gate_id='{screenGateId}'";
                                     var sccGate = repository.DapperContext.ExcuteNonQuery(sqlGate, null);
@@ -303,7 +320,13 @@ namespace PDMS.Project.Services
             }
             else
             {
+                var a = 4;
+                var b = 5;
                 return _cmc_pdms_project_mainService.Update(saveModel);
+            }
+            if (true)
+            {
+
             }
 
             return  webResponse.OK();
