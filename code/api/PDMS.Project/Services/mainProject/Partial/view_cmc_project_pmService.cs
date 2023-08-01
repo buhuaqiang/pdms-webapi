@@ -465,7 +465,7 @@ namespace PDMS.Project.Services
             }
             if (path == "/view_cmc_project_group_start")
             { //專案啟動組車型窗口查詢
-                string orgCode = " and  epl.group_code='" + departMentCode + "'";
+                string groupCode = " and  epl.group_code='" + departMentCode + "'";
                 QuerySql = @"  SELECT  distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
 	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
@@ -474,7 +474,7 @@ namespace PDMS.Project.Services
                             FROM cmc_pdms_project_main AS pm
 	                         left  join cmc_pdms_project_epl epl on epl.project_id=pm.project_id  where 1=1 
                         ";
-                QuerySql += orgCode;
+                QuerySql += groupCode;
                 QuerySql += where;
 
             }
