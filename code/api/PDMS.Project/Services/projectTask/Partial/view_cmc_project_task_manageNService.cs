@@ -127,8 +127,6 @@ namespace PDMS.Project.Services
         {
             var MainData = saveModel.MainDatas;
             List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
-            string format1 = "yyyy/MM/dd HH:mm:ss";
-            string format2 = "yyyy-MM-dd HH:mm:ss";
             if (MainData.Count != 0)
             {
                 try
@@ -142,29 +140,7 @@ namespace PDMS.Project.Services
 
                         if (pTask != null)
                         {
-                            if (item["start_date"].ToString().Contains("/"))
-                            {
-                                DateTime dateTimeValue = DateTime.ParseExact(item["start_date"].ToString(), format1, CultureInfo.InvariantCulture);
-                                string startDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
-                                pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                var sd = item["start_date"].ToString();
-                                pTask.start_date = DateTime.ParseExact(sd, format2, CultureInfo.InvariantCulture);
-                            }
-
-                            if (item["end_date"].ToString().Contains("/"))
-                            {
-                                DateTime dateTimeValue = DateTime.ParseExact(item["end_date"].ToString(), format1, CultureInfo.InvariantCulture);
-                                string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
-                                pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
-                            }
-                            else
-                            {
-                                var ed = item["end_date"].ToString();
-                                pTask.end_date = DateTime.ParseExact(ed, format2, CultureInfo.InvariantCulture);
-                            }
+                            dateFormat(item, pTask);
                         }
                         projectTaskLisk.Add(pTask);
                     }
@@ -195,91 +171,192 @@ namespace PDMS.Project.Services
         {
             Console.WriteLine("addMissionData");
             var MainDatas = saveModel.MainDatas;
-            var epl_id = saveModel.Extra;
+            //var epl_id = saveModel.MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
+            var epl_id = saveModel.MainData["epl_id"] == null ? "" : saveModel.MainData["epl_id"].ToString();
+            string[] epl_idArray = epl_id.Split(',');
+            //JArray epl_idArray = JArray.Parse(epl_id);
+
+            var path = saveModel.MainData["path"].ToString();
             var template_id = MainDatas[0]["template_id"];
+
 
             List<cmc_pdms_project_task> checkTemplate = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> addList = new List<cmc_pdms_project_task>();
+            List<cmc_pdms_project_task> updateList = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> existTaskList = new List<cmc_pdms_project_task>();
             List<view_template_task_mapping> frontEndTaskLisk = new List<view_template_task_mapping>();
-
-            //1.檢查此epl是否已經有選擇過模板,跟現在選的是否一樣
-            string sql = $@"SELECT  epl_id , template_id  FROM cmc_pdms_project_task
-                            WHERE epl_id='" + epl_id + "'";
-            checkTemplate = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
-            bool templateExists = checkTemplate.Any(b => b.template_id.ToString() == template_id.ToString());
-            //如果沒有相同模板 => 1.還沒選任務 2.選了不同模板的任務 故刪除舊有資料後面再新增
-            if (!templateExists)
+            string deleteAction = "";
+            //單個子專案選任務
+            if (path == "single")
             {
-                string deleteAction = @$"
+                //1.檢查此epl是否已經有選擇過模板,跟現在選的是否一樣
+                string sql = $@"SELECT  epl_id , template_id  FROM cmc_pdms_project_task
+                            WHERE epl_id='" + epl_idArray[0] + "'";
+                checkTemplate = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
+                bool templateExists = checkTemplate.Any(b => b.template_id.ToString() == template_id.ToString());
+                //如果沒有相同模板 => 1.還沒選任務 2.選了不同模板的任務 故刪除舊有資料後面再新增
+                if (!templateExists)
+                {
+                    deleteAction = @$"
                             DELETE FROM
 	                            cmc_pdms_project_task 
                             WHERE
-	                            epl_id ='{epl_id}' '";
-                try
-                {
-                    var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理選擇模板任務  更換模板刪除舊模板 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：addMissionData：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
+	                            epl_id ='{epl_id}'";
                 }
             }
+            //批次選任務
+            else if (path == "batch") 
+            {
+                //直接先清空任務
+                deleteAction = @$"
+                            DELETE FROM
+	                            cmc_pdms_project_task 
+                            WHERE
+	                            epl_id IN ('{epl_id}')";
+            }
 
-            //把已選擇之任務挑出來
-            string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='" + epl_id + "' AND template_id = '" + template_id + "";
-            existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql2, null);
+            try
+            {
+                Console.WriteLine("deleteAction:" + deleteAction);
+                var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理,子專案選擇模板任務,更換模板刪除舊模板 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：addMissionData：" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error();
+            }
+            /*
+            if (path == "single")
+            {
+                
+            }
+            //批次選任務
+            else if (path == "batch")
+            {
 
-            if (MainDatas.Count != 0)
+            }*/
+            if (!string.IsNullOrEmpty(epl_id))
             {
                 try
                 {
-                    foreach (var item in MainDatas)
+                    foreach (string eplId in epl_idArray)
                     {
-                        //判斷此任務是否已經被選擇了
-                        bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
-                        if (taskExists)
+                        //把已選擇之任務挑出來
+                        string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='{eplId}' AND template_id = '{template_id}'";
+                        existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql2, null);
+
+                        if (MainDatas.Count != 0)
                         {
-                            cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                            if (item["start_date"] != null && item["end_date"] != null)
+                            try
                             {
-                                pTask.start_date = (DateTime?)item["start_date"];
-                                pTask.end_date = (DateTime?)item["end_date"];
+                                foreach (var item in MainDatas)
+                                {
+                                    //判斷此任務是否已經被選擇了
+                                    bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
+                                    cmc_pdms_project_task pTask = new cmc_pdms_project_task();
+                                    dateFormat(item, pTask);
+                                    if (!taskExists)
+                                    {
+                                        pTask.project_task_id = Guid.NewGuid();
+                                        pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
+                                        pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
+                                        pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString());
+                                        pTask.action_type = "add";
+                                        pTask.approve_status = "00";
+                                        pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
+                                        pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString();
+                                        pTask.FormId = item["FormId"] == null ? Guid.Parse("") : Guid.Parse(item["FormId"].ToString());
+                                        pTask.FormCode = item["FormCode"] == null ? "" : item["FormCode"].ToString();
+                                        addList.Add(pTask);
+                                    }
+                                    else
+                                    {
+                                        updateList.Add(pTask);
+                                    }
+                                }
                             }
-                            pTask.epl_id = epl_id == null ? Guid.Parse("") : Guid.Parse(epl_id.ToString());
-                            pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
-                            pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString());
-                            pTask.action_type = "add";
-                            pTask.approve_status = "00";
-                            pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
-                            pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString();
-                            pTask.FormId = item["FormId"] == null ? Guid.Parse("") : Guid.Parse(item["FormId"].ToString());
-                            pTask.FormCode = item["FormCode"] == null ? "" : item["FormCode"].ToString();
-                            addList.Add(pTask);
+                            catch (Exception ex)
+                            {
+                                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：addList：" + DateTime.Now + ":" + ex.Message);
+                                return ResponseContent.Error();
+                            }
+                            if (addList.Count > 0) { 
+                                try
+                                {
+                                    repository.DapperContext.BeginTransaction((r) =>
+                                    {
+                                        DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_task");
+                                        return true;
+                                    }, (ex) => { throw new Exception(ex.Message); });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                                    return ResponseContent.Error();
+                                }
+                            }
+                            if (updateList.Count > 0) { 
+                                try
+                                {
+                                    repository.DapperContext.BeginTransaction((r) =>
+                                    {
+                                        DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.start_date, x.end_date });
+                                        return true;
+                                    }, (ex) => { throw new Exception(ex.Message); });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                                    return ResponseContent.Error();
+                                }
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：addList：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
-                }
-                try
-                {
-                    repository.DapperContext.BeginTransaction((r) =>
-                    {
-                        DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_task");
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error();
                 }
             }
             return ResponseContent.OK();
+        }
+
+        private static void dateFormat(Dictionary<string, object>? item, cmc_pdms_project_task pTask)
+        {
+            string format1 = "yyyy/MM/dd";
+            string format2 = "yyyy-MM-dd";
+            //string format2 = "yyyy-MM-dd HH:mm:ss";
+            var startD = item["start_date"].ToString();
+            var endD = item["end_date"].ToString();
+            if (!string.IsNullOrEmpty(startD))
+            {
+                if (startD.Contains("/"))
+                {
+                    DateTime dateTimeValue = DateTime.ParseExact(item["start_date"].ToString(), format1, CultureInfo.InvariantCulture);
+                    string startDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                    pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    var sd = item["start_date"].ToString();
+                    pTask.start_date = DateTime.ParseExact(sd, format2, CultureInfo.InvariantCulture);
+                }
+            }
+            if (!string.IsNullOrEmpty(endD)) 
+            {
+                if (endD.Contains("/"))
+                {
+                    DateTime dateTimeValue = DateTime.ParseExact(item["end_date"].ToString(), format1, CultureInfo.InvariantCulture);
+                    string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                    pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    var ed = item["end_date"].ToString();
+                    pTask.end_date = DateTime.ParseExact(ed, format2, CultureInfo.InvariantCulture);
+                }
+            }
         }
 
         public WebResponseContent deleteMissionData(SaveModel saveModel)
