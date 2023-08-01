@@ -24,6 +24,7 @@ using PDMS.Core.ManageUser;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml.ConditionalFormatting;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace PDMS.Project.Services
 {
@@ -443,6 +444,22 @@ namespace PDMS.Project.Services
                 List<cmc_pdms_project_epl> updateList = new List<cmc_pdms_project_epl>();
                 DateTime now = DateTime.Now;
                 List<string> strings = new List<string>();
+                //查詢部門編碼
+                List<string> upg_ids = new List<string>();
+
+                List<Dictionary<string, string>> dic = new List<Dictionary<string, string>>();
+
+                var templist = list.Select(x => new { upg_id = x.upg_id }).ToArray();
+
+                var aa = JsonConvert.SerializeObject(templist);
+                upg_ids = JsonConvert.DeserializeObject<List<string>>(aa);
+
+                string upgids = string.Join("','", upg_ids);
+                string getDeptCode = $@"SELECT	DepartmentCode,UpgID from Sys_Department where UpgID IN ('{upgids}')";
+                var temp = repository.DapperContext.QueryList<Sys_Department>(getDeptCode,null);
+                dic = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(JsonConvert.SerializeObject(temp));
+
+
                 foreach (cmc_pdms_project_epl epl in list)
                 {
                     //臨時實體變量
@@ -452,6 +469,8 @@ namespace PDMS.Project.Services
                     var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag=="0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
                     if (oldlist == null)
                     {
+                        var dd = dic.Where(x => x.ContainsKey(""));
+
                         tempEpl.epl_id = Guid.NewGuid();
                         strings.Add(tempEpl.epl_id.ToString());
                         tempEpl.CreateDate = now;
@@ -467,6 +486,8 @@ namespace PDMS.Project.Services
 
                         tempEpl.action_type = "add";
                         tempEpl.del_flag= "0";
+                       
+
                         //TODO
                         //接口查询kd区分和厂商代码
 
