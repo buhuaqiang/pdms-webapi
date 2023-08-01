@@ -59,5 +59,12 @@ namespace PDMS.Project.Controllers
         {
             return Service.addMissionData(obj);
         }
+
+        [ApiActionPermission()]
+        [Route("deleteMissionData"), HttpPost]
+        public WebResponseContent deleteMissionData([FromBody] SaveModel obj)
+        {
+            return Service.deleteMissionData(obj);
+        }
     }
 }
