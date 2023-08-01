@@ -62,7 +62,7 @@ namespace PDMS.Project.Services
             if (!string.IsNullOrEmpty(project_id))
             {
                 QuerySql = $@"SELECT
-	                tm.* 
+	              distinct  tm.* 
                 FROM
 	                (
 	                SELECT
