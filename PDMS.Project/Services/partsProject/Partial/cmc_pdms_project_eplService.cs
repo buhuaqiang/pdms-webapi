@@ -25,6 +25,9 @@ using Newtonsoft.Json.Linq;
 using OfficeOpenXml.ConditionalFormatting;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using System.Reflection;
+using System;
 
 namespace PDMS.Project.Services
 {
@@ -437,7 +440,7 @@ namespace PDMS.Project.Services
                 //查詢是否有舊數據，用於判斷是否需要寫曆史表
                 string sqlExist = $@"select count(0) from cmc_pdms_project_epl where project_id='{project_id}'";
                 object obj = _repository.DapperContext.ExecuteScalar(sqlExist, null);
-              
+                //解析Excel中的数据
                 WebResponseContent Response = ImportList(files);
                 List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
                 List<cmc_pdms_project_epl> addList = new List<cmc_pdms_project_epl>();
@@ -446,20 +449,23 @@ namespace PDMS.Project.Services
                 List<string> strings = new List<string>();
                 //查詢部門編碼
                 List<string> upg_ids = new List<string>();
-
-                List<Dictionary<string, string>> dic = new List<Dictionary<string, string>>();
-
-                var templist = list.Select(x => new { upg_id = x.upg_id }).ToArray();
-
-                var aa = JsonConvert.SerializeObject(templist);
-                upg_ids = JsonConvert.DeserializeObject<List<string>>(aa);
-
+                //只获取upg_id集合
+                var templist = list.Select(x => new { upg_id = x.upg_id }).ToList();
+                //根据映射关系，获取到对应的值
+                PropertyInfo[] PropertyList = templist[0].GetType().GetProperties();
+                foreach (PropertyInfo item in PropertyList)
+                {
+                    string name = item.Name;
+                    var thisvalue = templist.Select(p => p.GetType().GetProperty(name).GetValue(p))
+                                    .Distinct().ToList();
+                    upg_ids = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(thisvalue));
+                }
                 string upgids = string.Join("','", upg_ids);
                 string getDeptCode = $@"SELECT	DepartmentCode,UpgID from Sys_Department where UpgID IN ('{upgids}')";
                 var temp = repository.DapperContext.QueryList<Sys_Department>(getDeptCode,null);
-                dic = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(JsonConvert.SerializeObject(temp));
 
-
+                //UpgID做KEY,Sys_Department做值
+                Dictionary<string, Sys_Department> dic = temp.ToDictionary(p => p.UpgID);
                 foreach (cmc_pdms_project_epl epl in list)
                 {
                     //臨時實體變量
@@ -467,9 +473,17 @@ namespace PDMS.Project.Services
                     tempEpl = epl;
                     //设置数据状态：新增、删除、不变
                     var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag=="0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
+
+                    //根据字典Key 取 Value
+                    Sys_Department entity = new Sys_Department();
+                    dic.TryGetValue(oldlist.upg_id, out entity);
+                    //根据upg_id 获取部门Code
+                    var DepartmentCode = entity.DepartmentCode;
+
+
                     if (oldlist == null)
                     {
-                        var dd = dic.Where(x => x.ContainsKey(""));
+                  
 
                         tempEpl.epl_id = Guid.NewGuid();
                         strings.Add(tempEpl.epl_id.ToString());
