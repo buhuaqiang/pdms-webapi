@@ -80,7 +80,7 @@ from  cmc_pdms_project_task task
 left join cmc_pdms_project_epl epl on epl.epl_id=task.epl_id
 left join cmc_pdms_project_main main on main.project_id=epl.project_id
 left join Sys_User us on epl.dev_taker_id=us.User_id
-where epl.company_code is null  and  epl.epl_phase='02'
+where  kd_type like 'D%'  and  epl.epl_phase='02'
  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
