@@ -31,5 +31,7 @@ namespace PDMS.Entity.DomainModels
         public string Token { get; set; }
 
         public string DepartmentCode { get; set; }
+
+        public string user_code { get; set; }
     }
 }
