@@ -465,7 +465,8 @@ namespace PDMS.Project.Services
                 var temp = repository.DapperContext.QueryList<Sys_Department>(getDeptCode,null);
 
                 //UpgID做KEY,Sys_Department做值
-                Dictionary<string, Sys_Department> dic = temp.ToDictionary(p => p.UpgID);
+                //Dictionary<string, Sys_Department> dic = temp.ToDictionary(p => p.UpgID);
+
                 foreach (cmc_pdms_project_epl epl in list)
                 {
                     //臨時實體變量
@@ -474,17 +475,18 @@ namespace PDMS.Project.Services
                     //设置数据状态：新增、删除、不变
                     var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag=="0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
 
-                    //根据字典Key 取 Value
-                    Sys_Department entity = new Sys_Department();
-                    dic.TryGetValue(oldlist.upg_id, out entity);
-                    //根据upg_id 获取部门Code
-                    var DepartmentCode = entity.DepartmentCode;
+                    //方案一
+                    ////根据字典Key 取 Value
+                    //Sys_Department entity = new Sys_Department();
+                    //dic.TryGetValue(oldlist.upg_id, out entity);
+                    ////根据upg_id 获取部门Code
+                    //var DepartmentCode = entity.DepartmentCode;
 
+                    //获取DepartmentCode 方案二
+                    var DepartmentCode = temp.Where(x => x.UpgID == oldlist.upg_id).FirstOrDefault() == null ? "" : temp.Where(x => x.UpgID == oldlist.upg_id).FirstOrDefault().DepartmentCode;
 
                     if (oldlist == null)
-                    {
-                  
-
+                    {              
                         tempEpl.epl_id = Guid.NewGuid();
                         strings.Add(tempEpl.epl_id.ToString());
                         tempEpl.CreateDate = now;
