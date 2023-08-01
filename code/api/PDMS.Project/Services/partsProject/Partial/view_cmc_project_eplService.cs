@@ -175,7 +175,7 @@ namespace PDMS.Project.Services
             }
             if (path == "/view_cmc_project_epl_group")
             { //組車型窗口查詢
-                string orgCode = " and  epl.group_code='" + departMentCode + "'";
+                string groupCode = " and  epl.group_code='" + departMentCode + "'";
                 if (projectStatus == "01")
                 {//專案建立組車型窗口查詢
                     QuerySql = @" select  epl.* , (select  UserTrueName from sys_user where  User_Id=epl.dev_taker_id) as UserTrueName,
@@ -188,14 +188,16 @@ namespace PDMS.Project.Services
                             from   cmc_pdms_project_epl epl  where  epl.submit_status='1' and epl_phase='02'  
                         ";
                 }
-                QuerySql += orgCode;
+                QuerySql += groupCode;
                 QuerySql += where;
 
             }
             if (path == "/view_cmc_project_epl_departFinaliza")
             { //部門定版
+                string orgCode = " and  epl.org_code='" + departMentCode + "'";
                 if (projectStatus == "01")
                 {
+                   
                     QuerySql = @" select  epl.*,(select UserName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserTrueName   
 	                            from cmc_pdms_project_epl epl
                                 left  join cmc_pdms_project_main main on main.project_id=epl.project_id
@@ -214,7 +216,7 @@ namespace PDMS.Project.Services
                                 where epl_phase='02' 
                         ";
                 }
-                   
+                QuerySql += orgCode;
                 QuerySql += where;
 
             }
