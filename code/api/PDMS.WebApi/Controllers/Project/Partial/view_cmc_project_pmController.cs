@@ -41,7 +41,14 @@ namespace PDMS.Project.Controllers
         {
             return Service.release(saveModel);
         }
-
+        [ApiActionPermission()]
+        [HttpGet, Route("DownLoadTemplate")]
+        public override ActionResult DownLoadTemplate()
+        {
+            return base.DownLoadTemplate();
+        }
+        [ApiActionPermission()]
+        [HttpPost,Route("Import")]
         public override ActionResult Import(List<IFormFile> fileInput)
         {
             return Json(_service.Upload(fileInput));
