@@ -105,7 +105,8 @@ namespace PDMS.Core.ManageUser
                     UserTrueName = s.UserTrueName,
                     Enable = 1,
                     s.RoleIds,
-                    s.DeptIds
+                    s.DeptIds,
+                    s.user_code
                 }).ToList().Select(s => new UserInfo()
                 {
                     User_Id = userId,
@@ -116,8 +117,9 @@ namespace PDMS.Core.ManageUser
                     Enable = 1,
                     RoleIds = s.Role_Id == 1 ? new int[] { 1 } : (string.IsNullOrEmpty(s.RoleIds) ? new int[] { } : s.RoleIds.Split(",").Select(x => x.GetInt()).ToArray()),
                     DeptIds = string.IsNullOrEmpty(s.DeptIds) ? new List<Guid>() : s.DeptIds.Split(",").Select(x => (Guid)x.GetGuid()).ToList(),
+                    user_code = s.user_code
                 }).FirstOrDefault();
-            var info = DBServerProvider.DbContext.Set<Sys_UserDepartment>().Where(x => x.UserId == _userInfo.User_Id).FirstOrDefault();
+            var info = DBServerProvider.DbContext.Set<Sys_UserDepartment>().Where(x => x.UserId == _userInfo.User_Id).OrderByDescending(o => o.CreateDate ).FirstOrDefault();
             if (info != null)
             {
                 var DepartmentId = info.DepartmentId==null?"": info.DepartmentId.ToString();
