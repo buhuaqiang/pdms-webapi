@@ -483,7 +483,7 @@ namespace PDMS.Project.Services
                     //var DepartmentCode = entity.DepartmentCode;
 
                     //获取DepartmentCode 方案二
-                    var DepartmentCode = temp.Where(x => x.UpgID == oldlist.upg_id).FirstOrDefault() == null ? "" : temp.Where(x => x.UpgID == oldlist.upg_id).FirstOrDefault().DepartmentCode;
+                    var DepartmentCode = temp.Where(x => x.UpgID == tempEpl.upg_id).FirstOrDefault() == null ? "" : temp.Where(x => x.UpgID == tempEpl.upg_id).FirstOrDefault().DepartmentCode;
 
                     if (oldlist == null)
                     {              
@@ -502,8 +502,9 @@ namespace PDMS.Project.Services
 
                         tempEpl.action_type = "add";
                         tempEpl.del_flag= "0";
-                       
 
+                        tempEpl.org_code = DepartmentCode;
+                        tempEpl.new_org_code= DepartmentCode;
                         //TODO
                         //接口查询kd区分和厂商代码
 
