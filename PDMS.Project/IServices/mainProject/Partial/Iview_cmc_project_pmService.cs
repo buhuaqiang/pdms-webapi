@@ -24,7 +24,9 @@ namespace PDMS.Project.IServices
         /// </summary>
         /// <param name="glno"></param>
         /// <returns></returns>
-        public WebResponseContent getProjectOrgFromCMS(string glno);
+        public WebResponseContent getProjectOrgFromCMS(string proid);
+
+        public WebResponseContent getEPLFromCMS(string proid);
         WebResponseContent release(SaveModel saveModel);
     }
 }

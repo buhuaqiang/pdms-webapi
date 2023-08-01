@@ -76,6 +76,13 @@ namespace PDMS.Project.Controllers
             return Json(_service.getProjectOrgFromCMS(glno));
         }
 
-        
+        [ApiActionPermission()]
+        [HttpPost, Route("getEPLFromCMS")]
+        public ActionResult getEPLFromCMS(string proid)
+        {
+
+            return Json(_service.getEPLFromCMS(proid));
+        }
+
     }
 }
