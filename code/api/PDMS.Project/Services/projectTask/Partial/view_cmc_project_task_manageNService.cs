@@ -401,11 +401,12 @@ namespace PDMS.Project.Services
 
         private static void dateFormat(Dictionary<string, object>? item, cmc_pdms_project_task pTask)
         {
-            string format1 = "yyyy/MM/dd";
-            string format2 = "yyyy-MM-dd";
-            //string format2 = "yyyy-MM-dd HH:mm:ss";
-            var startD = item["start_date"].ToString();
-            var endD = item["end_date"].ToString();
+            string format1 = "yyyy/MM/dd HH:mm:ss";
+            string format2 = "yyyy-MM-dd HH:mm:ss";
+
+            //if (!string.IsNullOrEmpty(endD)) 
+            var startD = item["start_date"].ToString() ?? "";
+            var endD = item["end_date"].ToString() ?? "";
             if (!string.IsNullOrEmpty(startD))
             {
                 if (startD.Contains("/"))
@@ -420,7 +421,7 @@ namespace PDMS.Project.Services
                     pTask.start_date = DateTime.ParseExact(sd, format2, CultureInfo.InvariantCulture);
                 }
             }
-            if (!string.IsNullOrEmpty(endD)) 
+            if (!string.IsNullOrEmpty(endD))
             {
                 if (endD.Contains("/"))
                 {
