@@ -40,6 +40,32 @@ namespace PDMS.Project.Services
         }
         public override PageGridData<view_cmc_project_task_mission_manage> GetPageData(PageDataOptions options)
         {
+            string epl_id = "";
+            string where = " ";
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "epl_id".ToLower())
+                        {
+                            epl_id = sp.Value;
+                            if (!string.IsNullOrEmpty(epl_id))
+                            {
+                                where += " AND epl_id = '" + epl_id + "'";
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY task_name  desc) AS rowId  FROM view_cmc_project_task_mission_manage WHERE 1=1  ";
+            QuerySql += where;
+
             return base.GetPageData(options);
         }
         

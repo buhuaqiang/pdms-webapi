@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Project.Services
 {
@@ -39,6 +40,63 @@ namespace PDMS.Project.Services
         }
         public override PageGridData<view_UserDepartment> GetPageData(PageDataOptions options)
         {
+            //string department = "";
+            string group = "";
+            string UserTrueName = "";
+            string user_code = "";
+
+            string where = " ";
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        //if (sp.Name.ToLower() == "department".ToLower())
+                        //{
+                        //    department = sp.Value;
+                        //    if (!string.IsNullOrEmpty(department))
+                        //    {
+                        //        where += " AND department LIKE '%" + department + "%'";
+                        //    }
+                        //    continue;
+                        //}
+                        if (sp.Name.ToLower() == "group".ToLower())
+                        {
+                            group = sp.Value;
+                            if (!string.IsNullOrEmpty(group))
+                            {
+                                where += " AND group LIKE '%" + group + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "UserTrueName".ToLower())
+                        {
+                            UserTrueName = sp.Value;
+                            if (!string.IsNullOrEmpty(UserTrueName))
+                            {
+                                where += " AND UserTrueName LIKE '%" + UserTrueName + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "user_code".ToLower())
+                        {
+                            user_code = sp.Value;
+                            if (!string.IsNullOrEmpty(user_code))
+                            {
+                                where += " AND user_code LIKE '%" + user_code + "%'";
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY user_code  desc) AS rowId  FROM view_UserDepartment WHERE 1=1  ";
+            QuerySql += where;
+
             return base.GetPageData(options);
         }
     }
