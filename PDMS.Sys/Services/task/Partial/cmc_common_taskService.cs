@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
 using PDMS.System.IRepositories;
 using System;
+using System.Collections.Generic;
 
 namespace PDMS.Sys.Services
 {
@@ -80,6 +81,58 @@ namespace PDMS.Sys.Services
             }
 
             return base.Del(keys, delList);
+        }
+
+        public override PageGridData<cmc_common_task> GetPageData(PageDataOptions options)
+        {
+            QuerySql = $@"select * from cmc_common_task where 1=1";
+            QueryRelativeList = (List<SearchParameters> parameters) =>
+            {
+                string sql = null;
+                foreach (var item in parameters)
+                {
+                    if (!string.IsNullOrEmpty(item.Value))
+                    {
+                        string value = item.Value;
+                        //清空原来的数据
+                        if (item.Name == "suit_org_codes")
+                        {
+                            if (value.Contains(","))
+                            {
+                                string[] vals = value.Split(",");
+                                if (vals.Length > 0)
+                                {
+                                    sql += "and (";
+                                    for (int i = 0; i < vals.Length; i++)
+                                    {
+                                        if (i == 0)
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            sql += " or ";
+                                        }
+                                        sql += $"  suit_org_codes  like'%{vals[i]}%'";
+                                    }
+
+                                    sql += ")";
+                                }
+                            }
+                            else
+                            {
+                                sql += $" and suit_org_codes  like'%{value}%'";
+                            }
+
+                            //清空原来的数据
+                            item.Value = null;
+                        }
+
+                    }
+                }
+                QuerySql += sql;
+            };
+            return base.GetPageData(options);
         }
     }
 }

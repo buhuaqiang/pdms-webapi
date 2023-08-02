@@ -432,24 +432,53 @@ namespace PDMS.Project.Services
 
         public WebResponseContent UploadEpl(List<IFormFile> files, string flag, string project_id)
         {
-            ResponseContent = UploadEplVali(files, flag, project_id);
-            return ResponseContent;
-        }
-
-        public WebResponseContent UploadEplVali(List<IFormFile> files, string flag, string project_id)
-        {
             if (flag == "1")//和模版下载设置一致
             {//假EPL阶段
                 DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
             }
-            if (files.Count > 0)
+            //解析Excel中的数据
+            WebResponseContent Response = ImportList(files);
+            List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
+            return UploadEplVali(list, "1", project_id);           
+        }
+        public WebResponseContent getEPLFromCMS(string project_id)
+        {
+            DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
+            List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
+            //todo
+            //通過接口查詢到數據glno和date
+            string filePath = "D:\\PDMS\\code\\code\\plm.xlsx";
+            WebResponseContent Response=EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
+            list= Response.Data as List<cmc_pdms_project_epl>;
+
+            return UploadEplVali(list, "2", project_id);
+        }
+
+        public string[] getKDByPartNO(string part_no)
+        {
+            string[] result= new string[2];
+            
+            result[0]="D+";
+            result[1] = "廠商A";
+            return result;
+        }
+        
+        /// <summary>
+        /// 處理EPL寫入邏輯
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="flag"></param>flag=1 假EPL手動上傳，flag=2 從成本系統取得epl ，flag=3 從PLM取得epl 
+        /// <param name="project_id"></param>
+        /// <returns></returns>
+        public WebResponseContent UploadEplVali(List<cmc_pdms_project_epl> list, string flag, string project_id)
+        {
+           
+            if (list.Count > 0)
             {
                 //查詢是否有舊數據，用於判斷是否需要寫曆史表
                 string sqlExist = $@"select count(0) from cmc_pdms_project_epl where project_id='{project_id}'";
                 object obj = _repository.DapperContext.ExecuteScalar(sqlExist, null);
-                //解析Excel中的数据
-                WebResponseContent Response = ImportList(files);
-                List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
+             
                 List<cmc_pdms_project_epl> addList = new List<cmc_pdms_project_epl>();
                 List<cmc_pdms_project_epl> updateList = new List<cmc_pdms_project_epl>();
                 DateTime now = DateTime.Now;
@@ -500,10 +529,17 @@ namespace PDMS.Project.Services
                         if (flag == "1")
                         {
                             tempEpl.epl_phase = "01";
+                            tempEpl.epl_source = "01";//01：手工上傳；02：CMS；03：PLM
                         }
                         else if (flag == "2")
                         {
+                            tempEpl.epl_phase = "01";
+                            tempEpl.epl_source = "02";//01：手工上傳；02：CMS；03：PLM
+                        }
+                        else if (flag == "3")
+                        {
                             tempEpl.epl_phase = "02";
+                            tempEpl.epl_source = "03";
                         }
                         tempEpl.project_id = Guid.Parse(project_id);
 
@@ -514,6 +550,12 @@ namespace PDMS.Project.Services
                         tempEpl.new_org_code = DepartmentCode;
                         //TODO
                         //接口查询kd区分和厂商代码
+                        string[] kds = getKDByPartNO(tempEpl.part_no);
+                        if(kds!=null && kds.Length > 0)
+                        {
+                            tempEpl.kd_type = kds[0];
+                            tempEpl.company_code= kds[1];
+                        }
 
                         addList.Add(tempEpl);
                     }

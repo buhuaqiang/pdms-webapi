@@ -51,8 +51,7 @@ namespace PDMS.Entity.DomainModels
         ///表單描述
         /// </summary>
         [Display(Name = "表單描述")]
-        [MaxLength(1000)]
-        [Column(TypeName = "nvarchar(1000)")]
+        [Column(TypeName = "nvarchar(max)")]
         [Editable(true)]
         public string form_desc { get; set; }
 
