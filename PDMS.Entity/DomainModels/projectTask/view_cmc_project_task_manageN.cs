@@ -13,13 +13,13 @@ using PDMS.Entity.SystemModels;
 
 namespace PDMS.Entity.DomainModels
 {
-    [Entity(TableCnName = "子專案工作管理",TableName = "view_cmc_project_task_manageN",DBServer = "SysDbContext")]
+    [Entity(TableCnName = "子專案工作管理N",TableName = "view_cmc_project_task_manageN",DBServer = "SysDbContext")]
     public partial class view_cmc_project_task_manageN:SysEntity
     {
         /// <summary>
-       ///
+       ///GLNO
        /// </summary>
-        [Key]
+       [Key]
         [Display(Name = "GLNO")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
@@ -27,64 +27,51 @@ namespace PDMS.Entity.DomainModels
         public string glno { get; set; }
 
         /// <summary>
-        ///
+        ///專案名稱
         /// </summary>
-        [Display(Name ="project_name")]
+        [Display(Name ="專案名稱")]
        [MaxLength(100)]
        [Column(TypeName="nvarchar(100)")]
        [Editable(true)]
        public string project_name { get; set; }
 
        /// <summary>
-       ///
+       ///零件編號
        /// </summary>
-       [Display(Name ="approve_status")]
-       [MaxLength(2)]
-       [Column(TypeName="varchar(2)")]
-       [Editable(true)]
-       public string approve_status { get; set; }
+       [Display(Name ="零件編號")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
+       public string part_no { get; set; }
 
        /// <summary>
        ///
        /// </summary>
        [Display(Name ="epl_id")]
        [Column(TypeName="uniqueidentifier")]
-       [Editable(true)]
        [Required(AllowEmptyStrings=false)]
        public Guid epl_id { get; set; }
 
        /// <summary>
-       ///
+       ///零件名稱
        /// </summary>
-       [Display(Name ="part_no")]
+       [Display(Name ="零件名稱")]
        [MaxLength(100)]
        [Column(TypeName="varchar(100)")]
-       [Editable(true)]
-       public string part_no { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="part_name")]
-       [MaxLength(100)]
-       [Column(TypeName="varchar(100)")]
-       [Editable(true)]
        public string part_name { get; set; }
 
        /// <summary>
-       ///
+       ///狀態
        /// </summary>
-       [Display(Name ="part_taker_id")]
-       [Column(TypeName="int")]
-       [Editable(true)]
-       public int? part_taker_id { get; set; }
+       [Display(Name ="狀態")]
+       [MaxLength(2)]
+       [Column(TypeName="varchar(2)")]
+       public string approve_status { get; set; }
 
        /// <summary>
        ///
        /// </summary>
        [Display(Name ="dev_taker_id")]
        [Column(TypeName="int")]
-       [Editable(true)]
        public int? dev_taker_id { get; set; }
 
        /// <summary>
@@ -92,16 +79,14 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="User_Id")]
        [Column(TypeName="int")]
-       [Editable(true)]
        public int? User_Id { get; set; }
 
        /// <summary>
-       ///
+       ///負責承辦
        /// </summary>
-       [Display(Name ="UserTrueName")]
+       [Display(Name ="負責承辦")]
        [MaxLength(200)]
        [Column(TypeName="nvarchar(200)")]
-       [Editable(true)]
        public string UserTrueName { get; set; }
 
        /// <summary>
@@ -110,42 +95,31 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="user_code")]
        [MaxLength(20)]
        [Column(TypeName="varchar(20)")]
-       [Editable(true)]
        public string user_code { get; set; }
 
        /// <summary>
-       ///
+       ///負責單位
        /// </summary>
-       [Display(Name ="project_task_id")]
-       [Column(TypeName="uniqueidentifier")]
-       [Editable(true)]
-       public Guid? project_task_id { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="CreateDate")]
-       [Column(TypeName="datetime")]
-       [Editable(true)]
-       public DateTime? CreateDate { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="ModifyDate")]
-       [MaxLength(4000)]
-       [Column(TypeName="nvarchar(4000)")]
-       [Editable(true)]
-       public string ModifyDate { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="DepartmentName")]
+       [Display(Name ="負責單位")]
        [MaxLength(200)]
        [Column(TypeName="nvarchar(200)")]
-       [Editable(true)]
+       [Required(AllowEmptyStrings=false)]
        public string DepartmentName { get; set; }
+
+       /// <summary>
+       ///零品承辦
+       /// </summary>
+       [Display(Name ="零品承辦")]
+       [Column(TypeName="int")]
+       public int? part_taker_id { get; set; }
+
+       /// <summary>
+       ///最新版本
+       /// </summary>
+       [Display(Name ="最新版本")]
+       [MaxLength(4000)]
+       [Column(TypeName="nvarchar(4000)")]
+       public string ModifyDate { get; set; }
 
        
     }
