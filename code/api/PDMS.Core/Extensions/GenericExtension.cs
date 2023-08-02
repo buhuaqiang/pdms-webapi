@@ -1,4 +1,6 @@
-﻿using System;
+﻿using PDMS.Core.Configuration;
+using PDMS.Entity.DomainModels;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -87,15 +89,32 @@ namespace PDMS.Core.Extensions
 
                 dtReturn.Columns.Add(new DataColumn(pi.Name, colType));
             }
+            TableDefaultColumns defaultColumns = AppSetting.CreateMember;
             foreach (var rec in source)
             {
                 var dr = dtReturn.NewRow();
+                UserInfo userInfo = ManageUser.UserContext.Current.UserInfo;
                 foreach (var pi in oProps)
                 {
-                    dr[pi.Name] = pi.GetValue(rec, null) == null
-                        ? DBNull.Value
-                        : pi.GetValue
-                            (rec, null);
+                    string filed = pi.Name.ToLower();
+                    if (filed == defaultColumns.UserIdField?.ToLower())
+                    {
+                        dr[pi.Name] = userInfo.User_Id;
+                    }
+                    else if (filed == defaultColumns.UserNameField?.ToLower())
+                    {
+                        dr[pi.Name] = userInfo.UserTrueName;
+                    }
+                    else if (filed == defaultColumns.DateField?.ToLower())
+                    {
+                        dr[pi.Name] = DateTime.Now;
+                    }
+                    else
+                    {
+                        dr[pi.Name] = pi.GetValue(rec, null) == null 
+                            ? DBNull.Value : pi.GetValue
+                           (rec, null);
+                    }        
                 }
                 dtReturn.Rows.Add(dr);
             }
