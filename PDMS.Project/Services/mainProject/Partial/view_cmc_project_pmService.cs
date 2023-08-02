@@ -322,10 +322,6 @@ namespace PDMS.Project.Services
             {
                 return _cmc_pdms_project_mainService.Update(saveModel);
             }
-            if (true)
-            {
-
-            }
 
             return  webResponse.OK();
         }
@@ -525,61 +521,13 @@ namespace PDMS.Project.Services
             return webResponse.OK("");
         }
 
-        public WebResponseContent getEPLFromCMS(string proid)
-        {
-            List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
-            if (!string.IsNullOrEmpty(proid))
-            {
-                //if (proid == "GL123456")
-                //{
-                //    return webResponse.Error("查询不到信息");
-                //}
-                cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-                //epl.epl_id = "639DC245-4550-4D26-9F71-31E0F7D51A61";
-               //epl.project_id = proid;
-                epl.upg_id= "ma1995";
-                epl.level = 1;
-                epl.part_no= "CW98765";
-                epl.part_name= "冷熱交換器5";
+       // public WebResponseContent getEPLFromCMS(string proid)
+       // {
 
-//**
-                string delHis = $@"insert into cmc_pdms_project_epl (
-                                        epl_id,
-                                        project_id,
-                                        epl_phase,
-                                        upg_id,
-                                        level,
-                                        part_no,
-                                        part_name,
-                                        org_code)
-                                        values
-                                        (NEWID(),
-                                        '{proid}',
-                                        '01',                                      
-                                        'ma123',
-                                        2,
-										'CW98765',
-                                        '輪轂發動s',
-                                            'A01-01'),
-										(NEWID(),
-                                        '{proid}',
-                                        '01',                                      
-                                        'ma120',
-                                        2,
-										'CW12345',
-                                        '方向盤s',
-                                        'A01-01')";
-                var sccDelGateHis = repository.DapperContext.ExcuteNonQuery(delHis, null);
-   
-                return webResponse.OKData(list);
-            }
-            else
-            {
-                //return webResponse.Error("请输入GLNO");
-            }
+            //string project_id = Core.Utilities.HttpContext.Current.Request("project_id");
 
-            return webResponse.OK("");
-        }
+            //return _cmc_pdms_project_eplService.UploadEplVali(files, "1", proid);
+       // }
 
             public WebResponseContent getProjectOrgFromCMS(string glno)
         {
