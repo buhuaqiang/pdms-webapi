@@ -720,9 +720,9 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                             where epl.project_id='" + projectId + "'";
 
             if (projectStatus=="01") {
-                sql += " and epl.epl_phase='01' and  Final_version_status not in ('1','2') ";
+                sql += " and epl.epl_phase='01' and  (Final_version_status not in ('1','2') or Final_version_status is null)";
             } else {
-                sql += " and epl.epl_phase='02' and  Final_version_status not in ('1','2') ";
+                sql += " and epl.epl_phase='02' and (Final_version_status not in ('1','2') or Final_version_status is null) ";
             }
          
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
