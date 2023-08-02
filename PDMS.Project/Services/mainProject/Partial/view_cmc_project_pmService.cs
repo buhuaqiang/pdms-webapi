@@ -456,32 +456,27 @@ namespace PDMS.Project.Services
                         }
                     }
                 }
-            }
 
-            if (path == "/view_cmc_project_pm")//
+            }
+            QuerySql = @" SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+	                        pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
+	                        pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
+                            ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
+	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
+                        FROM cmc_pdms_project_main AS pm  ";
+	                      
+
+                if (path == "/view_cmc_project_pm")//
             {
                 string code = " and  po.user_id='" + userCode + "'";
-                QuerySql = @" SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
-	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
-                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
-                            FROM cmc_pdms_project_main AS pm
-	                        LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
+                QuerySql += " LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
                 QuerySql += code;
                 QuerySql += where;
             }
             if (path == "/view_cmc_project_start")
             { //專案啟動部車型窗口查詢
                 string code = " and  po.user_id='" + userCode + "'";
-                QuerySql = @" SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
-	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
-                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
-                            FROM cmc_pdms_project_main AS pm
-	                        LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  
-                        ";
+                QuerySql += " LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
                 QuerySql += code;
                 QuerySql += where;
 
@@ -489,14 +484,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_group_start")
             { //專案啟動組車型窗口查詢
                 string groupCode = " and  epl.group_code='" + departMentCode + "'";
-                QuerySql = @"  SELECT  distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
-	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
-                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
-                            FROM cmc_pdms_project_main AS pm
-	                         left  join cmc_pdms_project_epl epl on epl.project_id=pm.project_id  where 1=1 
-                        ";
+                QuerySql += " left  join cmc_pdms_project_epl epl on epl.project_id=pm.project_id  where 1=1 ";
                 QuerySql += groupCode;
                 QuerySql += where;
 
@@ -504,14 +492,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_book")
             { //開發清冊
                 string devTaker = " and  epl.dev_taker_id='" + userId + "'";
-                QuerySql = @"  SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
-	                            pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
-	                            pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
-                                ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                            pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
-                            FROM cmc_pdms_project_main AS pm
-	                        LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1 
-                        ";
+                QuerySql += "  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1 ";
                 QuerySql += devTaker;
                 QuerySql += where;
 
@@ -600,7 +581,7 @@ namespace PDMS.Project.Services
             return webResponse.OK("");
         }
 
-          public WebResponseContent getProjectOrgFromCMS(string glno)
+            public WebResponseContent getProjectOrgFromCMS(string glno)
         {
             List < cmc_pdms_project_org > list=new List<cmc_pdms_project_org>();
             if (!string.IsNullOrEmpty(glno))
