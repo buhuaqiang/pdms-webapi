@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\PDMS.Core\PDMS.Core.csproj" />
     <ProjectReference Include="..\PDMS.Entity\PDMS.Entity.csproj" />
     <ProjectReference Include="..\PDMS.Sys\PDMS.Sys.csproj" />
