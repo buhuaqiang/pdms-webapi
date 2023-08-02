@@ -688,8 +688,31 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             return ResponseContent.OK();
         }
 
+        public int getFinalStatus(Object obj)//獲取定版狀態
+        {
+            int count = 0;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            var projectStatus = data["projectStatus"].ToString();
 
-        public List<cmc_pdms_project_epl> getDepartList(string project_id,string project_status)//獲取部門的epl
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
+                            where epl.project_id='" + projectId + "'  ";
+            if (projectStatus == "01")
+            {
+                sql += " and epl.epl_phase='01' and  (Final_version_status!='2' or Final_version_status is null)";
+            }
+            else
+            {
+                sql += " and epl.epl_phase='02' and  (Final_version_status!='2' or Final_version_status is null)";
+            }
+
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+           
+        }
+
+
+            public List<cmc_pdms_project_epl> getDepartList(string project_id,string project_status)//獲取部門的epl
         {
             UserInfo userInfo = UserContext.Current.UserInfo;
             String departmentCode = userInfo.DepartmentCode;
