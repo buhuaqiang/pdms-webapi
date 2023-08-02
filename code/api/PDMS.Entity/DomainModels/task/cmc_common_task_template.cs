@@ -26,10 +26,19 @@ namespace PDMS.Entity.DomainModels
        [Required(AllowEmptyStrings=false)]
        public Guid template_id { get; set; }
 
-       /// <summary>
-       ///模板名稱
-       /// </summary>
-       [Display(Name ="模板名稱")]
+        /// <summary>
+        ///專案類型(1-車型專案，2-數位轉型)
+        /// </summary>
+        [Display(Name = "專案類型")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(5)")]
+        [Editable(true)]
+        public string project_class { get; set; }
+
+        /// <summary>
+        ///模板名稱
+        /// </summary>
+        [Display(Name ="模板名稱")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]

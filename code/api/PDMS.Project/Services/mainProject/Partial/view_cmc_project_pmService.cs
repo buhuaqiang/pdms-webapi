@@ -521,15 +521,12 @@ namespace PDMS.Project.Services
             return webResponse.OK("");
         }
 
-       // public WebResponseContent getEPLFromCMS(string proid)
-       // {
+        public WebResponseContent getEPLFromCMS(string proid)
+        {
+            return _cmc_pdms_project_eplService.getEPLFromCMS(proid);
+        }
 
-            //string project_id = Core.Utilities.HttpContext.Current.Request("project_id");
-
-            //return _cmc_pdms_project_eplService.UploadEplVali(files, "1", proid);
-       // }
-
-            public WebResponseContent getProjectOrgFromCMS(string glno)
+        public WebResponseContent getProjectOrgFromCMS(string glno)
         {
             List < cmc_pdms_project_org > list=new List<cmc_pdms_project_org>();
             if (!string.IsNullOrEmpty(glno))

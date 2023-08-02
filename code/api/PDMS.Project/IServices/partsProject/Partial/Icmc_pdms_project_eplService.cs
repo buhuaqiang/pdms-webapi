@@ -27,12 +27,17 @@ namespace PDMS.Project.IServices
         /// 上传epl
         /// </summary>
         /// <param name="files"></param>
-        /// <param name="flag"></param>
+        /// <param name="flag">flag=1 假EPL手動上傳，flag=2 從成本系統取得epl ，flag=3 從PLM取得epl </param>
         /// <param name="project_id"></param>
         /// <returns></returns>
         WebResponseContent UploadEpl(List<IFormFile> files, string flag, string project_id);
 
-
+        /// <summary>
+        /// 從成本系統取得EPL
+        /// </summary>
+        /// <param name="project_id"></param>
+        /// <returns></returns>
+        WebResponseContent getEPLFromCMS(string project_id);
 
         public int getDepartCount(Object obj);
 
