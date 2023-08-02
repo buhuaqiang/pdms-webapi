@@ -462,7 +462,7 @@ namespace PDMS.Project.Services
 	                        pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
 	                        pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                             ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate 
+	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee  
                         FROM cmc_pdms_project_main AS pm  ";
 	                      
 
