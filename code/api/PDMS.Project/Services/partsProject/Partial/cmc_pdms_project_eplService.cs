@@ -429,7 +429,14 @@ namespace PDMS.Project.Services
         /// <param name="flag"></param>
         /// <param name="project_id"></param>
         /// <returns></returns>
+
         public WebResponseContent UploadEpl(List<IFormFile> files, string flag, string project_id)
+        {
+            ResponseContent = UploadEplVali(files, flag, project_id);
+            return ResponseContent;
+        }
+
+        public WebResponseContent UploadEplVali(List<IFormFile> files, string flag, string project_id)
         {
             if (flag == "1")//和模版下载设置一致
             {//假EPL阶段
@@ -462,7 +469,7 @@ namespace PDMS.Project.Services
                 }
                 string upgids = string.Join("','", upg_ids);
                 string getDeptCode = $@"SELECT	DepartmentCode,UpgID from Sys_Department where UpgID IN ('{upgids}')";
-                var temp = repository.DapperContext.QueryList<Sys_Department>(getDeptCode,null);
+                var temp = repository.DapperContext.QueryList<Sys_Department>(getDeptCode, null);
 
                 //UpgID做KEY,Sys_Department做值
                 //Dictionary<string, Sys_Department> dic = temp.ToDictionary(p => p.UpgID);
@@ -473,7 +480,7 @@ namespace PDMS.Project.Services
                     cmc_pdms_project_epl tempEpl = new cmc_pdms_project_epl();
                     tempEpl = epl;
                     //设置数据状态：新增、删除、不变
-                    var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag=="0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
+                    var oldlist = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.part_no == epl.part_no && x.project_id == Guid.Parse(project_id) && x.del_flag == "0").OrderByDescending(x => x.CreateDate).FirstOrDefault();
 
                     //方案一
                     ////根据字典Key 取 Value
@@ -486,7 +493,7 @@ namespace PDMS.Project.Services
                     var DepartmentCode = temp.Where(x => x.UpgID == tempEpl.upg_id).FirstOrDefault() == null ? "" : temp.Where(x => x.UpgID == tempEpl.upg_id).FirstOrDefault().DepartmentCode;
 
                     if (oldlist == null)
-                    {              
+                    {
                         tempEpl.epl_id = Guid.NewGuid();
                         strings.Add(tempEpl.epl_id.ToString());
                         tempEpl.CreateDate = now;
@@ -501,17 +508,17 @@ namespace PDMS.Project.Services
                         tempEpl.project_id = Guid.Parse(project_id);
 
                         tempEpl.action_type = "add";
-                        tempEpl.del_flag= "0";
+                        tempEpl.del_flag = "0";
 
                         tempEpl.org_code = DepartmentCode;
-                        tempEpl.new_org_code= DepartmentCode;
+                        tempEpl.new_org_code = DepartmentCode;
                         //TODO
                         //接口查询kd区分和厂商代码
 
                         addList.Add(tempEpl);
                     }
                     else
-                    {                       
+                    {
                         //旧数据带入
                         tempEpl = JsonConvert.DeserializeObject<cmc_pdms_project_epl>(JsonConvert.SerializeObject(oldlist));
                         strings.Add(tempEpl.epl_id.ToString());
@@ -544,7 +551,7 @@ namespace PDMS.Project.Services
                     repository.DapperContext.BeginTransaction((r) =>
                     {
                         DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_epl");
-                    return true;
+                        return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
                 catch (Exception ex)
@@ -555,7 +562,7 @@ namespace PDMS.Project.Services
                 }
                 try
                 {
-                    if(updateList.Count > 0)
+                    if (updateList.Count > 0)
                     {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
@@ -563,7 +570,7 @@ namespace PDMS.Project.Services
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
-                    
+
                 }
                 catch (Exception ex)
                 {
@@ -607,10 +614,10 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                         return ResponseContent.Error();
                     }
 
-                   
+
                 }
-                
-               
+
+
                 return ResponseContent.OK();
             }
             return ResponseContent.Error("no data");
