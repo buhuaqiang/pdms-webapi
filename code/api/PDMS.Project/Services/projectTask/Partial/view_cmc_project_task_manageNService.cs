@@ -48,20 +48,85 @@ namespace PDMS.Project.Services
         WebResponseContent ResponseContent = new WebResponseContent();
         public override PageGridData<view_cmc_project_task_manageN> GetPageData(PageDataOptions options)
         {
-            QuerySql = @"SELECT *,ROW_NUMBER()over(order by glno  desc) as rowId  FROM view_cmc_project_task_manageN where 1=1  ";
+            string glno = "";
+            string project_name = "";
+            string part_no = "";
+            string part_name = "";
+            string approve_status = "";
+
+            string where = " ";
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "glno".ToLower())
+                        {
+                            glno = sp.Value;
+                            if (!string.IsNullOrEmpty(glno))
+                            {
+                                where += " AND glno LIKE '%" + glno + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "project_name".ToLower())
+                        {
+                            project_name = sp.Value;
+                            if (!string.IsNullOrEmpty(project_name))
+                            {
+                                where += " AND project_name LIKE '%" + project_name + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "part_no".ToLower())
+                        {
+                            part_no = sp.Value;
+                            if (!string.IsNullOrEmpty(part_no))
+                            {
+                                where += " AND part_no LIKE '%" + part_no + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "part_name".ToLower())
+                        {
+                            part_name = sp.Value;
+                            if (!string.IsNullOrEmpty(part_name))
+                            {
+                                where += " AND part_name LIKE '%" + part_name + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "approve_status".ToLower())
+                        {
+                            approve_status = sp.Value;
+                            if (!string.IsNullOrEmpty(approve_status))
+                            {
+                                where += " AND approve_status ='" + approve_status + "'";
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY glno  desc) AS rowId  FROM view_cmc_project_task_manageN WHERE 1=1  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
             if (User_Id != 1)
             {
-                QuerySql += @$" AND dev_taker_id='{User_Id}'";
+                where += @$" AND dev_taker_id='{User_Id}'";
             }
+            QuerySql += where;
             return base.GetPageData(options);
         }
         public WebResponseContent submitReview(SaveModel saveModel)
         {
             return ResponseContent.OK();
         }
-            public WebResponseContent setPartTaker(SaveModel saveModel)
+        public WebResponseContent setPartTaker(SaveModel saveModel)
         {
             var MainData = saveModel.MainData;
             var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
@@ -258,10 +323,9 @@ namespace PDMS.Project.Services
                                 {
                                     //判斷此任務是否已經被選擇了
                                     bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
-                                    cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                                    
                                     if (!taskExists)
                                     {
+                                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
                                         dateFormat(item, pTask);
                                         pTask.project_task_id = Guid.NewGuid();
                                         pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
@@ -277,6 +341,7 @@ namespace PDMS.Project.Services
                                     }
                                     else
                                     {
+                                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
                                         Guid task_id = Guid.Parse(item["task_id"].ToString());
                                         pTask = existTaskList.FirstOrDefault(t => t.task_id == task_id);
                                         dateFormat(item, pTask);
@@ -289,36 +354,39 @@ namespace PDMS.Project.Services
                                 Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：addList：" + DateTime.Now + ":" + ex.Message);
                                 return ResponseContent.Error();
                             }
-                            if (addList.Count > 0) { 
-                                try
-                                {
-                                    repository.DapperContext.BeginTransaction((r) =>
-                                    {
-                                        DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_task");
-                                        return true;
-                                    }, (ex) => { throw new Exception(ex.Message); });
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
-                                    return ResponseContent.Error();
-                                }
-                            }
-                            if (updateList.Count > 0) { 
-                                try
-                                {
-                                    repository.DapperContext.BeginTransaction((r) =>
-                                    {
-                                        DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.start_date, x.end_date });
-                                        return true;
-                                    }, (ex) => { throw new Exception(ex.Message); });
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
-                                    return ResponseContent.Error();
-                                }
-                            }
+                        }
+                    }
+
+                    if (addList.Count > 0)
+                    {
+                        try
+                        {
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.BulkInsert(addList, "cmc_pdms_project_task");
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                            return ResponseContent.Error();
+                        }
+                    }
+                    if (updateList.Count > 0)
+                    {
+                        try
+                        {
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.start_date, x.end_date });
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                            return ResponseContent.Error();
                         }
                     }
                 }
@@ -372,14 +440,13 @@ namespace PDMS.Project.Services
         {
             Console.WriteLine("deleteMissionData");
             var MainData = saveModel.MainData;
-            string task_id = MainData["task_id"] == null ? "" : MainData["task_id"].ToString();
             string project_task_id = MainData["project_task_id"] == null ? "" : MainData["project_task_id"].ToString();
 
             string deleteAction = @$"
                 DELETE FROM
 	                cmc_pdms_project_task 
                 WHERE
-	                project_task_id ='{project_task_id}' AND task_id IN( '{task_id}')";
+	                project_task_id IN({project_task_id})";
             try
             {
                 var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
