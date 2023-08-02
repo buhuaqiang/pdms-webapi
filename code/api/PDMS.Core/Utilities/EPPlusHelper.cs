@@ -12,6 +12,7 @@ using PDMS.Core.DBManager;
 using PDMS.Core.Extensions;
 using PDMS.Core.Infrastructure;
 using PDMS.Entity.DomainModels;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 
 namespace PDMS.Core.Utilities
 {
@@ -758,6 +759,40 @@ namespace PDMS.Core.Utilities
                 package.SaveAs(new FileInfo(fullPath + fileName));
             }
             return path + fileName;
+        }
+
+
+
+
+        //将已经获取到的Base64字符串，转换成文件，保存到服务器的某个文件路径下面。
+        public string SaveDocumentByBase64(string base64)
+        {
+
+            string htmlRptPath = "".MapPath(true);
+            string sFileName =  DateTime.Now.ToString("yyyMMddHHmmsss");   //这里的imageFormat就是文件类型
+            string sFilePath =$"Upload/Tables/{typeof(T).GetEntityTableName()}/{DateTime.Now.ToString("yyyMMddHHmmsss") + new Random().Next(1000, 9999)}/";//创建路径文件夹
+
+            sFileName = sFilePath + "\\" + sFileName;
+            //路径不存在，则创建路径
+            if (!Directory.Exists(sFilePath))
+            {
+                Directory.CreateDirectory(sFilePath);
+            }
+            //如果文件已经存在，则删除文件
+            if (System.IO.File.Exists(sFileName))
+            {
+                System.IO.File.Delete(sFileName);
+            }
+            //注意：文件直接转base64前面会带有“data:application/pdf;base64,”前缀，需要去掉。
+            byte[] DocBytes = Convert.FromBase64String(base64);
+            //文件流创建文件内容
+            FileStream fs = new FileStream(sFileName, FileMode.CreateNew);
+            BinaryWriter bw = new BinaryWriter(fs);
+            bw.Write(DocBytes, 0, DocBytes.Length);
+            bw.Close();
+            fs.Close();
+
+            return sFileName;
         }
 
 
