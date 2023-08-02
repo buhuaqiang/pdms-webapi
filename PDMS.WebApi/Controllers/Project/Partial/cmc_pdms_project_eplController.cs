@@ -78,7 +78,15 @@ namespace PDMS.Project.Controllers
         {
             return Service.saveAll(obj);
         }
+        //獲取定版狀態
+        [ApiActionPermission()]
+        [HttpPost, Route("getFinalStatus")]
+        public int getFinalStatus([FromBody] Object obj)
+        {
+            return Service.getFinalStatus(obj);
+        }
 
+        
 
     }
 }
