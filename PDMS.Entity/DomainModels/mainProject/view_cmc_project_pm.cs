@@ -232,5 +232,15 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(20)")]
         [Editable(true)]
         public string model_dest { get; set; }
+
+
+        /// <summary>
+        ///EO費率
+        /// </summary>
+        [Display(Name = "EO費率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? eo_fee { get; set; }
     }
 }

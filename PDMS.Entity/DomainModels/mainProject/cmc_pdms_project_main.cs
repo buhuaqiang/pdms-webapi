@@ -292,7 +292,16 @@ namespace PDMS.Entity.DomainModels
        [ForeignKey("project_id")]
        public List<cmc_pdms_project_org> cmc_pdms_project_org { get; set; }
 
+        /// <summary>
+        ///EO費率
+        /// </summary>
+        [Display(Name = "EO費率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? eo_fee { get; set; }
 
-       
+
+
     }
 }
