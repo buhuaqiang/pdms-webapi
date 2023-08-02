@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Globalization;
+using Quartz.Util;
 
 namespace PDMS.Project.Services
 {
@@ -215,16 +216,20 @@ namespace PDMS.Project.Services
 	                            epl_id IN ('{epl_id}')";
             }
 
-            try
+            if (!deleteAction.IsNullOrWhiteSpace()) 
             {
-                Console.WriteLine("deleteAction:" + deleteAction);
-                var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+                try
+                {
+                    Console.WriteLine("deleteAction:" + deleteAction);
+                    var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理,子專案選擇模板任務,更換模板刪除舊模板 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：addMissionData：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
             }
-            catch (Exception ex)
-            {
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理,子專案選擇模板任務,更換模板刪除舊模板 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：addMissionData：" + DateTime.Now + ":" + ex.Message);
-                return ResponseContent.Error();
-            }
+            
             /*
             if (path == "single")
             {
@@ -254,9 +259,10 @@ namespace PDMS.Project.Services
                                     //判斷此任務是否已經被選擇了
                                     bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
                                     cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                                    dateFormat(item, pTask);
+                                    
                                     if (!taskExists)
                                     {
+                                        dateFormat(item, pTask);
                                         pTask.project_task_id = Guid.NewGuid();
                                         pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
                                         pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
@@ -271,6 +277,9 @@ namespace PDMS.Project.Services
                                     }
                                     else
                                     {
+                                        Guid task_id = Guid.Parse(item["task_id"].ToString());
+                                        pTask = existTaskList.FirstOrDefault(t => t.task_id == task_id);
+                                        dateFormat(item, pTask);
                                         updateList.Add(pTask);
                                     }
                                 }
