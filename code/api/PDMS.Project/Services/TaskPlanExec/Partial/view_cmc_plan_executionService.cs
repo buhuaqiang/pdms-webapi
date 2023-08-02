@@ -9,8 +9,8 @@
 using PDMS.Core.BaseProvider;
 using PDMS.Core.Extensions.AutofacManager;
 using PDMS.Entity.DomainModels;
-using System.Linq;
 using PDMS.Core.Utilities;
+using System.Linq;
 using System.Linq.Expressions;
 using PDMS.Core.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +43,6 @@ namespace PDMS.Project.Services
         public override PageGridData<view_cmc_plan_execution> GetPageData(PageDataOptions options)
         {
             //查询所有del_flag!=1
-
             PageGridData<view_cmc_plan_execution> pageGridData = new PageGridData<view_cmc_plan_execution>();
             List<view_cmc_plan_execution> OCList = new List<view_cmc_plan_execution>();
             string status = "";
@@ -80,7 +79,8 @@ from  cmc_pdms_project_task task
 left join cmc_pdms_project_epl epl on epl.epl_id=task.epl_id
 left join cmc_pdms_project_main main on main.project_id=epl.project_id
 left join Sys_User us on epl.dev_taker_id=us.User_id
-where  epl.kd_type like 'D%'  and  epl.epl_phase='02'
+where  epl.kd_type like 'D%'  and  epl.epl_phase='02'  and epl.task_define_approve_status='01'
+and task.start_date  is not null  and task.end_date is not null 
  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
