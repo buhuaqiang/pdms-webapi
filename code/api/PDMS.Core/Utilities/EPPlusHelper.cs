@@ -791,8 +791,20 @@ namespace PDMS.Core.Utilities
             bw.Write(DocBytes, 0, DocBytes.Length);
             bw.Close();
             fs.Close();
-
             return sFileName;
+        }
+
+        //文件全路径：fileName
+        public string DocumentToBase64Str(string fileName)
+        {
+            FileStream filestream = new FileStream(fileName, FileMode.Open);
+
+            byte[] bt = new byte[filestream.Length];
+            //调用read读取方法
+            filestream.Read(bt, 0, bt.Length);
+            string base64Str = Convert.ToBase64String(bt);
+            filestream.Close();
+            return base64Str;
         }
 
 
