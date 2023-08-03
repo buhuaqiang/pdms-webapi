@@ -80,13 +80,23 @@ namespace PDMS.Project.Controllers
         {
             //執行保存按鈕走基礎邏輯，審核狀態調整為01
             var info = Service.TsSave(saveModel, "01");
-
-            return Json(info);
             //再走審批流程
-            //return Json(Service.SaveAndSubmit(saveModel,"01"));
+            return Json(Service.SaveAndSubmit(saveModel, "01"));
         }
 
-        //保存並提交
+
+        //批量提交
+        [ApiActionPermission()]
+        [HttpPost, Route("BulkSubmit")]
+        public IActionResult BulkSubmit([FromBody] SaveModel saveModel)
+        {
+            return Json("");
+            //return Json(Service.SaveAndSubmit(saveModel, "01"));
+        }
+
+
+
+        //修改任務時間
         [ApiActionPermission()]
         [HttpPost, Route("UpdateTaskDate")]
         public IActionResult UpdateTaskDate([FromBody] SaveModel saveModel)
