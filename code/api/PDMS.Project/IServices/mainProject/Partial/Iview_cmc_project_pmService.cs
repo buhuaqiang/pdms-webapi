@@ -28,5 +28,7 @@ namespace PDMS.Project.IServices
 
         public WebResponseContent getEPLFromCMS(string proid);
         WebResponseContent release(SaveModel saveModel);
+
+        public WebResponseContent saveRelease(SaveModel saveModel);
     }
 }
