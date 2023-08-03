@@ -122,12 +122,14 @@ namespace PDMS.Project.Services
             if (project_status == "01")
             {
                 QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
+                                    left join cmc_pdms_project_main main on main.project_id=epl.project_id
 	                               where epl_phase='01'
 	                                    and kd_type like 'D%' 
 	                                    and Final_version_status='2' and action_type!='delete' and dev_taker_id= " + userId;
             }
             else {
                 QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
+                            left join cmc_pdms_project_main main on main.project_id=epl.project_id
 	                               where epl_phase='02'
 	                                    and kd_type like 'D%' 
 	                                    and Final_version_status='2' and action_type!='delete'   and dev_taker_id= " + userId ;
