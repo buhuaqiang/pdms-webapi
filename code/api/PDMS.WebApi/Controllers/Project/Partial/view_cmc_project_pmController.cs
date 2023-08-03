@@ -84,5 +84,12 @@ namespace PDMS.Project.Controllers
             return Json(_service.getEPLFromCMS(proid));
         }
 
+        [ApiActionPermission()]
+        [HttpPost, Route("saveRelease")]
+        public WebResponseContent saveRelease([FromBody] SaveModel saveModel)
+        {//保存並發佈
+            return Service.saveRelease(saveModel);
+        }
+
     }
 }
