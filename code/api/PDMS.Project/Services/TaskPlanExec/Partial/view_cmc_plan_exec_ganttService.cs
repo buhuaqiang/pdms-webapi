@@ -27,6 +27,9 @@ using System;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using PDMS.Core.DBManager;
 using System.Threading.Tasks;
+using System.Drawing;
+using Microsoft.AspNetCore.Mvc;
+using PDMS.WorkFlow.Services;
 
 namespace PDMS.Project.Services
 {
@@ -350,31 +353,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
         }
 
-        //表單彈窗 保存並提交按鈕
-        public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status)
-        {
-            var FormData = saveModel.MainData["FormData"].ToString();
-            var FormId = saveModel.MainData["FormId"].ToString();
-            var FormCollectionId = saveModel.MainData["FormCollectionId"] == null ? "" : saveModel.MainData["FormCollectionId"].ToString();
-            var project_task_id = saveModel.MainData["project_task_id"].ToString();
-            var task_id = saveModel.MainData["task_id"].ToString();
-            var title = saveModel.MainData["title"].ToString();
-            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
-            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
-            var approve_status = saveModel.MainData["approve_status"].ToString();
-
-            if (status == "02")
-            {
-            
-            }
-            else
-            {
-
-            }
-
-            return ResponseContent.OK();
-        }
-
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
         public WebResponseContent TsSave(SaveModel saveModel, string status = "")
         {
@@ -483,6 +461,19 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             return ResponseContent.OK();
         }
 
+        public SaveModel AnalysisData(SaveModel saveModel)
+        {
+            SaveModel saveModels = new SaveModel();
+            if (saveModel.MainData.ContainsKey("checkVal"))
+            {
+                var str = saveModel.MainData["checkVal"].ToString();
+                JArray jarry=JArray.Parse(str);
+
+            }
+
+            return saveModels;
+        }
+
 
         //雙擊甘特圖任務：設置重點項目
         public WebResponseContent setAuditKey(string project_task_id = "")
@@ -542,6 +533,145 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
                 return ResponseContent.Error();
 
+            }
+            return ResponseContent.OK();
+        }
+
+
+        //表單彈窗 保存並提交按鈕
+        public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status)
+        {
+            var project_task_id = saveModel.MainData["project_task_id"].ToString();
+            if (status == "02")
+            {
+                #region  寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+                  ResponseContent = Insert_task_hist(saveModel);
+                #endregion
+
+                #region 新增一筆數據 FormCollectionObject  
+                  ResponseContent = FormCollectionObject(saveModel);
+                #endregion
+
+                #region 新增一筆cmc_pdms_wf_master 數據，cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
+                  ResponseContent= cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel,"01","04",null);
+                #endregion
+            }
+
+            return ResponseContent.OK();
+        }
+
+
+        //新增一筆數據 FormCollectionObject  
+        public WebResponseContent FormCollectionObject(SaveModel saveModel)
+        {
+            //MainDatas 批量提交
+            var TempList = saveModel.MainDatas;
+            if (TempList.Count == 0)
+            {
+                //表單單筆提交
+                TempList[0] = saveModel.MainData;
+            }
+            try
+            {
+                //新增
+                List<FormCollectionObject> objList = new List<FormCollectionObject>();
+                //修改
+                List<cmc_pdms_project_task> taskList = new List<cmc_pdms_project_task>();
+                foreach (var item in TempList)
+                {
+                    var FormCollectionIds = Guid.NewGuid();
+                    FormCollectionObject obj = new FormCollectionObject();
+                    obj.FormCollectionId = FormCollectionIds;
+                    obj.FormId = Guid.Parse(item["FormId"].ToString());
+                    obj.Title = item["title"].ToString();
+                    obj.FormData = item["FormData"].ToString();
+                    objList.Add(obj);
+
+                    //查出當前那筆數據
+                    var task = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(item["project_task_id"].ToString())).FirstOrDefault();
+                    task.FormCollectionId = FormCollectionIds;
+                    taskList.Add(task);
+                }
+
+                //批量新增FormCollectionObject
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.BulkInsert(objList, "FormCollectionObject");
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+
+                //批量修改
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(taskList, x => new { x.FormCollectionId });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增、修改執行 FormCollectionObject、cmc_pdms_project_task 表，view_cmc_plan_exec_ganttService 文件-->先BulkInsert、UpdateRange：" + DateTime.Now + ":" + ex.Message);
+            }
+         
+
+
+            return ResponseContent.OK();
+        }
+
+        //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+        public WebResponseContent Insert_task_hist(SaveModel saveModel)
+        {
+            var TempList = saveModel.MainDatas;
+            if (TempList.Count == 0)
+            {
+                //表單單筆提交
+                TempList[0] = saveModel.MainData;
+            }
+            List<cmc_pdms_project_task_hist> task_List = new List<cmc_pdms_project_task_hist>();
+            try
+            {
+                foreach (var item in TempList)
+                {
+                    var project_task_id =Guid.Parse(item["project_task_id"].ToString());
+                    var ptask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
+                    task_List.Add(new cmc_pdms_project_task_hist
+                    {
+                        project_task_his_id = Guid.NewGuid(),
+                        project_task_id = project_task_id,
+                        epl_id = ptask.epl_id,
+                        approve_status = ptask.approve_status,
+                        done_status = ptask.done_status,
+                        check_flag = ptask.check_flag,
+                        template_id = ptask.template_id,
+                        task_id = ptask.task_id,
+                        FormCode = ptask.FormCode,
+                        FormId = ptask.FormId,
+                        FormCollectionId = ptask.FormCollectionId,
+                        start_date = ptask.start_date,
+                        end_date = ptask.end_date,
+                        order_no = ptask.order_no,
+                        pre_task_id = ptask.pre_task_id,
+                        rule_id = ptask.rule_id,
+                        is_eo = ptask.is_eo,
+                        is_part_handle = ptask.is_part_handle,
+                        is_delete_able = ptask.is_delete_able,
+                        is_audit_key = ptask.is_audit_key,
+                        warn = ptask.warn,
+                        warn_leader = ptask.warn_leader,
+                        action_type = ptask.action_type,
+                        data_source ="01"
+                    }); 
+                }
+
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.BulkInsert(task_List, "cmc_pdms_project_task_hist");
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task_hist 表，view_cmc_plan_exec_ganttService 文件-->Insert_task_hist-->BulkInsert:" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error();
             }
             return ResponseContent.OK();
         }
