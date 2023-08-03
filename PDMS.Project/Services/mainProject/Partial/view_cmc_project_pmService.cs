@@ -464,7 +464,7 @@ namespace PDMS.Project.Services
 
                 if (path == "/view_cmc_project_pm")//
             {
-                string code = " and  po.user_id='" + userCode + "'";
+                string code = " and  pm.CreateID='" + userId + "'";
                 QuerySql += " LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
                 QuerySql += code;
                 QuerySql += where;
