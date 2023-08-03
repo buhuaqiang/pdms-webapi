@@ -340,6 +340,88 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
         }
 
+
+        public WebResponseContent editEo(Guid project_id, String project_status, decimal new_eo_fee, decimal old_eo_fee)
+        {//修改EO百分比，调整EO对应的数据
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            List<cmc_pdms_project_epl> eplLists = new List<cmc_pdms_project_epl>();
+            eplLists = getCostList(project_id, project_status);
+            decimal newEoFee = new_eo_fee;
+            decimal oldEoFee = old_eo_fee;
+
+            if (eplLists.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in eplLists)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item.epl_id.ToString())).FirstOrDefault();
+
+                        if (epl != null)
+                        {
+                            if (epl.fs_1 != null && epl.fs_1 != 0)
+                            {
+                                //計算調整比例前EO設變費按照比例的數值
+                                var eoCost = Math.Round(((Convert.ToDecimal(epl.fs_1) * oldEoFee) / 100), 2);
+                                if (eoCost == epl.fs_3 || epl.fs_3.IsNullOrEmpty())
+                                {//判斷EO設變費是否手動調整過，若手動調整過則不必根據新比例重新計算
+                                    epl.fs_3 = Math.Round(((Convert.ToDecimal(epl.fs_1) * newEoFee) / 100), 2);
+                                }
+                            }
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "調整EO百分比後批量修改EO設變費装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.fs_3 });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "調整EO百分比後批量修改EO設變費装箱 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+            }
+
+            return ResponseContent.OK();
+        }
+        public List<cmc_pdms_project_epl> getCostList(Guid project_id, String project_status)//根據條件查詢epl
+        {
+
+
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            string projectStatus = project_status;
+
+            var projectId = project_id;
+
+            string sql = "";
+            if (projectStatus == "01")
+            {//專案建立獲取開發清冊數據
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and project_id='" + projectId + "' and Final_version_status='2' and kd_type like 'D%' ";
+            }
+            else
+            {//專案啟動獲取開發清冊數據
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'  and Final_version_status='2'  and kd_type like 'D%' ";
+            }
+
+            eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
+
+            return eplList;
+        }
+
+
         public WebResponseContent addEpl(Guid project_id, String glno)
         {
 
