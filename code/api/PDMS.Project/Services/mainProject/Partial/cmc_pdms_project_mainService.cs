@@ -66,7 +66,7 @@ namespace PDMS.Project.Services
                 }
                 catch (Exception ex)
                 {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件：projectMain：" + DateTime.Now + ":" + ex.Message);
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "载入日期修改前装箱  cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件：projectMain：" + DateTime.Now + ":" + ex.Message);
                     return ResponseContent.Error();
                 }
                 try
@@ -81,7 +81,7 @@ namespace PDMS.Project.Services
                 }
                 catch (Exception ex)
                 {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_main 表，cmc_pdms_project_main 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "载入日期修改執行 cmc_pdms_project_main 表，cmc_pdms_project_main 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
 
                     return ResponseContent.Error();
                 }
@@ -89,6 +89,58 @@ namespace PDMS.Project.Services
                 ResponseContent = cmc_pdms_project_eplService.Instance.addEpl(Guid.Parse(MainDatas[0]["project_id"].ToString()), MainDatas[0]["glno"].ToString());
             }
              return ResponseContent.OK();
+        }
+
+        public WebResponseContent eoFee(SaveModel saveModel)
+        {//调整EO费率
+            var MainDatas = saveModel.MainDatas;
+            //定义变量存取变更前的数据
+            decimal  eoFee = 0;
+            List<cmc_pdms_project_main> projectMain = new List<cmc_pdms_project_main>();
+            if (MainDatas.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainDatas)
+                    {
+                        cmc_pdms_project_main project = new cmc_pdms_project_main();
+                        project = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_id == Guid.Parse(item["project_id"].ToString())).FirstOrDefault();
+
+                        if (project != null)
+                        {
+                            // project.epl_load_date = Convert.ToDateTime(ConvertTime(Now date()));
+
+                            eoFee =Convert.ToDecimal(project.eo_fee); //获取变更前的值
+                            project.eo_fee = Convert.ToDecimal(item["eo_fee"]);
+                        }
+                        projectMain.Add(project);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "变更EO费率前装箱  cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件：projectMain：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(projectMain, x => new { x.eo_fee });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "变更EO费率執行 cmc_pdms_project_main 表，cmc_pdms_project_main 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+                ResponseContent = cmc_pdms_project_eplService.Instance.editEo(Guid.Parse(MainDatas[0]["project_id"].ToString()),  MainDatas[0]["project_status"].ToString(), Convert.ToDecimal(MainDatas[0]["eo_fee"]), eoFee);
+            }
+            return ResponseContent.OK();
         }
     }
 }
