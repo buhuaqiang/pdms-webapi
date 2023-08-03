@@ -329,7 +329,39 @@ namespace PDMS.Project.Services
         //{
         //    return _cmc_pdms_project_mainService.Del(keys, delList);
         //}
-        public WebResponseContent release(SaveModel saveModel)
+
+        public WebResponseContent saveRelease(SaveModel saveModel)
+        {
+            var mains = saveModel;
+            Guid projectId = Guid.NewGuid();
+            var info = new WebResponseContent();
+
+            if (!saveModel.MainData.ContainsKey("project_id"))
+            {
+                saveModel.MainData.Add("project_id", "");
+            }
+            string project_id = saveModel.MainData["project_id"].ToString();
+
+            if (string.IsNullOrEmpty(project_id))
+            {
+                saveModel.MainData["release_status"] = "02";
+                saveModel.MainData["project_status"] = "01";
+                
+                 info = _cmc_pdms_project_mainService.Add(saveModel);
+            }
+            else {
+
+                info =  _cmc_pdms_project_mainService.Update(saveModel);
+
+            }
+
+            return info;
+           // return webResponse.OK();
+        }
+
+
+
+            public WebResponseContent release(SaveModel saveModel)
         {
             //UserInfo userList = UserContext.Current.UserInfo;
             //var CreateID = userList.User_Id;
