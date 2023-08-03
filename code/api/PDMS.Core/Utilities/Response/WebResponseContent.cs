@@ -24,7 +24,7 @@ namespace PDMS.Core.Utilities
             this.Status = true;
             if (string.IsNullOrEmpty(this.Message))
             {
-                this.Message = "Successful"; 
+                this.Message = "操作成功！"; 
             }        
             return this;
         }
