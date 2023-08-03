@@ -14,6 +14,7 @@
     <ProjectReference Include="..\PDMS.Core\PDMS.Core.csproj" />
     <ProjectReference Include="..\PDMS.Entity\PDMS.Entity.csproj" />
     <ProjectReference Include="..\PDMS.Sys\PDMS.Sys.csproj" />
+    <ProjectReference Include="..\PDMS.WorkFlow\PDMS.WorkFlow.csproj" />
   </ItemGroup>
 
 </Project>
