@@ -32,11 +32,18 @@ namespace PDMS.Project.Controllers
             _httpContextAccessor = httpContextAccessor;
         }
 
-        [ApiActionPermission]
+        [ApiActionPermission()]
         [HttpPost, Route("loadDate")]
         public WebResponseContent loadDate([FromBody] SaveModel saveModel)
         {
             return Service.loadDate(saveModel);
+        }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("eoFee")]
+        public WebResponseContent eoFee([FromBody] SaveModel saveModel)
+        {
+            return Service.eoFee(saveModel);
         }
     }
 }
