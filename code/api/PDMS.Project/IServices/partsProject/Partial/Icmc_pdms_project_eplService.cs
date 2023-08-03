@@ -54,5 +54,8 @@ namespace PDMS.Project.IServices
         public WebResponseContent updateCost(SaveModel saveModel);
 
         public int getFinalStatus(Object obj);
+
+
+        public WebResponseContent editEo(Guid guid, String project_status, decimal newEoFee, decimal eoFee);
     }
  }
