@@ -357,6 +357,14 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string? version { get; set; }
 
-       
+
+        /// <summary>
+        ///EO费率
+        /// </summary>
+        [Display(Name = "eo费率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? eo_fee { get; set; }
     }
 }
