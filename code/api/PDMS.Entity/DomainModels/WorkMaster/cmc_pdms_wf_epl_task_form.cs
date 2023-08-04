@@ -112,54 +112,5 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public DateTime? end_date { get; set; }
 
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "Creator")]
-        [MaxLength(50)]
-        [Column(TypeName = "varchar(50)")]
-        [Editable(true)]
-        public string Creator { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "CreateID")]
-        [Column(TypeName = "int")]
-        [Editable(true)]
-        public int? CreateID { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "CreateDate")]
-        [Column(TypeName = "datetime")]
-        [Editable(true)]
-        public DateTime? CreateDate { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "Modifier")]
-        [MaxLength(50)]
-        [Column(TypeName = "varchar(50)")]
-        [Editable(true)]
-        public string Modifier { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "ModifyID")]
-        [Column(TypeName = "int")]
-        [Editable(true)]
-        public int? ModifyID { get; set; }
-
-        /// <summary>
-        ///
-        /// </summary>
-        [Display(Name = "ModifyDate")]
-        [Column(TypeName = "datetime")]
-        [Editable(true)]
-        public DateTime? ModifyDate { get; set; }
     }
 }
