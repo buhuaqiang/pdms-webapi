@@ -56,6 +56,7 @@ namespace PDMS.Project.Services
             string where = " ";
             UserInfo userInfo = UserContext.Current.UserInfo;
              int userId = userInfo.User_Id;
+            string dept_code = userInfo.DepartmentCode;
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
             if (!string.IsNullOrEmpty(options.Wheres))
             {
@@ -114,25 +115,37 @@ namespace PDMS.Project.Services
                             project_status = sp.Value;
                             continue;
                         }
-
+                        if (sp.Name.ToLower() == "path".ToLower())
+                        {
+                            path = sp.Value;
+                            continue;
+                        }
                     }
                 }
             }
 
+            QuerySql = @" select epl.* ,'' as version,main.eo_fee  from cmc_pdms_project_epl epl
+                                    left join cmc_pdms_project_main main on main.project_id=epl.project_id
+	                               where 1=1
+	                                    and kd_type like 'D%' 
+	                                    and Final_version_status='2' and action_type!='delete'";
+
             if (project_status == "01")
             {
-                QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
-                                    left join cmc_pdms_project_main main on main.project_id=epl.project_id
-	                               where epl_phase='01'
-	                                    and kd_type like 'D%' 
-	                                    and Final_version_status='2' and action_type!='delete' and dev_taker_id= " + userId;
+                where += " and  epl_phase='01'";
             }
-            else {
-                QuerySql = @" select * ,'' as version  from cmc_pdms_project_epl epl
-                            left join cmc_pdms_project_main main on main.project_id=epl.project_id
-	                               where epl_phase='02'
-	                                    and kd_type like 'D%' 
-	                                    and Final_version_status='2' and action_type!='delete'   and dev_taker_id= " + userId ;
+            else
+            {
+                where += " and  epl_phase='02'  " ;
+            }
+
+            if (path.ToLower() == "/view_cmc_project_group_cost")
+            {
+                where += " and epl.group_code='"+dept_code+"'";
+            }
+            else
+            {
+                where += " and  dev_taker_id= " + userId;
             }
            
              QuerySql += where;

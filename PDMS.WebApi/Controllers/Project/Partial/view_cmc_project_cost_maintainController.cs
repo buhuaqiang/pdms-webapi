@@ -44,5 +44,12 @@ namespace PDMS.Project.Controllers
             return Json(_service.costConfirm(keys));
         }
 
+        [ApiActionPermission()]
+        [HttpPost, Route("GetPageData")]
+        public override ActionResult GetPageData([FromBody] PageDataOptions loadData)
+        {
+            return base.GetPageData(loadData);
+        }
+
     }
 }

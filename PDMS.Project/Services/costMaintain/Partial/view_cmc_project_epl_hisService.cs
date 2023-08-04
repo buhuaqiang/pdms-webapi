@@ -70,7 +70,7 @@ namespace PDMS.Project.Services
 		                main.project_name,
 		                main.glno,
 		                main.project_type,
-		                replace( LEFT ( epl_his.CreateDate, 10 ), '-', '' ) AS version,
+		                format(epl_his.CreateDate,'yyyyMMddHHmmss')  AS version,
 	                CASE
 			                main.project_status 
 			                WHEN '01' THEN
