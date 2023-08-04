@@ -90,8 +90,9 @@ namespace PDMS.Project.Controllers
         [HttpPost, Route("BulkSubmit")]
         public IActionResult BulkSubmit([FromBody] SaveModel saveModel)
         {
-            return Json("");
-            //return Json(Service.SaveAndSubmit(saveModel, "01"));
+            SaveModel saveModels = new SaveModel();
+            saveModels = Service.AnalysisData(saveModel);
+            return Json(Service.SaveAndSubmit(saveModels, "01"));
         }
 
 
