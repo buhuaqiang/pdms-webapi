@@ -64,6 +64,7 @@ namespace PDMS.WorkFlow.Services
                     saveModel.MainData["apply_type"] = apply_type;
                     saveModel.MainData["wf_master_id"] = wf_master_ids;
                     saveModel.MainData["approve_status"] = status;
+                    saveModel.MainData["org_code"] = GetOrgCode();
                     if (!status.Equals("00"))
                     {
                         if (!saveModel.MainData.ContainsKey("project_id"))
@@ -75,10 +76,10 @@ namespace PDMS.WorkFlow.Services
                             saveModel.MainData.Add("epl_id", null);
                         }
                         saveModel.MainData["approved_date"] = DateTime.Now;
-                        saveModel.MainData["approval_username"] = apprverUser.UserTrueName;
-                        saveModel.MainData["approval_user"] = apprverUser.User_Id;
-                        //cmc_pdms_wf_master masterEntiy = JsonConvert.DeserializeObject<cmc_pdms_wf_master>(JsonConvert.SerializeObject(saveModel.MainData));
-                        //InsertApproveLog(saveModel, bidMastDBID.ToString(), status == "01" ? "05" : status, userEntity, "", 0);
+                        //saveModel.MainData["approval_username"] = apprverUser.UserTrueName;
+                        saveModel.MainData["approve_user_id"] = apprverUser.User_Id;
+                        cmc_pdms_wf_master masterEntiy = JsonConvert.DeserializeObject<cmc_pdms_wf_master>(JsonConvert.SerializeObject(saveModel.MainData));
+                        InsertApproveLog(saveModel, wf_master_ids.ToString(), status : status, userEntity, "", 0);
                         //FlowEmail(saveModel, apprverUser.UserName, "", masterEntiy);
                     }
                     //增加master数据
@@ -99,7 +100,7 @@ namespace PDMS.WorkFlow.Services
                         master.approved_date = DateTime.Now;
                         master.approve_user_id = apprverUser.User_Id;
                         master.org_code = GetOrgCode();
-                        //InsertApproveLog(saveModel, Smaster_id.ToString(), status == "01" ? "05" : status, userEntity, "", 0);
+                        InsertApproveLog(saveModel, Smaster_id.ToString(), status, userEntity, "", 0);
                         //FlowEmail(saveModel, apprverUser.UserName, "", master);
                     }
                     //修改master数据
@@ -156,7 +157,7 @@ namespace PDMS.WorkFlow.Services
                     form.project_task_id = Guid.Parse(item["project_task_id"].ToString());
                     form.task_id = Guid.Parse(item["task_id"].ToString());
                     form.FormCode = item["FormCode"].ToString();
-                    form.approve_status = item["approve_status"].ToString();
+                    form.approve_status = "1";//默认给1 通过
                     form.start_date = Convert.ToDateTime(item["start_date"].ToString());
                     form.end_date = Convert.ToDateTime(item["end_date"].ToString());
                     taskForm.Add(form);
@@ -168,15 +169,12 @@ namespace PDMS.WorkFlow.Services
                         DBServerProvider.SqlDapper.BulkInsert(taskForm, "cmc_pdms_wf_epl_task_form");
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
-
                 }
             }
             catch (Exception ex)
             {
                 Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量寫入執行 cmc_pdms_wf_epl_task_form 表，cmc_pdms_wf_masterService 文件-->Insert_task_form-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
             }
-
-
         }
 
 
@@ -259,31 +257,30 @@ namespace PDMS.WorkFlow.Services
         public void InsertApproveLog(SaveModel saveModel, string wf_master_id, string status, Sys_User userEntity, string Conmment, int type)
         {
             SaveModel.DetailListDataResult logResult = new SaveModel.DetailListDataResult();
-            //cmc_pdms_wf_approve_log approveEntiy = new cmc_pdms_wf_approve_log()
+            cmc_pdms_wf_approve_log approveEntiy = new cmc_pdms_wf_approve_log()
+            {
+                wf_log_id = Guid.NewGuid(),
+                wf_master_id = new Guid(wf_master_id),
+                approve_user_id = userEntity.User_Id,
+                status = status,
+                remark = Conmment,  //审批意见从前台传递过来
+            };
+            if (status.Equals("01"))
+            {
+                approveEntiy.status = "03";
+            }
+            else
+            {
+                approveEntiy.status = status;
+            }
+            //if (type > 0)
             //{
-            //    wf_log_id = Guid.NewGuid(),
-            //    wf_master_id = new Guid(wf_master_id),
-            //    approve_user_id = userEntity.User_Id,
-            //    status= status,
-            //    remark= Conmment,
-            //    comment = Conmment    //审批意见从前台传递过来
-            //};
-            //if (status.Equals("01"))
-            //{
-            //    approveEntiy.approve_status = "03";
+            //    approveEntiy.grade = type;
             //}
-            //else
-            //{
-            //    approveEntiy.approve_status = status;
-            //}
-            ////if (type > 0)
-            ////{
-            ////    approveEntiy.grade = type;
-            ////}
-            //logResult.optionType = SaveModel.MainOptionType.add;
-            //logResult.detailType = typeof(cmc_pdms_wf_approve_log);
-            //logResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(approveEntiy)));
-            //saveModel.DetailListData.Add(logResult);
+            logResult.optionType = SaveModel.MainOptionType.add;
+            logResult.detailType = typeof(cmc_pdms_wf_approve_log);
+            logResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(approveEntiy)));
+            saveModel.DetailListData.Add(logResult);
         }
 
         #endregion
