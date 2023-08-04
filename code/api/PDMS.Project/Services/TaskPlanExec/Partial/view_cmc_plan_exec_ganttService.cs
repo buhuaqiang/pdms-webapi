@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 using System.Drawing;
 using Microsoft.AspNetCore.Mvc;
 using PDMS.WorkFlow.Services;
+using Quartz.Util;
 
 namespace PDMS.Project.Services
 {
@@ -471,7 +472,9 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
                 string sql = $@"select ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,ptask.approve_status,
                   ops.FormId,ops.FormCode,ops.FormOptions,
-                  obj.FormCollectionId,obj.FormData from  cmc_pdms_project_task  ptask
+                  obj.FormCollectionId,obj.FormData ,task.flow_code,epl.part_taker_id from  cmc_pdms_project_task  ptask
+                 left join  cmc_pdms_project_epl epl on ptask.epl_id=epl.epl_id
+                 left join  cmc_common_task task  on ptask.task_id=task.task_id
                  left join  FormDesignOptions  ops on ptask.FormId=ops.FormId
                  LEFT JOIN  FormCollectionObject  obj on ptask.FormCollectionId=obj.FormCollectionId
                  where project_task_id in('{TaskIds}')";
@@ -566,7 +569,46 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 #endregion               
             }
             #region 新增一筆cmc_pdms_wf_master 數據，cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
-            ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, "01", "04", null);
+            var Temp = saveModel.MainDatas;
+            var list = Temp.GroupBy(x => x["flow_code"]).ToList();
+            SaveModel ModelOne = new SaveModel();
+            //审批通道1
+            List<Dictionary<string, object>> ChannelOne = new List<Dictionary<string, object>>();
+            //审批通道2
+            List<Dictionary<string, object>> ChannelTwo = new List<Dictionary<string, object>>();
+            Sys_User user = new Sys_User();
+            foreach (var item in list)
+            {
+                foreach (var info in item)
+                {
+                    switch (item.Key)
+                    {
+                        case "1":
+                            ChannelOne.Add(info);
+                            break;
+                        case "2":
+                            ChannelTwo.Add(info);           
+                            break;
+                        default:
+                            break;
+                    }
+                }         
+            }
+            ModelOne.MainData = saveModel.MainData;
+            if (ChannelOne.Count != 0)
+            {
+                //通道1
+                ModelOne.MainDatas = ChannelOne;
+                ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "04", null);
+            }
+            if (ChannelTwo.Count != 0)
+            {
+                //通道2
+                ModelOne.MainDatas = ChannelTwo;
+                var part_taker_id = ChannelTwo[0]["part_taker_id"].ToString();
+                user = repository.DbContext.Set<Sys_User>().Where(x => x.User_Id == Convert.ToInt32(part_taker_id)).FirstOrDefault();
+                ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "04", user);
+            }         
             #endregion
 
             return ResponseContent.OK();
