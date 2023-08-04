@@ -220,6 +220,12 @@ namespace PDMS.Entity.DomainModels
         public Guid FormCollectionId { get; set; }
 
 
-
+        /// <summary>
+        ///审批流程
+        /// </summary>
+        [Display(Name = "flow_code")]
+        [Column(TypeName = "string")]
+        [Required(AllowEmptyStrings = false)]
+        public string flow_code { get; set; }     
     }
 }
