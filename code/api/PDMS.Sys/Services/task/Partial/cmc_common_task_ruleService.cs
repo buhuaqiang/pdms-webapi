@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
 using System.Collections.Generic;
+using System;
 
 namespace PDMS.Sys.Services
 {
@@ -54,6 +55,22 @@ namespace PDMS.Sys.Services
                 return webResponse.OK();
             };
             return base.Add(saveDataModel);
+        }
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            DelOnExecuting = (object[] _keys) =>
+            {
+                string dd = string.Join("','", keys);
+                string sSql = $@"SELECT COUNT(0) FROM cmc_common_task WHERE rule_id IN  ('{dd}')";
+                object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
+
+                if (Convert.ToInt32(obj) > 0)
+                {
+                    return webResponse.Error("規則被任務引用，不允許刪除");
+                }
+                return webResponse.OK();
+            };
+            return base.Del(keys, delList);
         }
     }
 }
