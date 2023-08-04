@@ -63,7 +63,7 @@ namespace PDMS.WorkFlow.Services
                 {
                     saveModel.MainData["apply_type"] = apply_type;
                     saveModel.MainData["wf_master_id"] = wf_master_ids;
-                    saveModel.MainData["status"] = status;
+                    saveModel.MainData["approve_status"] = status;
                     if (!status.Equals("00"))
                     {
                         if (!saveModel.MainData.ContainsKey("project_id"))
@@ -156,6 +156,9 @@ namespace PDMS.WorkFlow.Services
                     form.project_task_id = Guid.Parse(item["project_task_id"].ToString());
                     form.task_id = Guid.Parse(item["task_id"].ToString());
                     form.FormCode = item["FormCode"].ToString();
+                    form.approve_status = item["approve_status"].ToString();
+                    form.start_date = Convert.ToDateTime(item["start_date"].ToString());
+                    form.end_date = Convert.ToDateTime(item["end_date"].ToString());
                     taskForm.Add(form);
                 }
                 if (taskForm.Count != 0)
