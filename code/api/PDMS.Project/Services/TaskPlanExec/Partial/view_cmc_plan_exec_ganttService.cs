@@ -462,16 +462,25 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
         }
 
         public SaveModel AnalysisData(SaveModel saveModel)
-        {
-            SaveModel saveModels = new SaveModel();
+        { 
             if (saveModel.MainData.ContainsKey("checkVal"))
-            {
+            {        
                 var str = saveModel.MainData["checkVal"].ToString();
                 JArray jarry=JArray.Parse(str);
+                var TaskIds = string.Join("''", jarry);
 
+                string sql = $@"select ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,ptask.approve_status,
+                  ops.FormId,ops.FormCode,ops.FormOptions,
+                  obj.FormCollectionId,obj.FormData from  cmc_pdms_project_task  ptask
+                 left join  FormDesignOptions  ops on ptask.FormId=ops.FormId
+                 LEFT JOIN  FormCollectionObject  obj on ptask.FormCollectionId=obj.FormCollectionId
+                 where project_task_id in('{TaskIds}')";
+                var list = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql,null);
+                saveModel.MainDatas = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(list));
+               
             }
 
-            return saveModels;
+            return saveModel;
         }
 
 
@@ -541,21 +550,24 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
         //表單彈窗 保存並提交按鈕
         public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status)
         {
-            var project_task_id = saveModel.MainData["project_task_id"].ToString();
-            if (status == "02")
+            string TempStatus = "";
+            if (saveModel.MainData.ContainsKey("status"))
+            {
+                TempStatus = saveModel.MainData["status"].ToString();
+            }
+            if (TempStatus == "02")
             {
                 #region  寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
                   ResponseContent = Insert_task_hist(saveModel);
                 #endregion
 
-                #region 新增一筆數據 FormCollectionObject  
-                  ResponseContent = FormCollectionObject(saveModel);
-                #endregion
-
-                #region 新增一筆cmc_pdms_wf_master 數據，cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
-                  ResponseContent= cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel,"01","04",null);
-                #endregion
+                #region 新增一筆數據 FormCollectionObject  ,更新 cmc_pdms_project_task.FormCollectionId
+                ResponseContent = FormCollectionObject(saveModel);
+                #endregion               
             }
+            #region 新增一筆cmc_pdms_wf_master 數據，cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
+            ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, "01", "04", null);
+            #endregion
 
             return ResponseContent.OK();
         }
