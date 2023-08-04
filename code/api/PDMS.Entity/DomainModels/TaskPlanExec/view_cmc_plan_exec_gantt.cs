@@ -221,11 +221,21 @@ namespace PDMS.Entity.DomainModels
 
 
         /// <summary>
-        ///审批流程
+        ///审批通道
         /// </summary>
         [Display(Name = "flow_code")]
         [Column(TypeName = "string")]
         [Required(AllowEmptyStrings = false)]
-        public string flow_code { get; set; }     
+        public string flow_code { get; set; }
+
+
+        /// <summary>
+        ///零品承办
+        /// </summary>
+        [Display(Name = "part_taker_id")]
+        [Column(TypeName = "int")]
+        [Required(AllowEmptyStrings = false)]
+        public int part_taker_id { get; set; }
+        
     }
 }
