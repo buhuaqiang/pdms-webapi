@@ -182,7 +182,6 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Key]
        [Display(Name ="project_id")]
-       [JsonIgnore]
        [Column(TypeName="uniqueidentifier")]
        [Required(AllowEmptyStrings=false)]
        public Guid project_id { get; set; }
@@ -191,7 +190,6 @@ namespace PDMS.Entity.DomainModels
         ///
         /// </summary>
         [Display(Name = "project_task_id")]
-        [JsonIgnore]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
         public Guid project_task_id { get; set; }
@@ -201,7 +199,6 @@ namespace PDMS.Entity.DomainModels
         ///
         /// </summary>
         [Display(Name = "FormCode")]
-        [JsonIgnore]
         [Column(TypeName = "string")]
         [Required(AllowEmptyStrings = false)]
         public string FormCode { get; set; }
@@ -210,7 +207,6 @@ namespace PDMS.Entity.DomainModels
         ///
         /// </summary>
         [Display(Name = "FormId")]
-        [JsonIgnore]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
         public Guid FormId { get; set; }
@@ -219,7 +215,6 @@ namespace PDMS.Entity.DomainModels
         ///
         /// </summary>
         [Display(Name = "FormCollectionId")]
-        [JsonIgnore]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
         public Guid FormCollectionId { get; set; }
