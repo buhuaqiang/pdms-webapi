@@ -240,11 +240,9 @@ namespace PDMS.Project.Services
             //var epl_id = saveModel.MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
             var epl_id = saveModel.MainData["epl_id"] == null ? "" : saveModel.MainData["epl_id"].ToString();
             string[] epl_idArray = epl_id.Split(',');
-            //JArray epl_idArray = JArray.Parse(epl_id);
 
             var path = saveModel.MainData["path"].ToString();
             var template_id = MainDatas[0]["template_id"];
-
 
             List<cmc_pdms_project_task> checkTemplate = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> addList = new List<cmc_pdms_project_task>();
@@ -401,8 +399,8 @@ namespace PDMS.Project.Services
 
         private static void dateFormat(Dictionary<string, object>? item, cmc_pdms_project_task pTask)
         {
-            string format1 = "yyyy/MM/dd HH:mm:ss";
-            string format2 = "yyyy-MM-dd HH:mm:ss";
+            string format1 = "yyyy/MM/dd";
+            string format2 = "yyyy-MM-dd";
 
             //if (!string.IsNullOrEmpty(endD)) 
             var startD = item["start_date"].ToString() ?? "";
