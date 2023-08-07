@@ -86,7 +86,11 @@ namespace PDMS.Project.Services
                     return ResponseContent.Error();
                 }
 
-                ResponseContent = cmc_pdms_project_eplService.Instance.addEpl(Guid.Parse(MainDatas[0]["project_id"].ToString()), MainDatas[0]["glno"].ToString());
+                cmc_pdms_project_epl epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.project_id == Guid.Parse(MainDatas[0]["project_id"].ToString())  && x.epl_phase=="02").FirstOrDefault();
+                if (epl == null) {//载入EPL時若專案啟動中不存在數據則新增
+                    ResponseContent = cmc_pdms_project_eplService.Instance.addEpl(Guid.Parse(MainDatas[0]["project_id"].ToString()), MainDatas[0]["glno"].ToString());
+                }
+              
             }
              return ResponseContent.OK();
         }
@@ -141,6 +145,18 @@ namespace PDMS.Project.Services
                 ResponseContent = cmc_pdms_project_eplService.Instance.editEo(Guid.Parse(MainDatas[0]["project_id"].ToString()),  MainDatas[0]["project_status"].ToString(), Convert.ToDecimal(MainDatas[0]["eo_fee"]), eoFee);
             }
             return ResponseContent.OK();
+        }
+
+        public int isLoadDate(SaveModel saveModel) {//判斷epl是否維護到定版
+            int count = 0;
+            var MainDatas = saveModel.MainDatas;
+            var projectId = MainDatas[0]["project_id"].ToString();
+
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
+                            where epl.project_id='" + projectId + "' and epl_phase='01' and  Final_version_status='2'";
+           
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;     
         }
     }
 }
