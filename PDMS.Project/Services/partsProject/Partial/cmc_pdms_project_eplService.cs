@@ -264,10 +264,10 @@ namespace PDMS.Project.Services
                 string sql = "";
                 if (projectStatus == "01")
                 {//專案啟動
-                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and org_code='"+ departmentCode + "'";
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and action_type!='delete' and org_code='" + departmentCode + "'";
                 }
                 else {
-                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and org_code='" + departmentCode + "'";
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and action_type!='delete' and org_code='" + departmentCode + "'";
                 }
                 sql += where;
                 eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
@@ -277,10 +277,10 @@ namespace PDMS.Project.Services
                 string sql = "";
                 if (projectStatus == "01")
                 {
-                     sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and group_code='" + departmentCode + "'";
+                     sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and action_type!='delete'  and group_code='" + departmentCode + "'";
                 }
                 else {
-                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and group_code='" + departmentCode + "'";
+                    sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and action_type!='delete'  and group_code='" + departmentCode + "'";
                 }
               
                 sql += where;
