@@ -40,6 +40,13 @@ namespace PDMS.Project.Controllers
         }
 
         [ApiActionPermission()]
+        [HttpPost, Route("isLoadDate")]
+        public int isLoadDate([FromBody] SaveModel saveModel)
+        {
+            return Service.isLoadDate(saveModel);
+        }
+
+        [ApiActionPermission()]
         [HttpPost, Route("eoFee")]
         public WebResponseContent eoFee([FromBody] SaveModel saveModel)
         {
