@@ -183,7 +183,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_epl_departFinaliza")
             { //部門定版
 
-                QuerySql = @" select  epl.*,(select UserTrueName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserTrueName   
+                QuerySql = @" select  epl.*,(select UserTrueName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,(select UserTrueName   from sys_user where user_id=epl.dev_taker_id) as UserTrueName  
 	                            from cmc_pdms_project_epl epl
                                 left  join cmc_pdms_project_main main on main.project_id=epl.project_id
                                 left join cmc_pdms_project_epl_car_model model on model.epl_id=epl.epl_id
@@ -206,7 +206,7 @@ namespace PDMS.Project.Services
             }
             if (path == "/view_cmc_project_epl_finalization")
             { //最終定版 不需要過濾部門
-                QuerySql = @" select  epl.*,(select UserTrueName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,'' as UserTrueName   
+                QuerySql = @" select  epl.*,(select UserTrueName   from sys_user where user_id=mset.User_Id) as UserName  ,(select  user_code from sys_user where  User_Id=epl.dev_taker_id) as user_code ,(select UserTrueName   from sys_user where user_id=epl.dev_taker_id) as UserTrueName     
 	                            from cmc_pdms_project_epl epl
                                 left  join cmc_pdms_project_main main on main.project_id=epl.project_id
                                 left join cmc_pdms_project_epl_car_model model on model.epl_id=epl.epl_id
