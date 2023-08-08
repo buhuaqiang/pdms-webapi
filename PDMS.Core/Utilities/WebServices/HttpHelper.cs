@@ -15,11 +15,9 @@ namespace PDMS.Core.Utilities.WebServices
     //private void TestInvoke()
     //{
     //    //组织参数
-    //    Dictionary<string, string> parameters = new Dictionary<string, string>();
-    //    parameters.Add("CantonCode", PersonInfo.RegionNumber);
-    //    parameters.Add("CardCode", PersonInfo.CardNo);
-    //    parameters.Add("Name", txtName.Text);
-    //    parameters.Add("CompHosCode", SystemConfigData.HospitalCode);
+    //string url = "http://localhost:8088/WebService1.asmx/HelloWorld";
+    //Dictionary<string, string> parameters = new Dictionary<string, string>();
+    //parameters.Add("name","10086");
 
     //    string _result = HttpHelper.Helper.GetResponseString(url, ERequestMode.Post, parameters, Encoding.Default, Encoding.UTF8);
     //}
