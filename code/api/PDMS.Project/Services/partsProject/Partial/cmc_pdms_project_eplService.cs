@@ -759,10 +759,10 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
                             where epl.project_id='" + projectId + "' and epl.org_code='"+ departmentCode + "'";
             if (projectStatus=="01") {
-                sql += " and epl.epl_phase='01' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' or epl.kd_type is null or epl.group_code is null or epl.dev_taker_id is null )";
+                sql += " and epl.epl_phase='01' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' or epl.kd_type is null or epl.group_code is null or epl.dev_taker_id is null )   and action_type!='delete'";
             }
             else {
-                sql += " and epl.epl_phase='02' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' or epl.kd_type is null or epl.group_code is null or epl.dev_taker_id is null )";
+                sql += " and epl.epl_phase='02' and (epl.kd_type='' or epl.group_code='' or epl.dev_taker_id='' or epl.kd_type is null or epl.group_code is null or epl.dev_taker_id is null )  and action_type!='delete'";
             }
            
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
@@ -874,9 +874,9 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                             where epl.project_id='" + projectId + "'";
 
             if (projectStatus=="01") {
-                sql += " and epl.epl_phase='01' and  (Final_version_status not in ('1','2') or Final_version_status is null)";
+                sql += " and epl.epl_phase='01' and  (Final_version_status not in ('1','2') or Final_version_status is null)    ";
             } else {
-                sql += " and epl.epl_phase='02' and (Final_version_status not in ('1','2') or Final_version_status is null) ";
+                sql += " and epl.epl_phase='02' and (Final_version_status not in ('1','2') or Final_version_status is null)   ";
             }
          
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
