@@ -71,7 +71,7 @@
       <HintPath>E:\公司资料\01_PDMS\06_WebServiceDll\System.CodeDom.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Services">
-      <HintPath>E:\公司资料\01_PDMS\06_WebServiceDll\System.Web.Services.dll</HintPath>
+      <HintPath>WebServiceDll\System.Web.Services.dll</HintPath>
     </Reference>
   </ItemGroup>
 
