@@ -16,7 +16,6 @@ namespace PDMS.WebService
     // [System.Web.Script.Services.ScriptService]
     public class WebService1 : System.Web.Services.WebService
     {
-
         [WebMethod]
         public string HelloWorld(string name)
         {
