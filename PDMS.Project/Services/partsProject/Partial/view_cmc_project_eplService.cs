@@ -59,7 +59,7 @@ namespace PDMS.Project.Services
                 eplIds += "'" + eplId + "'" + ",";
             }
             eplIds = eplIds.Substring(0, eplIds.Length - 1);
-            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl where epl_id in ("+ eplIds + ")  and (kd_type='' or group_code='' or kd_type is null) and action_type !='delete' ";
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl where epl_id in ("+ eplIds + ")  and (kd_type='' or group_code=''  or kd_type is null or group_code is null ) and action_type !='delete' ";
             count =Convert.ToInt32( repository.DapperContext.ExecuteScalar(sql, null));
             return count;
         }
