@@ -532,7 +532,25 @@ namespace PDMS.Project.Services
             //通過接口查詢到數據,接口參數glno和date，返回的是base64的文件
             string filePath = "D:\\PDMS\\code\\code\\plm.xlsx";
             WebResponseContent Response=EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
-            list= Response.Data as List<cmc_pdms_project_epl>;
+            cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+            epl.upg_id = "ma123";
+            epl.level = 2;
+            epl.part_no = "CW888888";
+            epl.part_name = "方向盤8";
+            //epl.org_code = "A01-01";
+
+
+
+
+            cmc_pdms_project_epl epl1 = new cmc_pdms_project_epl();
+            epl1.upg_id = "ma123";
+            epl1.level = 2;
+            epl1.part_no = "CW111111";
+            epl1.part_name = "底盤1";
+            //epl1.org_code = "A01-01";
+            list.Add(epl);
+            list.Add(epl1);
+            //list = Response.Data as List<cmc_pdms_project_epl>;
 
             return UploadEplVali(list, "2", project_id);
         }
@@ -897,11 +915,11 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
             if (projectStatus == "01")
             {
-                sql += "and kd_type like 'D%'  and epl_phase='01' ) tab where tab.rn>1   ";
+                sql += "and kd_type like 'D*%'  and epl_phase='01' ) tab where tab.rn>1   ";
             }
             else
             {
-                sql += "and kd_type like 'D%'  and epl_phase='02' ) tab where tab.rn>1   ";
+                sql += "and kd_type like 'D*%'  and epl_phase='02' ) tab where tab.rn>1   ";
             }
           
             
