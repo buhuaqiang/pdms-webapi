@@ -17,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Project.Services
 {
@@ -37,5 +38,78 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
-  }
+        WebResponseContent ResponseContent = new WebResponseContent();
+        public override PageGridData<view_cmc_project_his> GetPageData(PageDataOptions options)
+        {
+            /*string glno = "";
+            string project_name = "";
+            string part_no = "";
+            string part_name = "";
+            string approve_status = "";
+
+            string where = " ";
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(options.Wheres))
+            {
+                searchParametersList = options.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "glno".ToLower())
+                        {
+                            glno = sp.Value;
+                            if (!string.IsNullOrEmpty(glno))
+                            {
+                                where += " AND glno LIKE '%" + glno + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "project_name".ToLower())
+                        {
+                            project_name = sp.Value;
+                            if (!string.IsNullOrEmpty(project_name))
+                            {
+                                where += " AND project_name LIKE '%" + project_name + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "part_no".ToLower())
+                        {
+                            part_no = sp.Value;
+                            if (!string.IsNullOrEmpty(part_no))
+                            {
+                                where += " AND part_no LIKE '%" + part_no + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "part_name".ToLower())
+                        {
+                            part_name = sp.Value;
+                            if (!string.IsNullOrEmpty(part_name))
+                            {
+                                where += " AND part_name LIKE '%" + part_name + "%'";
+                            }
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "approve_status".ToLower())
+                        {
+                            approve_status = sp.Value;
+                            if (!string.IsNullOrEmpty(approve_status))
+                            {
+                                where += " AND approve_status ='" + approve_status + "'";
+                            }
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY modifyDate  desc) AS rowId  FROM view_cmc_project_his WHERE 1=1  ";
+                       
+            QuerySql += where;
+            */
+            return base.GetPageData(options);
+        }
+    }
 }
