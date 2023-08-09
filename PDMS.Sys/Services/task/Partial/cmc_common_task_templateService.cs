@@ -147,6 +147,7 @@ namespace PDMS.Sys.Services
                             CreateID,
                             Creator,
                             CreateDate,
+                            work_days,
                         	order_no
                         )
                         SELECT 
@@ -158,6 +159,7 @@ namespace PDMS.Sys.Services
                             {CreateID},
                             '{Creator}',
                             GETDATE(),
+                            map.work_days,
                         	map.order_no
                         from  cmc_common_template_mapping map
                         left join cmc_common_task_template_set st on st.source_set_id=map.set_id

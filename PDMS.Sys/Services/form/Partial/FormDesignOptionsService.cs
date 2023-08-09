@@ -22,6 +22,7 @@ using static Dapper.SqlMapper;
 using System;
 using Newtonsoft.Json;
 using System.Net;
+using System.Web;
 
 namespace PDMS.System.Services
 {
@@ -145,30 +146,42 @@ namespace PDMS.System.Services
                             //_responseContent = base.CustomBatchProcessEntity(saveModel);
                             #endregion
 
-                            #region 修改任務表 cmc_common_task                   
-                            var taskList = repository.DbContext.Set<cmc_common_task>().Where(x => x.FormCode == FormCode).FirstOrDefault();
-                            if (taskList != null)
-                            {
-                                taskList.FormId = Temp;
-                                SaveModel.DetailListDataResult upTaskResult = new SaveModel.DetailListDataResult();
-                                upTaskResult.optionType = SaveModel.MainOptionType.update;
-                                upTaskResult.detailType = typeof(cmc_common_task);
-                                upTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(taskList)));
-                                saveModel.DetailListData.Add(upTaskResult);
-                            }       
+                            #region 修改任務表 cmc_common_task    
+                            string updateTaskFormId = $@"update cmc_common_task set FormId='{Temp}' where FormCode='{FormCode}'";
+                            var count3 = repository.DapperContext.ExcuteNonQuery(updateTaskFormId, null);
+                            /* var taskList = repository.DbContext.Set<cmc_common_task>().Where(x => x.FormCode == FormCode).ToList();
+                             if (taskList != null)
+                             {
+                                 foreach (var task in taskList)
+                                 {
+                                     task.FormId = Temp;
+                                     SaveModel.DetailListDataResult upTaskResult = new SaveModel.DetailListDataResult();
+                                     upTaskResult.optionType = SaveModel.MainOptionType.update;
+                                     upTaskResult.detailType = typeof(cmc_common_task);
+                                     upTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(task)));
+                                     saveModel.DetailListData.Add(upTaskResult);
+                                 }
+
+                             }       */
                             #endregion
 
                             #region 修改子專案工作計劃表 cmc_pdms_project_task  
-                            var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).FirstOrDefault();
+                            string updateProjectTaskFormId = $@"update cmc_pdms_project_task set FormId='{Temp}' where FormCode='{FormCode}' and (FormCollectionId is null or approve_status='00')";
+                            var count = repository.DapperContext.ExcuteNonQuery(updateProjectTaskFormId, null);
+                            /*var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).ToList();
                             if (ProjcetList != null)
                             {
-                                ProjcetList.FormId = Temp;
-                                SaveModel.DetailListDataResult upPTaskResult = new SaveModel.DetailListDataResult();
-                                upPTaskResult.optionType = SaveModel.MainOptionType.update;
-                                upPTaskResult.detailType = typeof(cmc_pdms_project_task);
-                                upPTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(ProjcetList)));
-                                saveModel.DetailListData.Add(upPTaskResult);
-                            }            
+                                foreach (var proj in ProjcetList)
+                                {
+                                    proj.FormId = Temp;
+                                    SaveModel.DetailListDataResult upPTaskResult = new SaveModel.DetailListDataResult();
+                                    upPTaskResult.optionType = SaveModel.MainOptionType.update;
+                                    upPTaskResult.detailType = typeof(cmc_pdms_project_task);
+                                    upPTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(proj)));
+                                    saveModel.DetailListData.Add(upPTaskResult);
+                                }
+                               
+                            }        */
                             #endregion
                         }
                         catch (Exception ex)
@@ -240,7 +253,7 @@ namespace PDMS.System.Services
                 if (
                     keys.Count() != 0)
                 {
-                    str = string.Join("''", keys);
+                    str = string.Join("','", keys);
                 }
                 string sql = $@" update	FormDesignOptions set status=1  where FormId in('{str}')";
                 int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
