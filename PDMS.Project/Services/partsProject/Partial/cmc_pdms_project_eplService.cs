@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System.Reflection;
 using System;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 
 namespace PDMS.Project.Services
 {
@@ -982,6 +983,9 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             var MainDatas = saveModel.MainDatas;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             List<cmc_pdms_project_epl_his> eplHisList = new List<cmc_pdms_project_epl_his>();
+            Guid projectId = Guid.Parse(MainDatas[0]["project_id"].ToString());
+            List<cmc_pdms_project_gate> gates = gateList(projectId);
+            string gateType = getValue(gates[0].gate_code);
             if (MainDatas.Count != 0)
             {
                 try
@@ -1041,6 +1045,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
                                 epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = "00";
+                                epl.gate_type = gateType;
 
                                 eplHisList.Add(eplHis);
                             }
@@ -1051,6 +1056,8 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
                                 epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = epl.fs_approve_status;
+                                epl.gate_type = gateType;   
+
                             }
                             
 ;
@@ -1068,7 +1075,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                     if (eplList.Count > 0) {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status ,x.gate_type });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
@@ -1093,6 +1100,28 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
             }
             return ResponseContent.OK();
+        }
+        public string getValue(string value) {
+            string dicName = "";
+
+            List<Sys_DictionaryList> dicList = new List<Sys_DictionaryList>();
+            string sql = @$"select   d.* from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID  where   d.Enable='1'  and s.Enable='1'		and s.DicNo='gate' and  d.DicValue='"+ value + "'";
+            dicList = repository.DapperContext.QueryList<Sys_DictionaryList>(sql, null);
+            if (dicList!=null  && dicList.Count > 0) {
+                dicName = dicList[0].DicName;
+            }
+           
+            return dicName;
+        }
+
+        public List<cmc_pdms_project_gate> gateList(Guid projectId) {//獲取大日程
+            DateTime time = DateTime.Now;
+            List<cmc_pdms_project_gate> gateslList = new List<cmc_pdms_project_gate>();
+           string sql = @$"select  * from  cmc_pdms_project_gate where  project_id='" + projectId + "'  and  gate_start_date<='"+ time + "'  and  gate_end_date>='"+time+"'";
+
+
+            gateslList = repository.DapperContext.QueryList<cmc_pdms_project_gate>(sql, null);
+            return gateslList;
         }
 
     }
