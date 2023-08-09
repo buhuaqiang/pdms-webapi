@@ -71,7 +71,7 @@ namespace PDMS.Sys.Services
         public override WebResponseContent Del(object[] keys, bool delList = true)
         {
             string dd = string.Join("','", keys);
-            //如果表單被cmc_common_task表引用，不允許刪除
+            //如果表單被cmc_common_template_mapping表引用，不允許刪除
             string sSql = $@"SELECT COUNT(0) FROM cmc_common_template_mapping WHERE task_id IN  ('{dd}')";
             object obj = _repository.DapperContext.ExecuteScalar(sSql, null);
 

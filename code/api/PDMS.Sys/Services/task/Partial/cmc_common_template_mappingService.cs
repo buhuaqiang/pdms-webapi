@@ -114,7 +114,7 @@ namespace PDMS.Sys.Services
                 Guid set_id = Guid.Parse(data["set_id"].ToString());
                 List<Dictionary<string, object>> entityDic = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(data["datas"].ToString());
                 List<cmc_common_template_mapping> setList = new List<cmc_common_template_mapping>();
-                var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.template_id == template_id).Select(x => new { set_id = x.set_id }).ToList();
+                var List = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.set_id == set_id).Select(x => new { set_id = x.set_id }).ToList();
                 List<string> listS = new List<string>();
                 foreach (var item in List)
                 {

@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
 using PDMS.Sys.IServices;
+using PDMS.Core.ManageUser;
 
 namespace PDMS.Sys.Services
 {
@@ -58,6 +59,8 @@ namespace PDMS.Sys.Services
         }
         public override PageGridData<view_cmc_group_model_set> GetPageData(PageDataOptions options)
         {
+            UserInfo userInfo = UserContext.Current.UserInfo;
+            string departMentCode = userInfo.DepartmentCode;
             QuerySql = $@"SELECT
 	                    ms.*,
 	                    dp.DepartmentName,
@@ -67,7 +70,17 @@ namespace PDMS.Sys.Services
 	                    cmc_group_model_set ms
 	                    LEFT JOIN Sys_User u ON ms.user_id = u.User_Id
 	                    LEFT JOIN Sys_Department dp ON dp.DepartmentCode= ms.DepartmentCode";
+            if (userInfo.User_Id == 1)
+            {
 
+            }
+            else
+            {   if(!string.IsNullOrEmpty(departMentCode))
+                {
+                    QuerySql += $@" where ms.DepartmentCode='{departMentCode}'";
+                }
+                
+            }
             return base.GetPageData(options);
         }
     }
