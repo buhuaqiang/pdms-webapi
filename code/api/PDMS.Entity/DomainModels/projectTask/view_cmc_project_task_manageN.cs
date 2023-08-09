@@ -17,9 +17,9 @@ namespace PDMS.Entity.DomainModels
     public partial class view_cmc_project_task_manageN:SysEntity
     {
         /// <summary>
-       ///GLNO
-       /// </summary>
-       [Key]
+        ///GLNO
+        /// </summary>
+        [Key]
         [Display(Name = "GLNO")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
@@ -120,6 +120,8 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(4000)]
        [Column(TypeName="nvarchar(4000)")]
        public string ModifyDate { get; set; }
+
+
 
        
     }

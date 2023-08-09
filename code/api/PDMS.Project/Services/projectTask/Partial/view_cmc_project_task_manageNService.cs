@@ -402,35 +402,32 @@ namespace PDMS.Project.Services
             string format1 = "yyyy/MM/dd";
             string format2 = "yyyy-MM-dd";
 
-            //if (!string.IsNullOrEmpty(endD)) 
-            var startD = item["start_date"].ToString() ?? "";
-            var endD = item["end_date"].ToString() ?? "";
+            var startD = item["start_date"]?.ToString() ?? "";
+            var endD = item["end_date"]?.ToString() ?? "";
             if (!string.IsNullOrEmpty(startD))
             {
                 if (startD.Contains("/"))
                 {
-                    DateTime dateTimeValue = DateTime.ParseExact(item["start_date"].ToString(), format1, CultureInfo.InvariantCulture);
-                    string startDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                    DateTime dateTimeValue = DateTime.ParseExact(startD, format1, CultureInfo.InvariantCulture);
+                    string startDate = dateTimeValue.ToString("yyyy-MM-dd");
                     pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    var sd = item["start_date"].ToString();
-                    pTask.start_date = DateTime.ParseExact(sd, format2, CultureInfo.InvariantCulture);
+                    pTask.start_date = DateTime.ParseExact(startD, format2, CultureInfo.InvariantCulture);
                 }
             }
             if (!string.IsNullOrEmpty(endD))
             {
                 if (endD.Contains("/"))
                 {
-                    DateTime dateTimeValue = DateTime.ParseExact(item["end_date"].ToString(), format1, CultureInfo.InvariantCulture);
-                    string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                    DateTime dateTimeValue = DateTime.ParseExact(endD, format1, CultureInfo.InvariantCulture);
+                    string endDate = dateTimeValue.ToString("yyyy-MM-dd");
                     pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    var ed = item["end_date"].ToString();
-                    pTask.end_date = DateTime.ParseExact(ed, format2, CultureInfo.InvariantCulture);
+                    pTask.end_date = DateTime.ParseExact(endD, format2, CultureInfo.InvariantCulture);
                 }
             }
         }

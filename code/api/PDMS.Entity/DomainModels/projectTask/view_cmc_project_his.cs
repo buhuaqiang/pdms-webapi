@@ -17,23 +17,38 @@ namespace PDMS.Entity.DomainModels
     public partial class view_cmc_project_his:SysEntity
     {
         /// <summary>
-       ///版次
-       /// </summary>
-       [Display(Name ="版次")]
-       [Column(TypeName="datetime")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public DateTime CreateDate { get; set; }
+        ///GLNO
+        /// </summary>
+        [Key]
+        [Display(Name = "GLNO")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public string glno { get; set; }
+
+        /// <summary>
+        ///專案名稱
+        /// </summary>
+        [Display(Name ="專案名稱")]
+       [MaxLength(100)]
+       [Column(TypeName="nvarchar(100)")]
+       public string project_name { get; set; }
 
        /// <summary>
-       ///任務
+       ///零件編號
        /// </summary>
-       [Display(Name ="任務")]
-       [MaxLength(50)]
-       [Column(TypeName="varchar(50)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public string task_name { get; set; }
+       [Display(Name ="零件編號")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
+       public string part_no { get; set; }
+
+       /// <summary>
+       ///零件名稱
+       /// </summary>
+       [Display(Name ="零件名稱")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
+       public string part_name { get; set; }
 
        /// <summary>
        ///階段
@@ -41,100 +56,46 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="階段")]
        [MaxLength(100)]
        [Column(TypeName="nvarchar(100)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
        public string dicName { get; set; }
 
        /// <summary>
-       ///
+       ///任務
        /// </summary>
-       [Display(Name ="set_type")]
-       [MaxLength(10)]
-       [Column(TypeName="varchar(10)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public string set_type { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="set_value")]
-       [MaxLength(10)]
-       [Column(TypeName="varchar(10)")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public string set_value { get; set; }
-
-       /// <summary>
-       ///預警
-       /// </summary>
-       [Display(Name ="預警")]
-       [Column(TypeName="int")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public int warn { get; set; }
+       [Display(Name ="任務")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
+       public string task_name { get; set; }
 
        /// <summary>
        ///日程(起)
        /// </summary>
        [Display(Name ="日程(起)")]
-       [Column(TypeName="datetime")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public DateTime start_date { get; set; }
+       [MaxLength(30)]
+       [Column(TypeName="varchar(30)")]
+       public string start_date { get; set; }
 
        /// <summary>
        ///日程(迄)
        /// </summary>
        [Display(Name ="日程(迄)")]
-       [Column(TypeName="datetime")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
-       public DateTime end_date { get; set; }
+       [MaxLength(30)]
+       [Column(TypeName="varchar(30)")]
+       public string end_date { get; set; }
 
        /// <summary>
-       ///GLNO
+       ///預警
        /// </summary>
-       [Key]
-       [Display(Name ="GLNO")]
-       [MaxLength(100)]
-       [Column(TypeName="uniqueidentifier")]
-       [Required(AllowEmptyStrings=false)]
-       public Guid glno { get; set; }
-
-       /// <summary>
-       ///專案名稱
-       /// </summary>
-       [Display(Name ="專案名稱")]
-       [MaxLength(100)]
-       [Column(TypeName="nvarchar(100)")]
-       [Required(AllowEmptyStrings=false)]
-       public string project_name { get; set; }
-
-       /// <summary>
-       ///PART NO
-       /// </summary>
-       [Display(Name ="PART NO")]
-       [MaxLength(100)]
-       [Column(TypeName="varchar(100)")]
-       [Required(AllowEmptyStrings=false)]
-       public string part_no { get; set; }
-
-       /// <summary>
-       ///PART NAME
-       /// </summary>
-       [Display(Name ="PART NAME")]
-       [MaxLength(100)]
-       [Column(TypeName="varchar(100)")]
-       [Required(AllowEmptyStrings=false)]
-       public string part_name { get; set; }
+       [Display(Name ="預警")]
+       [MaxLength(4)]
+       [Column(TypeName="int(4)")]
+       public int? warn { get; set; }
 
        /// <summary>
        ///前置任務
        /// </summary>
        [Display(Name ="前置任務")]
-       [MaxLength(50)]
-       [Column(TypeName="varchar(50)")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
        public string pre_task_name { get; set; }
 
        /// <summary>
@@ -143,8 +104,30 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="變動")]
        [MaxLength(20)]
        [Column(TypeName="varchar(20)")]
-       [Required(AllowEmptyStrings=false)]
        public string action_type { get; set; }
+
+       /// <summary>
+       ///版次
+       /// </summary>
+       [Display(Name ="版次")]
+       [Column(TypeName="varchar(30)")]
+       public string? CreateDate { get; set; }
+
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="set_type")]
+       [MaxLength(10)]
+       [Column(TypeName="varchar(10)")]
+       public string set_type { get; set; }
+
+       /// <summary>
+       ///
+       /// </summary>
+       [Display(Name ="set_value")]
+       [MaxLength(10)]
+       [Column(TypeName="varchar(10)")]
+       public string set_value { get; set; }
 
        
     }
