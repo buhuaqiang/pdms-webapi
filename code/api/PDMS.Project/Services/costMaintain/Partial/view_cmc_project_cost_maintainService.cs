@@ -127,7 +127,7 @@ namespace PDMS.Project.Services
             QuerySql = @" select epl.* ,'' as version,main.eo_fee  from cmc_pdms_project_epl epl
                                     left join cmc_pdms_project_main main on main.project_id=epl.project_id
 	                               where 1=1
-	                                    and kd_type like 'D%' 
+	                                    and kd_type like 'D*%' 
 	                                    and Final_version_status='2' and action_type!='delete'";
 
             if (project_status == "01")
