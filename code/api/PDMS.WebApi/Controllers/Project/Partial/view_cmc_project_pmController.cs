@@ -90,6 +90,12 @@ namespace PDMS.Project.Controllers
         {//保存並發佈
             return Service.saveRelease(saveModel);
         }
+        [ApiActionPermission()]
+        [HttpPost, Route("isGlnoRepeated")]
+        public int isGlnoRepeated(String glno)
+        {//保存並發佈
+            return Service.isGlnoRepeated(glno);
+        }
 
     }
 }
