@@ -11,6 +11,6 @@ namespace PDMS.Sys.IServices
 {
     public partial interface Isys_notify_queueService
     {
-        WebResponseContent MailJob(IHeaderDictionary header);
+      public  WebResponseContent MailJob(IHeaderDictionary header);
     }
  }
