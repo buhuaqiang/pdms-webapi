@@ -559,7 +559,7 @@ namespace PDMS.Project.Services
         {
             string[] result= new string[2];
             
-            result[0]="D+";
+            result[0]="D*";
             result[1] = "廠商A";
             return result;
         }
@@ -574,7 +574,7 @@ namespace PDMS.Project.Services
         public WebResponseContent UploadEplVali(List<cmc_pdms_project_epl> list, string flag, string project_id)
         {
            
-            if (list.Count > 0)
+            if (list!=null && list.Count > 0)
             {
                 //查詢是否有舊數據，用於判斷是否需要寫曆史表
                 string sqlExist = $@"select count(0) from cmc_pdms_project_epl where project_id='{project_id}'";
