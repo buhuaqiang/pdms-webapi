@@ -21,7 +21,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Key]
        [Display(Name ="PKID")]
-       [Column(TypeName="int")]
+       [Column(TypeName= "Guid")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
        public Guid notifyqueue_id { get; set; }
