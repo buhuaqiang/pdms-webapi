@@ -1,8 +1,10 @@
-﻿using System;
+﻿using SkiaSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection.PortableExecutable;
 using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
@@ -62,14 +64,17 @@ namespace PDMS.Core.Utilities.WebServices
 
             if (webResponse != null && webResponse.StatusCode == HttpStatusCode.OK)
             {
+
+
                 using (Stream newStream = webResponse.GetResponseStream())
                 {
                     if (newStream != null)
                         using (StreamReader reader = new StreamReader(newStream, responseCoding))
                         {
                             string result = reader.ReadToEnd();
-                            return result;
+                            return result;   
                         }
+
                 }
             }
             return null;
