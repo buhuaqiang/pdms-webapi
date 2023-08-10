@@ -55,6 +55,9 @@ namespace PDMS.Core.Configuration
         /// kafka配置
         /// </summary>
         public static Kafka Kafka { get; set; }
+        public static SftpSite SftpSite { get; set; }
+        public static Smtp Smtp { get; set; }
+        public static QuartzHeader quartzHeader { get; set; }
 
 
         /// <summary>
@@ -79,6 +82,9 @@ namespace PDMS.Core.Configuration
             services.Configure<ModifyMember>(configuration.GetSection("ModifyMember"));
             services.Configure<GlobalFilter>(configuration.GetSection("GlobalFilter"));
             services.Configure<Kafka>(configuration.GetSection("Kafka"));
+            services.Configure<SftpSite>(configuration.GetSection("SftpSite"));
+            services.Configure<Smtp>(configuration.GetSection("Smtp"));
+            services.Configure<QuartzHeader>(configuration.GetSection("QuartzHeader"));
 
             var provider = services.BuildServiceProvider();
             IWebHostEnvironment environment = provider.GetRequiredService<IWebHostEnvironment>();
@@ -94,6 +100,10 @@ namespace PDMS.Core.Configuration
 
             GlobalFilter.Actions = GlobalFilter.Actions ?? new string[0];
             Kafka = provider.GetRequiredService<IOptions<Kafka>>().Value ?? new Kafka();
+
+            SftpSite = provider.GetRequiredService<IOptions<SftpSite>>().Value;
+            Smtp = provider.GetRequiredService<IOptions<Smtp>>().Value;
+            quartzHeader = provider.GetRequiredService<IOptions<QuartzHeader>>().Value;
 
             _connection = provider.GetRequiredService<IOptions<Connection>>().Value;
 
@@ -215,5 +225,28 @@ namespace PDMS.Core.Configuration
     public class Topics
     {
         public string TestTopic { get; set; }
+    }
+    public class QuartzHeader
+    {
+        public string Name { get; set; }
+        public string Password { get; set; }
+    }
+    public class Smtp
+    {
+        public string SmtpServer { get; set; }
+        public string SmtpUsername { get; set; }
+        public string SmtpPasswd { get; set; }
+        public string SendFrom { get; set; }
+    }
+    public class SftpSite
+    {
+        public string path { get; set; }
+        public string HostName { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public string VsalesPath { get; set; }
+        public string VSalesHostName { get; set; }
+        public string VSalesUserName { get; set; }
+        public string VSalesPassword { get; set; }
     }
 }
