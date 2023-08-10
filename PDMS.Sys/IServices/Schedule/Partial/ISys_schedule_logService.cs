@@ -11,6 +11,6 @@ namespace PDMS.Sys.IServices
 {
     public partial interface ISys_schedule_logService
     {
-        List<Sys_schedule_log> ScheduleLogData(string task_name);
+      public List<Sys_schedule_log> ScheduleLogData(string task_name);
     }
  }
