@@ -15,6 +15,9 @@ using PDMS.Core.Filters;
 using static PDMS.Project.Services.view_cmc_plan_exec_ganttService;
 using PDMS.System.Services;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Policy;
+using PDMS.Core.Utilities.WebServices;
+using System.Text;
 
 namespace PDMS.Project.Controllers
 {
@@ -89,7 +92,7 @@ namespace PDMS.Project.Controllers
         [ApiActionPermission()]
         [HttpPost, Route("BulkSubmit")]
         public IActionResult BulkSubmit([FromBody] SaveModel saveModel)
-        {
+        {   
             SaveModel saveModels = new SaveModel();
             saveModels = Service.AnalysisData(saveModel);
             return Json(Service.SaveAndSubmit(saveModels, "01"));
