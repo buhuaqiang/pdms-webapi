@@ -14,6 +14,7 @@ using PDMS.Sys.IServices;
 using Microsoft.AspNetCore.Authorization;
 using System.Collections;
 using PDMS.Core.Filters;
+using Autofac.Core;
 
 namespace PDMS.Sys.Controllers
 {
@@ -23,14 +24,12 @@ namespace PDMS.Sys.Controllers
     {
         private readonly ISys_schedule_logService _service;//访问业务代码
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly ISys_schedule_logService _schedule_log;
         private readonly Isys_notify_queueService _queue;
 
         [ActivatorUtilitiesConstructor]
         public Sys_schedule_logController(
             ISys_schedule_logService service,
             IHttpContextAccessor httpContextAccessor,
-            ISys_schedule_logService schedule_log,
              Isys_notify_queueService queue
         )
         : base(service)
@@ -42,7 +41,7 @@ namespace PDMS.Sys.Controllers
         [HttpGet, Route("ScheduleLogData"), AllowAnonymous]
         public ActionResult ScheduleLogData(string task_name)
         {
-            return Json(_schedule_log.ScheduleLogData(task_name));
+            return Json(Service.ScheduleLogData(task_name));
         }
 
         [HttpPost, Route("EmailJob"), AllowAnonymous]
