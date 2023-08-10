@@ -530,27 +530,9 @@ namespace PDMS.Project.Services
             List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
             //todo
             //通過接口查詢到數據,接口參數glno和date，返回的是base64的文件
-            string filePath = "D:\\PDMS\\code\\code\\plm.xlsx";
+            string filePath = "C:\\Source\\PDMS\\code\\code\\AEPL模版.xlsx";
             WebResponseContent Response=EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
-            cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-            epl.upg_id = "ma123";
-            epl.level = 2;
-            epl.part_no = "CW888888";
-            epl.part_name = "方向盤8";
-            //epl.org_code = "A01-01";
-
-
-
-
-            cmc_pdms_project_epl epl1 = new cmc_pdms_project_epl();
-            epl1.upg_id = "ma123";
-            epl1.level = 2;
-            epl1.part_no = "CW111111";
-            epl1.part_name = "底盤1";
-            //epl1.org_code = "A01-01";
-            list.Add(epl);
-            list.Add(epl1);
-            //list = Response.Data as List<cmc_pdms_project_epl>;
+            list = Response.Data as List<cmc_pdms_project_epl>;
 
             return UploadEplVali(list, "2", project_id);
         }
