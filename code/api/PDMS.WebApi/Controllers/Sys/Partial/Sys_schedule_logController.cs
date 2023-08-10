@@ -41,7 +41,7 @@ namespace PDMS.Sys.Controllers
         [HttpGet, Route("ScheduleLogData"), AllowAnonymous]
         public ActionResult ScheduleLogData(string task_name)
         {
-            return Json(Service.ScheduleLogData(task_name));
+            return Json(Service.ScheduleLogData(task_name)); 
         }
 
         [HttpPost, Route("EmailJob"), AllowAnonymous]
