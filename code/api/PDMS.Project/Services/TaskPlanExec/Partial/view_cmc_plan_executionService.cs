@@ -45,7 +45,7 @@ namespace PDMS.Project.Services
             //查询所有del_flag!=1
             PageGridData<view_cmc_plan_execution> pageGridData = new PageGridData<view_cmc_plan_execution>();
             List<view_cmc_plan_execution> OCList = new List<view_cmc_plan_execution>();
-            string status = "";
+            string status = "", glno="", project_name="", part_no="", part_name="";
 
             /*解析查询条件*/
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
@@ -60,7 +60,20 @@ namespace PDMS.Project.Services
                         {
                             case "status":
                                 status = sp.Value;
-                                break;               
+                                break;
+                            case "glno":
+                                glno = sp.Value;
+                                break;
+                            case "project_name":
+                                project_name = sp.Value;
+                                break;
+                            case "part_no":
+                                part_no = sp.Value;
+                                break;
+                            case "part_name":
+                                part_name = sp.Value;
+                                break;
+
                         }
                     }
                 }
@@ -92,12 +105,28 @@ and task.start_date  is not null  and task.end_date is not null
             {
                 if (status == "0")
                 {
-                    QuerySql += @" and DATEDIFF(day, GETDATE(), t_end_date)<=warn and  GETDATE()<= t_end_date";
+                    QuerySql += @" and DATEDIFF(day, GETDATE(), task.end_date)<=warn and  GETDATE()<= task.end_date";
                 }
                 else
                 {
-                    QuerySql += @"  and DATEDIFF(day, t_end_date , GETDATE())>=warn_leader";
+                    QuerySql += @"  and DATEDIFF(day, task.end_date , GETDATE())>=task.warn_leader";
                 }
+            }
+            if (!string.IsNullOrEmpty(glno))
+            {
+                QuerySql += @$" and  main.GLNO  like '%{glno}%'";
+            }
+            if (!string.IsNullOrEmpty(project_name))
+            {
+                QuerySql += @$" and  main.project_name  like '%{project_name}%'";
+            }
+            if (!string.IsNullOrEmpty(part_no))
+            {
+                QuerySql += @$" and  epl.part_no  like '%{part_no}%'";
+            }
+            if (!string.IsNullOrEmpty(part_name))
+            {
+                QuerySql += @$" and  epl.part_name like '%{part_name}%'";
             }
             string sql = $@"SELECT Count(*) as dbid  FROM ( {QuerySql}) b ";
             int TotalList =Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
