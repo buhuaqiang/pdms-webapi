@@ -228,7 +228,8 @@ namespace PDMS.Project.Services
 
         }
 
-        public List<cmc_pdms_project_epl> getEpl(Object obj)//根據條件查詢epl
+
+            public List<cmc_pdms_project_epl> getEpl(Object obj)//根據條件查詢epl
         {
             var data = JObject.Parse(obj.ToString());
             var projectId = data["projectId"].ToString();
@@ -1121,6 +1122,23 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
 
             gateslList = repository.DapperContext.QueryList<cmc_pdms_project_gate>(sql, null);
+            return gateslList;
+        }
+
+        public List<cmc_pdms_project_epl_car_model> getCarModel(Object obj)//獲取細車型
+        {
+            List<cmc_pdms_project_epl_car_model> gateslList = new List<cmc_pdms_project_epl_car_model>();
+            UserInfo userInfo = UserContext.Current.UserInfo;
+           var departMentCode = userInfo.DepartmentCode;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+            var projectStatus = data["projectStatus"].ToString();
+
+
+            string sql = @$"select  *  from   cmc_pdms_project_epl_car_model where  epl_id in (select  epl_id  from  cmc_pdms_project_epl where project_id='"+ projectId + "' and epl_phase!='01' and  org_code='"+ departMentCode + "')";
+
+
+            gateslList = repository.DapperContext.QueryList<cmc_pdms_project_epl_car_model>(sql, null);
             return gateslList;
         }
 

@@ -57,5 +57,8 @@ namespace PDMS.Project.IServices
 
 
         public WebResponseContent editEo(Guid guid, String project_status, decimal newEoFee, decimal eoFee);
+
+        public List<cmc_pdms_project_epl_car_model> getCarModel(Object obj);
+
     }
- }
+}

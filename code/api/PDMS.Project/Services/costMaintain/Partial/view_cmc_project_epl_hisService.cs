@@ -80,12 +80,12 @@ namespace PDMS.Project.Services
 		                cmc_pdms_project_epl_his epl_his
 		                LEFT JOIN cmc_pdms_project_main main ON main.project_id= epl_his.project_id 
 	                WHERE
-		                epl_his.project_id= '{project_id}' 
+		                epl_his.project_id= '{project_id}' AND epl_his.kd_type like 'D*%'
 	                ) AS tm
 	                LEFT JOIN cmc_pdms_project_epl epl ON epl.project_id= '{project_id}' 
 	                AND epl.epl_phase= epl_phase1 
                 WHERE
-	                epl.kd_type like 'D%' " ;
+	                epl.kd_type like 'D*%' " ;
             }
             
             return base.GetPageData(options);
