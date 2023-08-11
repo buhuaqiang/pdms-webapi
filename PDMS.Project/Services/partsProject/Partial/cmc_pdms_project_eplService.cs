@@ -411,11 +411,11 @@ namespace PDMS.Project.Services
             string sql = "";
             if (projectStatus == "01")
             {//專案建立獲取開發清冊數據
-                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and project_id='" + projectId + "' and Final_version_status='2' and kd_type like 'D%' ";
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='01' and project_id='" + projectId + "' and Final_version_status='2' and kd_type like 'D*%' ";
             }
             else
             {//專案啟動獲取開發清冊數據
-                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'  and Final_version_status='2'  and kd_type like 'D%' ";
+                sql += @$"select  * from  cmc_pdms_project_epl where epl_phase='02' and project_id='" + projectId + "'  and Final_version_status='2'  and kd_type like 'D*%' ";
             }
 
             eplList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(sql, null);
