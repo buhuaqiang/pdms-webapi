@@ -355,8 +355,7 @@ namespace PDMS.Project.Services
             var info = new WebResponseContent();
             var glno = saveModel.MainData["glno"].ToString();
             var isRep = isGlnoRepeated(glno);
-            if (isRep == 0)
-            {            
+          
                 if (!saveModel.MainData.ContainsKey("project_id"))
                 {
                     saveModel.MainData.Add("project_id", "");
@@ -369,6 +368,10 @@ namespace PDMS.Project.Services
 
                 if (string.IsNullOrEmpty(project_id))
                 {//第一次新增時直接保存並發佈
+                    if (isRep != 0)
+                    {
+                        return webResponse.Error("專案編號不可重複!");
+                    }
                     saveModel.MainData["release_status"] = "02";
                     saveModel.MainData["project_status"] = "01";
                     gateDates.ForEach(x =>
@@ -507,11 +510,7 @@ namespace PDMS.Project.Services
                     }
 
                 }
-            }
-            else
-            {
-                return webResponse.Error("專案編號不可重複!");
-            }
+
            // return info;
             return webResponse.OK();
         }
