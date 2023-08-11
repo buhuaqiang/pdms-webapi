@@ -92,14 +92,14 @@ case when ((DATEDIFF(day,  GETDATE(), tsk.end_date))<=tsk.warn and Convert(VARCH
 from cmc_pdms_project_task tsk
 left join cmc_common_task  task on tsk.task_id=task.task_id
 left join cmc_common_template_mapping map on map.task_id=tsk.task_id and 
-set_id in (SELECT set_id from cmc_common_task_template_set where template_id=(SELECT main_plan_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01'))
+set_id in (SELECT set_id from cmc_common_task_template_set where template_id=(SELECT main_plan_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01'))
 left join cmc_common_task_template_set sets on map.set_id=sets.set_id
 left join Sys_DictionaryList sl2 ON ( sl2.DicValue= sets.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = sets.set_type ))
 left join cmc_common_task_template_set parent on sets.parent_set_id=parent.set_id
 left join Sys_DictionaryList sl3 ON ( sl3.DicValue= parent.set_value AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
-left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
-left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
-where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')";
+left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
+left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
+where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')";
 
             if (!string.IsNullOrEmpty(start_date))
             {
