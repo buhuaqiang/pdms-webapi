@@ -92,7 +92,7 @@ from  cmc_pdms_project_task task
 left join cmc_pdms_project_epl epl on epl.epl_id=task.epl_id
 left join cmc_pdms_project_main main on main.project_id=epl.project_id
 left join Sys_User us on epl.dev_taker_id=us.User_id
-where  epl.kd_type like 'D%'  and  epl.epl_phase='02'  and epl.task_define_approve_status='01'
+where  epl.kd_type like 'D*%'  and  epl.epl_phase='02'  and epl.task_define_approve_status='01'
 and task.start_date  is not null  and task.end_date is not null 
  ";
             UserInfo userList = UserContext.Current.UserInfo;
