@@ -677,9 +677,11 @@ namespace PDMS.Project.Services
             { //開發清冊
                 string devTaker = " and  epl.dev_taker_id='" + userId + "'";
                 QuerySql += "  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1 ";
-                QuerySql += devTaker;
+                if (userId!=1)
+                {
+                    QuerySql += devTaker;
+                }                
                 QuerySql += where;
-
             }
 
             return base.GetPageData(options);
@@ -729,7 +731,7 @@ namespace PDMS.Project.Services
                 org.user_id = "201995";
                 org.user_name = "鄧宇柯";
                 org.user_role_id = "A1551";
-                org.user_role_name = "系統工程師";
+                org.user_role_name = "系統工程師ss1";
 
                 cmc_pdms_project_org org1 = new cmc_pdms_project_org();
                 org1.org_code = "D148";
@@ -737,7 +739,7 @@ namespace PDMS.Project.Services
                 org1.user_id = "775928";
                 org1.user_name = "林敏男";
                 org1.user_role_id = "A2582";
-                org1.user_role_name = "系統工程師";
+                org1.user_role_name = "系統工程師ss12";
                 list.Add(org1);
                 list.Add(org);
                 return webResponse.OKData(list);
