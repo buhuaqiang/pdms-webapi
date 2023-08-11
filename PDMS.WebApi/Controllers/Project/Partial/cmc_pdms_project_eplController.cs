@@ -86,7 +86,13 @@ namespace PDMS.Project.Controllers
             return Service.getFinalStatus(obj);
         }
 
-        
+        //查詢細車型
+        [ApiActionPermission()]
+        [HttpPost, Route("getCarModel")]
+        public List<cmc_pdms_project_epl_car_model> getCarModel([FromBody] Object obj)
+        {
+            return Service.getCarModel(obj);
+        }
 
     }
 }

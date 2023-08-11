@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using PDMS.Core.DBManager;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 
 namespace PDMS.Sys.Services
 {
@@ -181,6 +182,24 @@ namespace PDMS.Sys.Services
             }
             _webResponseContent.Data = saveData;
             return _webResponseContent.OK("操作成功");
+        }
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            if(keys!= null && keys.Length > 0) { 
+          
+                string ids=string.Join("','", keys);
+                string sql = $@"SELECT count(0) from cmc_pdms_project_task WHERE template_id=
+                            (SELECT distinct template_id from cmc_common_task_template_set where set_id in 
+                                (SELECT set_id from cmc_common_template_mapping WHERE mapping_id in('{ids}')))";
+                var count3 = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+                if (count3 > 0)
+                {
+                    return _webResponseContent.Error("模板被引用，不允許刪除任務");
+                }
+            }
+           
+            return base.Del(keys, delList);
         }
     }
 }
