@@ -461,6 +461,7 @@ namespace PDMS.Project.Services
                         epl.fs_3 = item.fs_3;
                         epl.fs_remark = item.fs_remark;
                         epl.is_eo = item.is_eo;
+                        epl.submit_status = item.submit_status;
                         epl.original_part_no = item.original_part_no;
                         epl.del_flag = item.del_flag;
                         epl.currency = item.currency;
