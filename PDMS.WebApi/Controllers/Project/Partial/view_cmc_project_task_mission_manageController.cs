@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Project.Controllers
 {
@@ -29,5 +30,14 @@ namespace PDMS.Project.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
+
+        [Route("getProjectTask"), HttpPost]
+        [ApiActionPermission()]
+        public ActionResult GetList([FromBody] object saveModel)
+        {
+            List<view_cmc_project_task_mission_manage> list = _service.getProjectTask(saveModel);
+            return Json(list);
+        }
+
     }
 }

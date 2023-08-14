@@ -18,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -38,6 +39,34 @@ namespace PDMS.Project.Services
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
+
+        public List<view_cmc_project_task_mission_manage> getProjectTask(object saveModel)
+        {
+            List<view_cmc_project_task_mission_manage> Result = new List<view_cmc_project_task_mission_manage>();
+            string sql = $@"SELECT
+	                                       * 
+                                         FROM
+	                                       view_cmc_project_task_mission_manage                
+                                         WHERE 1=1 ";
+
+            var data = JObject.Parse(saveModel.ToString());
+            var sets = data["set_ids"];
+            var template_id = data["template_id"].ToString();
+            if (!string.IsNullOrEmpty(template_id))
+            {
+                sql += $" AND template_id='{template_id}'";
+            }
+            if (sets != null && sets.Count() > 0)
+            {
+                string ids = string.Join("','", sets);
+                sql += $" AND set_id in ('{ids}')";
+            }
+
+            sql += $" ORDER BY mapOrder DESC";
+            Result = repository.DapperContext.QueryList<view_cmc_project_task_mission_manage>(sql, null);
+            return Result;
+        }
+
         public override PageGridData<view_cmc_project_task_mission_manage> GetPageData(PageDataOptions options)
         {
             string epl_id = "";
