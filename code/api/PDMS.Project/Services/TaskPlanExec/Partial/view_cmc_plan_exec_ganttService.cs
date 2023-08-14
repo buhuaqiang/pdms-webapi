@@ -159,8 +159,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.set_value, x.start_date, x.end_date, x.project_task_id, x.task_status }).ToList();
 
                 var gateIndex = 0;
-                var SetIndex = 1;
-                var taskIndex = 2;
+                var SetIndex = 50;
+                var taskIndex =100;
 
                 List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
