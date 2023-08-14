@@ -35,10 +35,18 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string project_name { get; set; }
 
-       /// <summary>
-       ///零件編號
-       /// </summary>
-       [Display(Name ="零件編號")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "template_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? template_id { get; set; }
+
+        /// <summary>
+        ///零件編號
+        /// </summary>
+        [Display(Name ="零件編號")]
        [MaxLength(100)]
        [Column(TypeName="varchar(100)")]
        public string part_no { get; set; }
@@ -65,7 +73,7 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="狀態")]
        [MaxLength(2)]
        [Column(TypeName="varchar(2)")]
-       public string approve_status { get; set; }
+       public string task_define_approve_status { get; set; }
 
        /// <summary>
        ///

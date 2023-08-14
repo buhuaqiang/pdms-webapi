@@ -16,11 +16,10 @@ namespace PDMS.Entity.DomainModels
     [Entity(TableCnName = "模板任務映射",TableName = "view_template_task_mapping",DBServer = "SysDbContext")]
     public partial class view_template_task_mapping:SysEntity
     {
-
         /// <summary>
-        ///階段
-        /// </summary>
-        [Display(Name ="階段")]
+       ///階段
+       /// </summary>
+       [Display(Name ="階段")]
        [MaxLength(100)]
        [Column(TypeName="nvarchar(100)")]
        public string dicName { get; set; }
@@ -29,9 +28,47 @@ namespace PDMS.Entity.DomainModels
        ///任務名稱
        /// </summary>
        [Display(Name ="任務名稱")]
-       [MaxLength(50)]
-       [Column(TypeName="varchar(50)")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
        public string task_name { get; set; }
+
+       /// <summary>
+       ///承辦預警(天)
+       /// </summary>
+       [Display(Name ="承辦預警(天)")]
+       [Column(TypeName="int")]
+       public int? warn { get; set; }
+
+       /// <summary>
+       ///上級預警(天)
+       /// </summary>
+       [Display(Name ="上級預警(天)")]
+       [Column(TypeName="int")]
+       public int? warn_leader { get; set; }
+
+       /// <summary>
+       ///是否允許刪除
+       /// </summary>
+       [Display(Name ="是否允許刪除")]
+       [MaxLength(1)]
+       [Column(TypeName="char(1)")]
+       public string is_delete_able { get; set; }
+
+       /// <summary>
+       ///任務描述
+       /// </summary>
+       [Display(Name ="任務描述")]
+       [MaxLength(100)]
+       [Column(TypeName="varchar(100)")]
+       public string task_desc { get; set; }
+
+       /// <summary>
+       ///是否重點審核項目
+       /// </summary>
+       [Display(Name ="是否重點審核項目")]
+       [MaxLength(1)]
+       [Column(TypeName="char(1)")]
+       public string is_audit_key { get; set; }
 
        /// <summary>
        ///日程設定(起)
@@ -39,7 +76,6 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="日程設定(起)")]
        [MaxLength(1)]
        [Column(TypeName="varchar(1)")]
-       [Required(AllowEmptyStrings=false)]
        public string start_date { get; set; }
 
        /// <summary>
@@ -48,26 +84,7 @@ namespace PDMS.Entity.DomainModels
        [Display(Name ="日程設定(迄)")]
        [MaxLength(1)]
        [Column(TypeName="varchar(1)")]
-       [Required(AllowEmptyStrings=false)]
        public string end_date { get; set; }
-
-       /// <summary>
-       ///是否允許刪除
-       /// </summary>
-       [Display(Name ="是否允許刪除")]
-       [MaxLength(1)]
-       [Column(TypeName="char(1)")]
-       [Editable(true)]
-       public string is_delete_able { get; set; }
-
-       /// <summary>
-       ///是否重點審核項目
-       /// </summary>
-       [Display(Name ="是否重點審核項目")]
-       [MaxLength(1)]
-       [Column(TypeName="char(1)")]
-       [Editable(true)]
-       public string is_audit_key { get; set; }
 
        /// <summary>
        ///
@@ -203,20 +220,6 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        public string is_part_handle { get; set; }
-
-       /// <summary>
-       ///承辦預警(天)
-       /// </summary>
-       [Display(Name ="承辦預警(天)")]
-       [Column(TypeName="int")]
-       public int? warn { get; set; }
-
-       /// <summary>
-       ///上級預警(天)
-       /// </summary>
-       [Display(Name ="上級預警(天)")]
-       [Column(TypeName="int")]
-       public int? warn_leader { get; set; }
 
        
     }

@@ -25,10 +25,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string task_name { get; set; }
 
-       /// <summary>
-       ///前置任務
-       /// </summary>
-       [Display(Name ="前置任務")]
+        /// <summary>
+        ///任務
+        /// </summary>
+        [Display(Name = "任務描述")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        [Editable(true)]
+        public string task_desc { get; set; }
+
+        /// <summary>
+        ///前置任務
+        /// </summary>
+        [Display(Name ="前置任務")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
