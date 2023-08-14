@@ -35,6 +35,15 @@ namespace PDMS.Entity.DomainModels
         public string task_desc { get; set; }
 
         /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "set_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public Guid set_id { get; set; }
+
+        /// <summary>
         ///前置任務
         /// </summary>
         [Display(Name ="前置任務")]
@@ -42,6 +51,7 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
        public string pre_task_name { get; set; }
+
 
        /// <summary>
        ///
@@ -173,10 +183,18 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public DateTime? end_date { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="order_no")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "mapOrder")]
+        [Column(TypeName = "int")]
+        [Editable(true)]
+        public int? mapOrder { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="order_no")]
        [Column(TypeName="int")]
        [Editable(true)]
        public int? order_no { get; set; }

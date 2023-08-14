@@ -9,5 +9,6 @@ namespace PDMS.Project.IServices
 {
     public partial interface Iview_cmc_project_task_mission_manageService
     {
+        List<view_cmc_project_task_mission_manage> getProjectTask(object saveModel);
     }
  }
