@@ -89,7 +89,8 @@ namespace PDMS.Sys.Services
 	                '' AS start_date,
 	                '' AS end_date,
 					task.warn,
-	                task.warn_leader                
+	                task.warn_leader,
+	                task_desc
               FROM
 	                cmc_common_template_mapping map
 	                LEFT JOIN cmc_common_task task ON map.task_id= task.task_id 

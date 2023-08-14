@@ -124,6 +124,44 @@ namespace PDMS.Project.Services
         }
         public WebResponseContent submitReview(SaveModel saveModel)
         {
+            var MainData = saveModel.MainData;
+            var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (!string.IsNullOrEmpty(epl_id))
+            {
+                try
+                {
+                    JArray epl_idArray = JArray.Parse(epl_id);
+                    foreach (string item in epl_idArray)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
+                        if (epl != null)
+                        {
+                            epl.task_define_approve_status = "02";
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.task_define_approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
             return ResponseContent.OK();
         }
         public WebResponseContent setPartTaker(SaveModel saveModel)
@@ -235,7 +273,6 @@ namespace PDMS.Project.Services
 
         public WebResponseContent addMissionData(SaveModel saveModel)
         {
-            Console.WriteLine("addMissionData");
             var MainDatas = saveModel.MainDatas;
             //var epl_id = saveModel.MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
             var epl_id = saveModel.MainData["epl_id"] == null ? "" : saveModel.MainData["epl_id"].ToString();
@@ -324,13 +361,15 @@ namespace PDMS.Project.Services
                                     if (!taskExists)
                                     {
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                                        dateFormat(item, pTask);
+                                        //dateFormat(item, pTask);
                                         pTask.project_task_id = Guid.NewGuid();
                                         pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
                                         pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
                                         pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString());
                                         pTask.action_type = "add";
                                         pTask.approve_status = "00";
+                                        pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
+                                        pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
                                         pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
                                         pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString();
                                         pTask.FormId = item["FormId"] == null ? Guid.Parse("") : Guid.Parse(item["FormId"].ToString());
@@ -342,7 +381,9 @@ namespace PDMS.Project.Services
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
                                         Guid task_id = Guid.Parse(item["task_id"].ToString());
                                         pTask = existTaskList.FirstOrDefault(t => t.task_id == task_id);
-                                        dateFormat(item, pTask);
+                                        pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
+                                        pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
+                                        //dateFormat(item, pTask);
                                         updateList.Add(pTask);
                                     }
                                 }
