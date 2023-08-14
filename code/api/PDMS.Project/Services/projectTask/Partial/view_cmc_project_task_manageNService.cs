@@ -138,7 +138,7 @@ namespace PDMS.Project.Services
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
                         if (epl != null)
                         {
-                            epl.task_define_approve_status = "02";
+                            epl.task_define_approve_status = "01";
                         }
                         eplList.Add(epl);
                     }
