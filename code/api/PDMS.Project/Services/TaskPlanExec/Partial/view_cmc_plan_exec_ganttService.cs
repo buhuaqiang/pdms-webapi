@@ -176,8 +176,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     GanttInfo data = new GanttInfo();
                     data.id = gateIndex;
                     data.task_name = item.Key.gate_name;
-                    data.start_date = item.Key.gate_start_date.ToString("yyyy-MM-dd");
-                    data.end_date = item.Key.gate_end_date.ToString("yyyy-MM-dd");
+                    data.start_date = item.Key.gate_start_date==null?"": item.Key.gate_start_date.ToString("yyyy-MM-dd");
+                    data.end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
                     data.open = true;
                     data.type = "project";
                     data.status = "project";
@@ -248,8 +248,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     GanttInfo data = new GanttInfo();
                     data.id = taskIndex;
                     data.task_name = item.Key.task_name;
-                    data.start_date = item.Key.start_date.ToString("yyyy-MM-dd");
-                    data.end_date = item.Key.end_date.ToString("yyyy-MM-dd");
+                    data.start_date = item.Key.start_date==null?"": item.Key.start_date.ToString("yyyy-MM-dd");
+                    data.end_date = item.Key.end_date == null ? "" : item.Key.end_date.ToString("yyyy-MM-dd");
                     data.parent = index;
                     data.type = "task";
                     data.status = "task";
