@@ -75,8 +75,9 @@ namespace PDMS.Project.Services
                             else
                             {//部車型窗口保存操作
                                 if (item["org_code"] != null && item["org_code"].ToString() == item["new_org_code"].ToString())
-                                {
+                                {//變更kd、組別、繼承件號或者部門變回原部門
                                     epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
+                                    epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
                                     epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
                                     epl.new_org_code = epl.new_org_code;
@@ -84,7 +85,7 @@ namespace PDMS.Project.Services
                                     epl.org_change_approve_status = "02";
                                 }
                                 else
-                                {
+                                {//變更了部門
                                     epl.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
                                     epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
                                     epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
