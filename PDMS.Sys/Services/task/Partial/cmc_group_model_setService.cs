@@ -57,28 +57,39 @@ namespace PDMS.Sys.Services
         {
            
             UserInfo userList = UserContext.Current.UserInfo;
-            cmc_group_model_set queueEntity = new cmc_group_model_set()
-            {
-                group_set_id = Guid.NewGuid(),
-                DepartmentCode= saveDataModel.MainData["DepartmentCode"].ToString(),
-                set_type = "01",//目前只有一種設置：01組窗口，預留字段，方便以後擴展用
-                user_id = int.Parse(saveDataModel.MainData["user_id"].ToString()),
-                model_type = saveDataModel.MainData["model_type"].ToString(),
-                CreateDate = DateTime.Now,
-                CreateID = userList.User_Id,
-                Creator = userList.UserTrueName
-            };
-            List<cmc_group_model_set> orderLists = repository.DbContext.Set<cmc_group_model_set>().Where(x => x.DepartmentCode == queueEntity.DepartmentCode && x.model_type == queueEntity.model_type).ToList();
-            //自定义逻辑
-            if (orderLists != null && orderLists.Count > 0)
+            string deptCode = saveDataModel.MainData["DepartmentCode"].ToString();
+            string model_type = saveDataModel.MainData["model_type"].ToString();
+            string[] types = model_type.Split(',');
+            string tt = String.Join("','",types);
+            string sql = $@"select count(0) from cmc_group_model_set where   DepartmentCode='{deptCode}' and model_type in ('{tt}')";
+            
+            var count3 = _repository.DapperContext.ExecuteScalar(sql, null);
+            if (Convert.ToInt32(count3) > 0)            
             {//
                 return _responseContent.Error("已設置過組窗口，不允許重複設置");
             }
 
+
             SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
             List<cmc_group_model_set> List = new List<cmc_group_model_set>();
+            foreach (string type in types)
+            {
+
+                cmc_group_model_set queueEntity = new cmc_group_model_set()
+                {
+                    group_set_id = Guid.NewGuid(),
+                    DepartmentCode =deptCode ,
+                    set_type = "01",//目前只有一種設置：01組窗口，預留字段，方便以後擴展用
+                    user_id = int.Parse(saveDataModel.MainData["user_id"].ToString()),
+                    model_type = type.Trim(),
+                    CreateDate = DateTime.Now,
+                    CreateID = userList.User_Id,
+                    Creator = userList.UserTrueName
+                };
+                List.Add(queueEntity);
+            }
+                    
            
-            List.Add(queueEntity);
             repository.DapperContext.BeginTransaction((r) =>
             {
                 DBServerProvider.SqlDapper.BulkInsert(List, "cmc_group_model_set");

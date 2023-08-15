@@ -27,7 +27,7 @@ namespace PDMS.Entity.DomainModels
        public Guid task_id { get; set; }
 
         /// <summary>
-        ///專案類型(1-車型專案，2-數位轉型)
+        ///專案類型(1-車型專案)
         /// </summary>
         [Display(Name = "專案類型")]
         [MaxLength(100)]
@@ -39,8 +39,8 @@ namespace PDMS.Entity.DomainModels
         ///任務名稱
         /// </summary>
         [Display(Name ="任務名稱")]
-       [MaxLength(100)]
-       [Column(TypeName="varchar(100)")]
+       [MaxLength(200)]
+       [Column(TypeName="varchar(200)")]
        [Editable(true)]
        public string task_name { get; set; }
 

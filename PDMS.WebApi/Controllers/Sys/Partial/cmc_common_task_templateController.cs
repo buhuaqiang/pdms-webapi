@@ -44,5 +44,13 @@ namespace PDMS.Sys.Controllers
         {
             return base.GetPageData(loadData);
         }
+
+        //
+        [ApiActionPermission()]
+        [HttpPost, Route("bathChangeStatus")]
+        public ActionResult bathChangeStatus([FromBody] object saveModel)
+        {
+            return Json(_service.bathChangeStatus(saveModel));
+        }
     }
 }
