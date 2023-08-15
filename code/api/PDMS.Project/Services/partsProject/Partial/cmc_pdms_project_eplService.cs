@@ -80,9 +80,8 @@ namespace PDMS.Project.Services
                                     epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
                                     epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
-                                    epl.new_org_code = epl.new_org_code;
                                     epl.submit_status = "0";
-                                    epl.org_change_approve_status = "02";
+                                    epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
                                 }
                                 else
                                 {//變更了部門
@@ -310,11 +309,16 @@ namespace PDMS.Project.Services
 
                         if (epl != null)
                         {
-                            epl.submit_status = "1";
-
-
-                            //部門變更邏輯待完善
-
+                            if (epl.org_code == epl.new_org_code)
+                            {
+                                epl.submit_status = "1";
+                                epl.org_change_approve_status = item["org_change_approve_status"].ToString();
+                            }
+                            else
+                            { //部門變更邏輯待完善
+                                epl.submit_status = item["submit_status"].ToString();
+                                epl.org_change_approve_status = "01";
+                            }
                         }
                         eplList.Add(epl);
                     }
@@ -328,7 +332,7 @@ namespace PDMS.Project.Services
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status });
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status,x.org_change_approve_status });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
