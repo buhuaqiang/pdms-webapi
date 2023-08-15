@@ -474,14 +474,19 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
         }
 
         public SaveModel AnalysisData(SaveModel saveModel)
-        { 
+        {
+            var TaskIds = "";
             if (saveModel.MainData.ContainsKey("checkVal"))
-            {        
+            {
                 var str = saveModel.MainData["checkVal"].ToString();
-                JArray jarry=JArray.Parse(str);
-                var TaskIds = string.Join("''", jarry);
-
-                string sql = $@"select ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,ptask.approve_status,
+                JArray jarry = JArray.Parse(str);
+                TaskIds = string.Join("''", jarry);
+            }
+            else 
+            {
+                TaskIds = saveModel.MainData["project_task_id"].ToString();
+            }
+            string sql = $@"select ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,ptask.approve_status,
                   ops.FormId,ops.FormCode,ops.FormOptions,
                   obj.FormCollectionId,obj.FormData ,task.flow_code,epl.part_taker_id from  cmc_pdms_project_task  ptask
                  left join  cmc_pdms_project_epl epl on ptask.epl_id=epl.epl_id
@@ -489,10 +494,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                  left join  FormDesignOptions  ops on ptask.FormId=ops.FormId
                  LEFT JOIN  FormCollectionObject  obj on ptask.FormCollectionId=obj.FormCollectionId
                  where project_task_id in('{TaskIds}')";
-                var list = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql,null);
-                saveModel.MainDatas = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(list));
-               
-            }
+            var list = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
+            saveModel.MainDatas = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(list));
 
             return saveModel;
         }
