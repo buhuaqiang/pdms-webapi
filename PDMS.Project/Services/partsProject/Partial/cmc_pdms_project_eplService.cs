@@ -52,6 +52,7 @@ namespace PDMS.Project.Services
         }
 
         public WebResponseContent ResponseContent = new WebResponseContent();
+
         public override WebResponseContent Update(SaveModel saveModel)
         {
             var MainDatas = saveModel.MainDatas;
@@ -313,11 +314,11 @@ namespace PDMS.Project.Services
                             if (epl.org_code == epl.new_org_code)
                             {
                                 epl.submit_status = "1";
-                                epl.org_change_approve_status = item["org_change_approve_status"].ToString();
+                                epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
                             }
                             else
                             { //部門變更邏輯待完善
-                                epl.submit_status = item["submit_status"].ToString();
+                                epl.submit_status = item["submit_status"] == null ? "" : item["submit_status"].ToString();
                                 epl.org_change_approve_status = "01";
                             }
                         }
