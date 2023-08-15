@@ -58,12 +58,13 @@ namespace PDMS.Project.Services
                 if (item["org_code"] == item["new_org_code"]) {//部门变更的不用校验
                     object eplId = item["epl_id"];
                     eplIds += "'" + eplId + "'" + ",";
-                }
-               
+                }  
             }
-            eplIds = eplIds.Substring(0, eplIds.Length - 1);
-            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl where epl_id in ("+ eplIds + ")  and (kd_type='' or group_code=''  or kd_type is null or group_code is null ) and action_type !='delete' ";
-            count =Convert.ToInt32( repository.DapperContext.ExecuteScalar(sql, null));
+            if (eplIds != "") {
+                eplIds = eplIds.Substring(0, eplIds.Length - 1);
+                string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl where epl_id in (" + eplIds + ")  and (kd_type='' or group_code=''  or kd_type is null or group_code is null ) and action_type !='delete' ";
+                count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            }
             return count;
         }
 
