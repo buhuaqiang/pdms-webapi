@@ -83,11 +83,11 @@ namespace PDMS.System.Services
             {
                 if (_repository.Exists(x => x.DepartmentId == dept.ParentId && x.DepartmentId == dept.DepartmentId))
                 {
-                    return webResponse.Error("上级组织不能选择自己");
+                    return webResponse.Error("上級組織不能選擇自己");
                 }
                 if (_repository.Exists(x => x.ParentId == dept.DepartmentId) && _repository.Exists(x => x.DepartmentId == dept.ParentId))
                 {
-                    return webResponse.Error("不能选择此上级组织");
+                    return webResponse.Error("不能選擇此上級組織");
                 }
                 return webResponse.OK();
             };

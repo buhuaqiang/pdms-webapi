@@ -79,10 +79,18 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public int? Enable { get; set; }
 
-       /// <summary>
-       ///備注
-       /// </summary>
-       [Display(Name ="備注")]
+        /// <summary>
+        ///是否可用
+        /// </summary>
+        [Display(Name = "是否零品部門")]
+        [Column(TypeName = "int")]
+        [Editable(true)]
+        public int? IsPartDept { get; set; }
+
+        /// <summary>
+        ///備注
+        /// </summary>
+        [Display(Name ="備注")]
        [MaxLength(500)]
        [Column(TypeName="nvarchar(500)")]
        [Editable(true)]
