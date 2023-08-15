@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Core.DBManager;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -157,6 +158,52 @@ namespace PDMS.Project.Services
            
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
             return count;     
+        }
+
+
+        public WebResponseContent closeProject(object obj)
+        {//結案
+
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+
+            List<cmc_pdms_project_main> mainProject = new List<cmc_pdms_project_main>();
+           
+                try
+                {
+
+                    cmc_pdms_project_main project = new cmc_pdms_project_main();
+                    project = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_id == Guid.Parse(projectId)).FirstOrDefault();
+
+                        if (project != null)
+                        {
+                        project.project_status = "05";
+                        }
+                    mainProject.Add(project);
+                    
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "結案前装箱  cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(mainProject, x => new { x.project_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "結案執行 cmc_pdms_project_main 表，cmc_pdms_project_mainService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return ResponseContent.Error();
+                }
+
+           
+            return ResponseContent.OK();
         }
     }
 }
