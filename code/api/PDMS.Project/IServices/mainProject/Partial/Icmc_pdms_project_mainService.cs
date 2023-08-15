@@ -15,5 +15,7 @@ namespace PDMS.Project.IServices
         public WebResponseContent eoFee(SaveModel saveModel);
 
         public int isLoadDate(SaveModel saveModel);
+
+        public WebResponseContent closeProject(object obj);
     }
  }
