@@ -85,6 +85,7 @@ tsk.warn,
 tsk.warn_leader,
 tsk.approve_status,
 tsk.done_status,
+tsk.is_audit_key,
 users.User_Id,
 gate.gate_start_date,
 gate.gate_end_date,
@@ -156,7 +157,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.set_value, x.start_date, x.end_date, x.project_task_id, x.task_status }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.set_value, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key }).ToList();
 
                 var gateIndex = 0;
                 var SetIndex = 50;
@@ -246,7 +247,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
                         GanttInfo data = new GanttInfo();
                         data.id = taskIndex;
-                        data.task_name = item.Key.task_name;
+                        data.task_name = item.Key.is_audit_key == "1" ? item.Key.task_name + " (重點項目)" : item.Key.task_name;
                         data.start_date = item.Key.start_date == null ? "" : item.Key.start_date.ToString("yyyy-MM-dd");
                         data.end_date = item.Key.end_date == null ? "" : item.Key.end_date.ToString("yyyy-MM-dd");
                         data.parent = index;
