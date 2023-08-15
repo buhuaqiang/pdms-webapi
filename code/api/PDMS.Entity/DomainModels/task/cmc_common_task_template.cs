@@ -27,7 +27,7 @@ namespace PDMS.Entity.DomainModels
        public Guid template_id { get; set; }
 
         /// <summary>
-        ///專案類型(1-車型專案，2-數位轉型)
+        ///專案類型(1-車型專案)
         /// </summary>
         [Display(Name = "專案類型")]
         [MaxLength(100)]
@@ -53,10 +53,20 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string template_desc { get; set; }
 
-       /// <summary>
-       ///適用部門
-       /// </summary>
-       [Display(Name ="適用部門")]
+
+        /// <summary>
+        ///启用状态
+        /// </summary>
+        [Display(Name = "启用状态")]
+        [MaxLength(5)]
+        [Column(TypeName = "varchar(5)")]
+        [Editable(true)]
+        public string status { get; set; }
+
+        /// <summary>
+        ///適用部門
+        /// </summary>
+        [Display(Name ="適用部門")]
        [MaxLength(200)]
        [Column(TypeName="varchar(200)")]
        [Editable(true)]
@@ -120,6 +130,7 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="datetime")]
        [Editable(true)]
        public DateTime? ModifyDate { get; set; }
+
 
        
     }

@@ -127,6 +127,16 @@ namespace PDMS.Sys.Services
                             //清空原来的数据
                             item.Value = null;
                         }
+                        if (item.Name == "template_id")
+                        {//如果是模版设置页打开的任务列表查询，则需要设置所属的大专案类型和模板保持一致
+                            string val = item.Value;
+                            if (!string.IsNullOrEmpty(val))
+                            {
+                                sql += $" and project_class=(select project_class from cmc_common_task_template where template_id='{val}')";
+                            }
+
+                            item.Value = null;
+                        }
 
                     }
                 }

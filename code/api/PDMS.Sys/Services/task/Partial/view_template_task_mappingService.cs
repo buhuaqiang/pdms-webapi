@@ -69,7 +69,7 @@ namespace PDMS.Sys.Services
                 sql += $" and map.set_id in ('{ids}')";
             }
            
-            sql +=$" order by map.order_no desc";
+            sql +=$" order by st.order_no desc,map.order_no desc";
             Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
             return Result;
         }

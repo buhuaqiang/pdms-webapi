@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using PDMS.Core.DBManager;
 using PDMS.Core.ManageUser;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Sys.Services
 {
@@ -79,6 +80,7 @@ namespace PDMS.Sys.Services
                         CreateID,
                         Creator,
                         CreateDate,
+                        project_class,
 	                    source_set_id
                     )
                     SELECT 
@@ -92,6 +94,7 @@ namespace PDMS.Sys.Services
                         {CreateID},
                         '{Creator}',
                         GETDATE(),
+                        project_class,
 	                    set_id
                     from  cmc_common_task_template_set where template_id='{oldid}' ";
             int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
@@ -225,6 +228,35 @@ namespace PDMS.Sys.Services
             };
 
             return base.GetPageData(options);
+        }
+
+        public WebResponseContent bathChangeStatus(object saveData)
+        {
+            SaveModel saveModel = new SaveModel();
+            string sRowDatas = saveData.ToString();
+            if (string.IsNullOrEmpty(sRowDatas) == false)
+            {
+                var data = JObject.Parse(sRowDatas);
+                string flag = data["flag"].ToString();
+                var ids = JArray.Parse(data["ids"].ToString());
+                if (ids != null && ids.Count() > 0)
+                {
+                    string ids_str = string.Join("','", ids);
+                    string sql = "";
+                    if (flag == "1")//废弃
+                    {
+                        sql = $@"update cmc_common_task_template  set status=2 where template_id in ('{ids_str}') ";
+                    }
+                    else if (flag == "2")//启用
+                    {
+                        sql = $@"update cmc_common_task_template set status=1 where template_id  in ('{ids_str}') ";
+                    }
+                    var s = repository.DapperContext.ExcuteNonQuery(sql, null);
+                    return _responseContent.OK(s + "条记录操作成功");
+                }
+
+            }
+            return _responseContent.OK("操作成功");
         }
     }
 }
