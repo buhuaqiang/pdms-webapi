@@ -71,16 +71,16 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="日程(起)")]
        [MaxLength(30)]
-       [Column(TypeName="varchar(30)")]
-       public string start_date { get; set; }
+       [Column(TypeName= "datetime")]
+       public DateTime? start_date { get; set; }
 
        /// <summary>
        ///日程(迄)
        /// </summary>
        [Display(Name ="日程(迄)")]
        [MaxLength(30)]
-       [Column(TypeName="varchar(30)")]
-       public string end_date { get; set; }
+       [Column(TypeName= "datetime")]
+       public DateTime? end_date { get; set; }
 
        /// <summary>
        ///預警
@@ -110,7 +110,7 @@ namespace PDMS.Entity.DomainModels
        ///版次
        /// </summary>
        [Display(Name ="版次")]
-       [Column(TypeName="varchar(30)")]
+       [Column(TypeName= "varchar(30)")]
        public string? CreateDate { get; set; }
 
        /// <summary>
