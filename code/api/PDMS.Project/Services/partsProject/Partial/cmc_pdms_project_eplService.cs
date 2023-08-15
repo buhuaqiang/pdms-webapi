@@ -1058,6 +1058,11 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = "00";
                                 epl.gate_type = gateType;
+                                epl.exchange_rate = item["exchange_rate"] == null ? null : item["exchange_rate"].ToDecimal();
+                                epl.fs_1_ntd = item["fs_1_ntd"] == null ? null : item["fs_1_ntd"].ToDecimal();
+                                epl.fs_2_ntd = item["fs_2_ntd"] == null ? null : item["fs_2_ntd"].ToDecimal();
+                                epl.fs_1_rate = item["fs_1_rate"] == null ? null : item["fs_1_rate"].ToDecimal();
+                                epl.fs_2_rate = item["fs_2_rate"] == null ? null : item["fs_2_rate"].ToDecimal();
 
                                 eplHisList.Add(eplHis);
                             }
@@ -1068,7 +1073,12 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
                                 epl.currency = item["currency"] == null ? null : item["currency"].ToString();
                                 epl.fs_approve_status = epl.fs_approve_status;
-                                epl.gate_type = gateType;   
+                                epl.gate_type = gateType;
+                                epl.exchange_rate = item["exchange_rate"] == null ? null : item["exchange_rate"].ToDecimal();
+                                epl.fs_1_ntd = item["fs_1_ntd"] == null ? null : item["fs_1_ntd"].ToDecimal();
+                                epl.fs_2_ntd = item["fs_2_ntd"] == null ? null : item["fs_2_ntd"].ToDecimal();
+                                epl.fs_1_rate = item["fs_1_rate"] == null ? null : item["fs_1_rate"].ToDecimal();
+                                epl.fs_2_rate = item["fs_2_rate"] == null ? null : item["fs_2_rate"].ToDecimal();
 
                             }
                             
@@ -1087,7 +1097,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                     if (eplList.Count > 0) {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status ,x.gate_type });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status ,x.gate_type,x.exchange_rate,x.fs_1_ntd,x.fs_2_ntd,x.fs_1_rate,x.fs_2_rate });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
