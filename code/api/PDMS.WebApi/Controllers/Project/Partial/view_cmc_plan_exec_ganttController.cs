@@ -54,9 +54,9 @@ namespace PDMS.Project.Controllers
         /// <returns></returns>
         [ApiActionPermission()]
         [HttpGet,Route("setAuditKey")]
-        public ActionResult setAuditKey(string project_task_id="")
+        public ActionResult setAuditKey(string project_task_id="",string is_audit_key = "")
         {
-            return Json(Service.setAuditKey(project_task_id));
+            return Json(Service.setAuditKey(project_task_id, is_audit_key));
         }
 
         //保存
