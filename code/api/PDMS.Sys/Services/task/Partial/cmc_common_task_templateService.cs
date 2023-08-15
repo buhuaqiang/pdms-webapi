@@ -53,13 +53,13 @@ namespace PDMS.Sys.Services
             var Creator = userList.UserTrueName;
 
             var oldid = Guid.Parse(saveModel.MainData["template_id"].ToString());
-            var newid =Guid.NewGuid();//创建新的NewId()
+            var newid = Guid.NewGuid();//创建新的NewId()
             #region 新增
             SaveModel.DetailListDataResult queueResult = new SaveModel.DetailListDataResult();
             cmc_common_task_template template = new cmc_common_task_template();
             template.template_id = newid;
             template.template_name = saveModel.MainData["template_name"].ToString();
-            template.suit_org_codes =  saveModel.MainData["suit_org_codes"].ToString();
+            template.suit_org_codes = saveModel.MainData["suit_org_codes"].ToString();
             template.template_desc = saveModel.MainData["template_desc"].ToString();
             queueResult.optionType = SaveModel.MainOptionType.add;
             queueResult.detailType = typeof(cmc_common_task_template);
@@ -111,7 +111,7 @@ namespace PDMS.Sys.Services
                     foreach (var item in addset)
                     {
                         //获取parent_set_id
-                        var parent_set_id = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id && x.template_id==newid).FirstOrDefault().set_id;
+                        var parent_set_id = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id && x.template_id == newid).FirstOrDefault().set_id;
                         //获取当前实体
                         var Setlist = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.set_id == item.set_id).FirstOrDefault();
                         //对需要调整的字段进行赋值
@@ -193,11 +193,11 @@ namespace PDMS.Sys.Services
                         {
                             if (value.Contains(","))
                             {
-                                string[] vals= value.Split(",");
+                                string[] vals = value.Split(",");
                                 if (vals.Length > 0)
                                 {
                                     sql += "and (";
-                                    for(int i = 0; i < vals.Length; i++)
+                                    for (int i = 0; i < vals.Length; i++)
                                     {
                                         if (i == 0)
                                         {
@@ -205,11 +205,11 @@ namespace PDMS.Sys.Services
                                         }
                                         else
                                         {
-                                            sql+= " or ";
+                                            sql += " or ";
                                         }
                                         sql += $"  suit_org_codes  like'%{vals[i]}%'";
                                     }
-                                   
+
                                     sql += ")";
                                 }
                             }
@@ -217,14 +217,14 @@ namespace PDMS.Sys.Services
                             {
                                 sql += $" and suit_org_codes  like'%{value}%'";
                             }
-                           
+
                             //清空原来的数据
                             item.Value = null;
                         }
-                       
+
                     }
                 }
-                QuerySql +=  sql;
+                QuerySql += sql;
             };
 
             return base.GetPageData(options);
@@ -258,5 +258,5 @@ namespace PDMS.Sys.Services
             }
             return _responseContent.OK("操作成功");
         }
-    }
+    }  
 }
