@@ -251,6 +251,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         data.start_date = item.Key.start_date == null ? "" : item.Key.start_date.ToString("yyyy-MM-dd");
                         data.end_date = item.Key.end_date == null ? "" : item.Key.end_date.ToString("yyyy-MM-dd");
                         data.parent = index;
+                        data.is_audit_key = item.Key.is_audit_key;
                         data.type = "task";
                         data.status = "task";
                         data.approve_status = item.Key.approve_status;
@@ -353,11 +354,9 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             public string task_status { get; set; }
 
-
-
-
-
-
+            //设置零品承办
+            public string is_audit_key { get; set; }
+ 
         }
 
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
@@ -494,7 +493,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
 
         //雙擊甘特圖任務：設置重點項目
-        public WebResponseContent setAuditKey(string project_task_id = "")
+        public WebResponseContent setAuditKey(string project_task_id = "",string is_audit_key="")
         {
             if (!string.IsNullOrEmpty(project_task_id))
             {
@@ -505,7 +504,14 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                     var temp = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Ptask_id).FirstOrDefault();
                     if (temp != null)
                     {
-                        temp.is_audit_key = "1";
+                        if (!string.IsNullOrEmpty(is_audit_key) && is_audit_key=="0")
+                        {
+                            temp.is_audit_key = "0";
+                        }
+                        else
+                        {
+                            temp.is_audit_key = "1";
+                        }               
                     }
                     List.Add(temp);
                     repository.DapperContext.BeginTransaction((r) =>
