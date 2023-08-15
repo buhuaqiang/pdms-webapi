@@ -236,6 +236,16 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "int")]
         [Required(AllowEmptyStrings = false)]
         public int part_taker_id { get; set; }
+
+
+        /// <summary>
+        ///设置重点审查项目
+        /// </summary>
+        [Display(Name = "is_audit_key")]
+        [Column(TypeName = "varchar(20)")]
+        [Required(AllowEmptyStrings = false)]
+        public string is_audit_key { get; set; }
         
+
     }
 }
