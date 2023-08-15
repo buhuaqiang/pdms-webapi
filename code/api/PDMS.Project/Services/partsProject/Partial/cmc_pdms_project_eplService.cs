@@ -29,6 +29,7 @@ using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System.Reflection;
 using System;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using System.Security.Cryptography;
 
 namespace PDMS.Project.Services
 {
@@ -960,6 +961,9 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                     return ResponseContent.Error();
                 }
+
+                string mainStatusStr = $@"UPDATE cmc_pdms_project_main  set project_status='03' WHERE project_id='{projectId}'";
+                var adjustStatus = repository.DapperContext.ExcuteNonQuery(mainStatusStr, null);
 
             }
             return ResponseContent.OK();
