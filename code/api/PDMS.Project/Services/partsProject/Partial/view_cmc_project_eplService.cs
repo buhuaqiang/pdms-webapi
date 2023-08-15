@@ -55,7 +55,10 @@ namespace PDMS.Project.Services
             var eplIds = "";
             foreach (var item in MainDatas)
             {
-                if (item["org_code"].ToString() == item["new_org_code"].ToString()) {//部门变更的不用校验
+                cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+
+                if (item["org_code"].ToString() == item["new_org_code"].ToString() || epl.org_code==epl.new_org_code ) {//部门变更的不用校验(前端修改沒保存時提交也需要校驗)
                     object eplId = item["epl_id"];
                     eplIds += "'" + eplId + "'" + ",";
                 }  
