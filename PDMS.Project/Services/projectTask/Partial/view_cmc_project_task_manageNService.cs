@@ -329,17 +329,45 @@ namespace PDMS.Project.Services
                     return ResponseContent.Error();
                 }
             }
-            
-            /*
-            if (path == "single")
-            {
-                
-            }
-            //批次選任務
-            else if (path == "batch")
-            {
 
-            }*/
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (!string.IsNullOrEmpty(epl_id))
+            {
+                try
+                {
+                    //JArray epl_idArray = JArray.Parse(epl_id);
+                    foreach (string item in epl_idArray)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
+                        if (epl != null)
+                        {
+                            epl.main_plan_id = template_id == null ? Guid.Parse("") : Guid.Parse(template_id.ToString());
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.main_plan_id });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
+
+
             if (!string.IsNullOrEmpty(epl_id))
             {
                 try
