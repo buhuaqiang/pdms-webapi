@@ -32,5 +32,7 @@ namespace PDMS.Project.IServices
         public WebResponseContent saveRelease(SaveModel saveModel);
 
         public int isGlnoRepeated(String glno);
+
+        public int isCompletion(object obj);
     }
 }
