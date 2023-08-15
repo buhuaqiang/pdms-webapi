@@ -165,106 +165,114 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                 List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
 
-                //大日程装箱
-                foreach (var item in GateInfo)
+                try
                 {
-                    gateIndex++;
-                    //var gate_code = item.Key.gate_code;
-                    //var gate_name = item.Key.gate_name;
-                    //var gate_start_date = item.Key.gate_start_date;
-                    //var gate_end_date = item.Key.gate_end_date;
-                    GanttInfo data = new GanttInfo();
-                    data.id = gateIndex;
-                    data.task_name = item.Key.gate_name;
-                    data.start_date = item.Key.gate_start_date==null?"": item.Key.gate_start_date.ToString("yyyy-MM-dd");
-                    data.end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
-                    data.open = true;
-                    data.type = "project";
-                    data.status = "project";
-                    data.StatusInfo = "";
-                    info.Add(data);
-
-                    Dictionary<string, object> obj = new Dictionary<string, object>();
-                    obj.Add(item.Key.gate_code, gateIndex);
-                    GetaobjList.Add(obj);
-
-
-
-                }
-                //阶段装箱
-                foreach (var item in SetInfo)
-                {
-                    SetIndex++;
-                    //var set_value = item.Key.set_value;
-                    //var set_name = item.Key.set_name;
-                    //var gate = item.Key.gate_code;
-                    var index = 0;
-                    //大日程的index
-                    foreach (var temp in GetaobjList)
+                    //大日程装箱
+                    foreach (var item in GateInfo)
                     {
-                        if (temp.Keys.Contains(item.Key.gate_code))
-                        {
-                            index = Convert.ToInt32(temp[item.Key.gate_code]);
-                            break;
-                        }
+                        gateIndex++;
+                        //var gate_code = item.Key.gate_code;
+                        //var gate_name = item.Key.gate_name;
+                        //var gate_start_date = item.Key.gate_start_date;
+                        //var gate_end_date = item.Key.gate_end_date;
+                        GanttInfo data = new GanttInfo();
+                        data.id = gateIndex;
+                        data.task_name = item.Key.gate_name;
+                        data.start_date = item.Key.gate_start_date == null ? "" : item.Key.gate_start_date.ToString("yyyy-MM-dd");
+                        data.end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
+                        data.open = true;
+                        data.type = "project";
+                        data.status = "project";
+                        data.StatusInfo = "";
+                        info.Add(data);
+
+                        Dictionary<string, object> obj = new Dictionary<string, object>();
+                        obj.Add(item.Key.gate_code == null ? "" : item.Key.gate_code, gateIndex);
+                        GetaobjList.Add(obj);
+
+
+
                     }
-                    GanttInfo data = new GanttInfo();
-                    data.id = SetIndex;
-                    data.task_name = item.Key.set_name;
-                    data.parent = index;
-                    data.open = true;
-                    data.type = "project";
-                    data.status = "phase";
-                    info.Add(data);
-
-                    Dictionary<string, object> obj = new Dictionary<string, object>();
-                    obj.Add(item.Key.set_value, SetIndex);
-                    SetobjList.Add(obj);
-
-
-                }
-                //任务装箱
-                foreach (var item in taskInfo)
-                {
-                    taskIndex++;
-                    var index = 0;
-                    //大日程的index
-                    foreach (var temp in SetobjList)
+                    //阶段装箱
+                    foreach (var item in SetInfo)
                     {
-                        if (temp.Keys.Contains(item.Key.set_value))
+                        SetIndex++;
+                        //var set_value = item.Key.set_value;
+                        //var set_name = item.Key.set_name;
+                        //var gate = item.Key.gate_code;
+                        var index = 0;
+                        //大日程的index
+                        foreach (var temp in GetaobjList)
                         {
-                            index = Convert.ToInt32(temp[item.Key.set_value]);
-                            break;
+                            if (temp.Keys.Contains(item.Key.gate_code == null ? "" : item.Key.gate_code))
+                            {
+                                index = Convert.ToInt32(temp[item.Key.gate_code]);
+                                break;
+                            }
                         }
+                        GanttInfo data = new GanttInfo();
+                        data.id = SetIndex;
+                        data.task_name = item.Key.set_name;
+                        data.parent = index;
+                        data.open = true;
+                        data.type = "project";
+                        data.status = "phase";
+                        info.Add(data);
+
+                        Dictionary<string, object> obj = new Dictionary<string, object>();
+                        obj.Add(item.Key.set_value == null ? "" : item.Key.set_value, SetIndex);
+                        SetobjList.Add(obj);
+
+
                     }
+                    //任务装箱
+                    foreach (var item in taskInfo)
+                    {
+                        taskIndex++;
+                        var index = 0;
+                        //大日程的index
+                        foreach (var temp in SetobjList)
+                        {
+                            if (temp.Keys.Contains(item.Key.set_value == null ? "" : item.Key.set_value))
+                            {
+                                index = Convert.ToInt32(temp[item.Key.set_value]);
+                                break;
+                            }
+                        }
 
-                    //var task_id = item.Key.task_id;
-                    //var task_name = item.Key.task_name;
-                    //var approve_status = item.Key.approve_status;
-                    //var FormId = item.Key.FormId;
-                    //var FormCode = item.Key.FormCode;
-                    //var FormCollectionId = item.Key.FormCollectionId;
+                        //var task_id = item.Key.task_id;
+                        //var task_name = item.Key.task_name;
+                        //var approve_status = item.Key.approve_status;
+                        //var FormId = item.Key.FormId;
+                        //var FormCode = item.Key.FormCode;
+                        //var FormCollectionId = item.Key.FormCollectionId;
 
-                    GanttInfo data = new GanttInfo();
-                    data.id = taskIndex;
-                    data.task_name = item.Key.task_name;
-                    data.start_date = item.Key.start_date==null?"": item.Key.start_date.ToString("yyyy-MM-dd");
-                    data.end_date = item.Key.end_date == null ? "" : item.Key.end_date.ToString("yyyy-MM-dd");
-                    data.parent = index;
-                    data.type = "task";
-                    data.status = "task";
-                    data.approve_status = item.Key.approve_status;
-                    data.StatusInfo = GetStatusText(item.Key.approve_status);
-                    data.task_id = item.Key.task_id.ToString();
-                    data.FormCollectionId = item.Key.FormCollectionId == null ? "" : item.Key.FormCollectionId.ToString();
-                    data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
-                    data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
-                    data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
-                    data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
+                        GanttInfo data = new GanttInfo();
+                        data.id = taskIndex;
+                        data.task_name = item.Key.task_name;
+                        data.start_date = item.Key.start_date == null ? "" : item.Key.start_date.ToString("yyyy-MM-dd");
+                        data.end_date = item.Key.end_date == null ? "" : item.Key.end_date.ToString("yyyy-MM-dd");
+                        data.parent = index;
+                        data.type = "task";
+                        data.status = "task";
+                        data.approve_status = item.Key.approve_status;
+                        data.StatusInfo = GetStatusText(item.Key.approve_status);
+                        data.task_id = item.Key.task_id.ToString();
+                        data.FormCollectionId = item.Key.FormCollectionId == null ? "" : item.Key.FormCollectionId.ToString();
+                        data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
+                        data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
+                        data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
+                        data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
 
-                    info.Add(data);
+                        info.Add(data);
 
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行，view_cmc_plan_exec_ganttService 文件-->组装甘特图数据：" + DateTime.Now + ":" + ex.Message);
+                }
+
             }
 
 

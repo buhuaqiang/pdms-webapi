@@ -79,15 +79,15 @@ namespace PDMS.Project.Services
                 }
             }
             QuerySql = @"
-select epl.part_no,epl.part_name,epl.company_code,epl.epl_phase, main.project_id,us.User_id ,main.GLNO,main.project_name
+select DISTINCT epl.part_no,epl.part_name,epl.company_code,epl.epl_phase, main.project_id,us.User_id ,main.GLNO,main.project_name
 ,main.start_date as 'p_start_date'
-,main.end_date as 'p_end_date',
-main.project_type 
-,task.start_date as 't_start_date'
-,task.end_date as 't_end_date'
+,main.end_date as 'p_end_date'
+,main.project_type 
+--,task.start_date as 't_start_date'
+--,task.end_date as 't_end_date'
 ,'' status
-,task.warn
-,task.warn_leader
+--,task.warn
+--,task.warn_leader
 from  cmc_pdms_project_task task
 left join cmc_pdms_project_epl epl on epl.epl_id=task.epl_id
 left join cmc_pdms_project_main main on main.project_id=epl.project_id
