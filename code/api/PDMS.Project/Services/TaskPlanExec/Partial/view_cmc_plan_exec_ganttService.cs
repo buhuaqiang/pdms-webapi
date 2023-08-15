@@ -356,7 +356,13 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             //设置零品承办
             public string is_audit_key { get; set; }
- 
+
+            //大日程开始时间
+            public string gate_start_date { get; set; }
+
+            //大日程结束时间
+            public string gate_end_date { get; set; }
+
         }
 
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
