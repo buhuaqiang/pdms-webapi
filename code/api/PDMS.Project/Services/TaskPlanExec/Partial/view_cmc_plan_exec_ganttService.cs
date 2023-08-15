@@ -189,9 +189,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         Dictionary<string, object> obj = new Dictionary<string, object>();
                         obj.Add(item.Key.gate_code == null ? "" : item.Key.gate_code, gateIndex);
                         GetaobjList.Add(obj);
-
-
-
                     }
                     //阶段装箱
                     foreach (var item in SetInfo)
