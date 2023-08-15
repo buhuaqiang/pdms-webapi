@@ -83,6 +83,7 @@ namespace PDMS.Project.Controllers
         {
             //執行保存按鈕走基礎邏輯，審核狀態調整為01
             var info = Service.TsSave(saveModel, "01");
+            //获取表单相关信息，表单单笔提交，没有 checkval，直接获取project_task_id
             saveModel = Service.AnalysisData(saveModel);
             //再走審批流程
             return Json(Service.SaveAndSubmit(saveModel, "01"));
@@ -95,6 +96,7 @@ namespace PDMS.Project.Controllers
         public IActionResult BulkSubmit([FromBody] SaveModel saveModel)
         {   
             SaveModel saveModels = new SaveModel();
+            //获取表单相关信息，批量的时候，checkval 有多个，需要拼接
             saveModels = Service.AnalysisData(saveModel);
             return Json(Service.SaveAndSubmit(saveModels, "01"));
         }
