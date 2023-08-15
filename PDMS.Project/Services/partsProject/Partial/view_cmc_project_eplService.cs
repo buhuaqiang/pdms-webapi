@@ -55,7 +55,7 @@ namespace PDMS.Project.Services
             var eplIds = "";
             foreach (var item in MainDatas)
             {
-                if (item["org_code"] == item["new_org_code"]) {//部门变更的不用校验
+                if (item["org_code"].ToString() == item["new_org_code"].ToString()) {//部门变更的不用校验
                     object eplId = item["epl_id"];
                     eplIds += "'" + eplId + "'" + ",";
                 }  
