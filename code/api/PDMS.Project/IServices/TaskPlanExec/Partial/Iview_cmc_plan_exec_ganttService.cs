@@ -16,7 +16,7 @@ namespace PDMS.Project.IServices
       public WebResponseContent TsSave(SaveModel saveModel,string status);
 
       public WebResponseContent SaveAndSubmit(SaveModel saveModel, string status);
-      public WebResponseContent setAuditKey(string project_task_id);
+      public WebResponseContent setAuditKey(string project_task_id,string is_audit_key);
 
       public WebResponseContent UpdateTaskDate(SaveModel saveModel);
 
