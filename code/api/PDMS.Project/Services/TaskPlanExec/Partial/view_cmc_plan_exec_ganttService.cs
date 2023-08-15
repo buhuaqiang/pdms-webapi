@@ -139,8 +139,8 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 sql += @$" and users.User_Id='{User_Id}'";
             }
+            sql += $@" order by tsk.order_no desc";
             info = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
-
             repository.DapperContext.ExcuteNonQuery(sql, null);
 
             return info;
