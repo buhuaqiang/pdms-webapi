@@ -52,5 +52,12 @@ namespace PDMS.Project.Controllers
         {
             return Service.eoFee(saveModel);
         }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("closeProject")]
+        public WebResponseContent closeProject([FromBody] object obj)
+        {
+            return Service.closeProject(obj);
+        }
     }
 }

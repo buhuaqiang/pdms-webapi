@@ -97,5 +97,12 @@ namespace PDMS.Project.Controllers
             return Service.isGlnoRepeated(glno);
         }
 
+        [ApiActionPermission()]
+        [HttpPost, Route("isCompletion")]
+        public int isCompletion([FromBody]  object obj)
+        {//結案
+            return Service.isCompletion(obj);
+        }
+
     }
 }
