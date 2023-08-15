@@ -28,6 +28,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Newtonsoft.Json;
 using PDMS.Core.DBManager;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Project.Services
 {
@@ -751,6 +752,23 @@ namespace PDMS.Project.Services
 
             return webResponse.OK("");
         }
+
+
+        public int isCompletion(Object obj)//結案判斷
+        {
+            int count = 0;
+            var data = JObject.Parse(obj.ToString());
+            var projectId = data["projectId"].ToString();
+          
+            string sql = $@"select  count(*) from cmc_pdms_project_main main 
+							left  join cmc_pdms_project_epl epl on epl.project_id=main.project_id
+							left join cmc_pdms_project_task task on task.epl_id= epl.epl_id
+							where (task.task_completion!=100 or task.task_completion is null ) and main.project_id='" + projectId + "'";
+
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
+
     }
 
 
