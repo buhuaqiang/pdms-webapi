@@ -238,13 +238,16 @@ namespace PDMS.Project.Services
                     foreach (var item in MainData)
                     {
                         Guid task_id = Guid.Parse(item["task_id"].ToString());
+                        Guid mapping_id = Guid.Parse(item["mapping_id"].ToString());
                         Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.task_id == task_id && x.project_task_id == project_task_id).FirstOrDefault();
+                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.mapping_id == mapping_id && x.project_task_id == project_task_id).FirstOrDefault();
 
                         if (pTask != null)
                         {
                             dateFormat(item, pTask);
+                            pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
+                            pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
                         }
                         projectTaskLisk.Add(pTask);
                     }
@@ -384,8 +387,8 @@ namespace PDMS.Project.Services
                             {
                                 foreach (var item in MainDatas)
                                 {
-                                    //判斷此任務是否已經被選擇了
-                                    bool taskExists = existTaskList.Any(itemExist => itemExist.task_id.ToString() == item["task_id"].ToString());
+                                    //判斷此階段+任務是否已經被選擇了
+                                    bool taskExists = existTaskList.Any(itemExist => itemExist.mapping_id.ToString() == item["mapping_id"].ToString());
                                     if (!taskExists)
                                     {
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
@@ -394,6 +397,7 @@ namespace PDMS.Project.Services
                                         pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
                                         pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
                                         pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString());
+                                        pTask.mapping_id = item["mapping_id"] == null ? Guid.Parse("") : Guid.Parse(item["mapping_id"].ToString());
                                         pTask.action_type = "add";
                                         pTask.approve_status = "00";
                                         pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
@@ -407,8 +411,8 @@ namespace PDMS.Project.Services
                                     else
                                     {
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                                        Guid task_id = Guid.Parse(item["task_id"].ToString());
-                                        pTask = existTaskList.FirstOrDefault(t => t.task_id == task_id);
+                                        Guid mapping_id = Guid.Parse(item["mapping_id"].ToString());
+                                        pTask = existTaskList.FirstOrDefault(t => t.mapping_id == mapping_id);
                                         pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
                                         pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
                                         //dateFormat(item, pTask);

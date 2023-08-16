@@ -44,6 +44,7 @@ namespace PDMS.Project.Services
             string group = "";
             string UserTrueName = "";
             string user_code = "";
+            string partDeptId = "";
 
             string where = " ";
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
@@ -63,6 +64,17 @@ namespace PDMS.Project.Services
                         //    }
                         //    continue;
                         //}
+                        
+                        if (sp.Name.ToLower() == "partDeptId".ToLower())
+                        {
+                            partDeptId = sp.Value;
+                            if (!string.IsNullOrEmpty(partDeptId))
+                            {
+                                where += " AND DepartmentId = '" + partDeptId + "' OR ParentId = '" + partDeptId +  "'" ;
+                            }
+                            continue;
+                        }
+
                         if (sp.Name.ToLower() == "group".ToLower())
                         {
                             group = sp.Value;

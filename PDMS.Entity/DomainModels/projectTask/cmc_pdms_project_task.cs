@@ -34,10 +34,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public Guid? epl_id { get; set; }
 
-       /// <summary>
-       ///審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交
-       /// </summary>
-       [Display(Name ="審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "mapping_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public Guid mapping_id { get; set; }
+
+        /// <summary>
+        ///審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交
+        /// </summary>
+        [Display(Name ="審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交")]
        [MaxLength(2)]
        [Column(TypeName="varchar(2)")]
        [Editable(true)]
