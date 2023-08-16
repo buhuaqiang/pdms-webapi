@@ -29,6 +29,7 @@ using Newtonsoft.Json;
 using PDMS.Core.DBManager;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using Newtonsoft.Json.Linq;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 
 namespace PDMS.Project.Services
 {
@@ -361,9 +362,17 @@ namespace PDMS.Project.Services
                 {
                     saveModel.MainData.Add("project_id", "");
                 }
-                string project_id = saveModel.MainData["project_id"].ToString();
+            if (!saveModel.MainData.ContainsKey("release_status"))
+            {
+                saveModel.MainData.Add("release_status", null);
+            }
+            string project_id = saveModel.MainData["project_id"].ToString();
+            // var getReleaseStatus = saveModel.MainData["release_status"].ToString();
+            string selectreleaseStatus = $@"SELECT main.release_status FROM cmc_pdms_project_main main WHERE project_id= '{project_id}'";
+            List<cmc_pdms_project_main> result = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
+            var getReleaseStatus = result[0].release_status;
 
-                string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
+            string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
                 var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
                 var gateDates = saveModel.Details[0].Data;//獲取當前頁面大日程數據
 
@@ -382,6 +391,15 @@ namespace PDMS.Project.Services
 
                     info = _cmc_pdms_project_mainService.Add(saveModel);
                 }
+                else if (getReleaseStatus == "01")
+                {
+                    saveModel.MainData["release_status"] = "02";
+                    gateDates.ForEach(x =>
+                    {
+                        x["version"] = newVersion.ToString();
+                    });
+                    info = _cmc_pdms_project_mainService.Update(saveModel);
+                }
                 else {//修改後保存並發佈
 
                     // saveModel.Details[0]["version"] = newVersion;
@@ -392,16 +410,32 @@ namespace PDMS.Project.Services
                     //獲取變更前的大日程數據
                     var oldGates = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.project_id == projectID).ToList();
 
+                    List<cmc_pdms_project_gate_his> gateHis = new List<cmc_pdms_project_gate_his>();
 
-
-                    //將格式轉換成list實體類格式
-                    var newDateList = JsonConvert.DeserializeObject<List<cmc_pdms_project_gate_his>>(JsonConvert.SerializeObject(gateDates));
-                    saveModel.MainData["release_status"] = "02";//狀態設為發佈
+                //將格式轉換成list實體類格式
+                var newDateList = JsonConvert.DeserializeObject<List<cmc_pdms_project_gate_his>>(JsonConvert.SerializeObject(gateDates));
+                    if (saveModel.MainData["release_status"]!="02")
+                    {
+                        saveModel.MainData["release_status"] = "02";//狀態設為發佈    
+                    }
+                    
                     gateDates.ForEach(date =>
                     {
-                        if (!date.ContainsKey("gate_id"))
+                        cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                        
+                        if (!date.ContainsKey("gate_id")|| date["version"]==null)
                         {//若為新增加上版本號
                             date["version"] = newVersion.ToString();
+                            his.gate_his_id = Guid.NewGuid();
+                            his.project_id = projectID;
+                            his.gate_id = Guid.NewGuid();
+                            his.gate_code = date["gate_code"].ToString();
+                            his.gate_start_date = Convert.ToDateTime(date["gate_start_date"]);
+                            his.gate_end_date = Convert.ToDateTime(date["gate_end_date"]);
+                            his.version = newVersion.ToString();
+                            his.action_type = "add";
+                            gateHis.Add(his);
+                            
                         }
                         else {
                             var oldGate = oldGates.Where(x => x.gate_id == Guid.Parse(date["gate_id"].ToString())).FirstOrDefault();//獲取變更前對應的大日程
@@ -409,19 +443,27 @@ namespace PDMS.Project.Services
                             {
                                 if ((date["gate_start_date"].ToString() != oldGate.gate_start_date.ToString()) || (date["gate_end_date"].ToString() != oldGate.gate_end_date.ToString()) || (date["gate_code"].ToString() != oldGate.gate_code.ToString()))
                                 {//若為修改變更版本號
+
+                                    his.gate_his_id = Guid.NewGuid();
+                                    his.project_id = oldGate.project_id;
+                                    his.gate_id = oldGate.gate_id;
+                                    his.gate_code = oldGate.gate_code;
+                                    his.gate_start_date = oldGate.gate_start_date;
+                                    his.gate_end_date = oldGate.gate_end_date;
+                                    his.version = oldGate.version;
+                                    his.action_type = "modify";
+                                    gateHis.Add(his);
+
                                     date["version"] = newVersion.ToString();
                                 }
                             }
                         }
-
-
-
                     });
 
                     info = _cmc_pdms_project_mainService.Update(saveModel);//更新保存數據
 
 
-                    List<cmc_pdms_project_gate_his> gateHis = new List<cmc_pdms_project_gate_his>();
+                    
                     try
                     {
 
@@ -434,15 +476,15 @@ namespace PDMS.Project.Services
                                 var gateCode = gateDate["gate_code"].ToString();
                                 cmc_pdms_project_gate gate = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.gate_code == gateCode && x.project_id == projectID).FirstOrDefault();
                                 //將數據寫入歷史表
-                                his.gate_his_id = Guid.NewGuid();
-                                his.project_id = gate.project_id;
-                                his.gate_id = gate.gate_id;
-                                his.gate_code = gate.gate_code;
-                                his.gate_start_date = gate.gate_start_date;
-                                his.gate_end_date = gate.gate_end_date;
-                                his.version = newVersion.ToString();
-                                his.action_type = "add";
-                                gateHis.Add(his);
+                                //his.gate_his_id = Guid.NewGuid();
+                                //his.project_id = gate.project_id;
+                                //his.gate_id = gate.gate_id;
+                                //his.gate_code = gate.gate_code;
+                                //his.gate_start_date = gate.gate_start_date;
+                                //his.gate_end_date = gate.gate_end_date;
+                                //his.version = newVersion.ToString();
+                                //his.action_type = "add";
+                                //gateHis.Add(his);
                             }
                             else
                             {//明細表中存在date_id字段，判斷大日程是否修改
@@ -451,15 +493,15 @@ namespace PDMS.Project.Services
                                 if (!oldGate.IsNullOrEmpty()) {
                                     if ((gateDate["gate_start_date"].ToString() != oldGate.gate_start_date.ToString()) || (gateDate["gate_end_date"].ToString() != oldGate.gate_end_date.ToString()) || (gateDate["gate_code"].ToString() != oldGate.gate_code.ToString()))
                                     { //存在變更，將變更寫入歷史表
-                                        his.gate_his_id = Guid.NewGuid();
-                                        his.project_id = Guid.Parse(oldGate.project_id.ToString());
-                                        his.gate_id = Guid.Parse(oldGate.gate_id.ToString());
-                                        his.gate_code = oldGate.gate_code.ToString();
-                                        his.gate_start_date = Convert.ToDateTime(oldGate.gate_start_date.ToString());
-                                        his.gate_end_date = Convert.ToDateTime(oldGate.gate_end_date.ToString());
-                                        his.version = oldGate.version.ToString();
-                                        his.action_type = "modify";
-                                        gateHis.Add(his);
+                                        //his.gate_his_id = Guid.NewGuid();
+                                        //his.project_id = Guid.Parse(oldGate.project_id.ToString());
+                                        //his.gate_id = Guid.Parse(oldGate.gate_id.ToString());
+                                        //his.gate_code = oldGate.gate_code.ToString();
+                                        //his.gate_start_date = Convert.ToDateTime(oldGate.gate_start_date.ToString());
+                                        //his.gate_end_date = Convert.ToDateTime(oldGate.gate_end_date.ToString());
+                                        //his.version = oldGate.version.ToString();
+                                        //his.action_type = "modify";
+                                        //gateHis.Add(his);
                                     }
                                 }
 
