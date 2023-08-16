@@ -19,7 +19,6 @@ namespace PDMS.Entity.DomainModels
         /// <summary>
        ///User ID
        /// </summary>
-       [Key]
        [Display(Name ="User ID")]
        [Column(TypeName="int")]
        [Editable(true)]
@@ -44,10 +43,29 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string user_code { get; set; }
 
-       /// <summary>
-       ///DepartmentType
-       /// </summary>
-       [Display(Name ="DepartmentType")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Key]
+        [Display(Name = "DepartmentId")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public Guid DepartmentId { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "ParentId")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public Guid ParentId { get; set; }
+
+        /// <summary>
+        ///DepartmentType
+        /// </summary>
+        [Display(Name ="DepartmentType")]
        [MaxLength(50)]
        [Column(TypeName="nvarchar(50)")]
        [Editable(true)]
