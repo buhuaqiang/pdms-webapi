@@ -112,7 +112,7 @@ namespace PDMS.Project.Services
                 }
             }
 
-            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY glno  desc) AS rowId  FROM view_cmc_project_task_manageN WHERE 1=1  ";
+            QuerySql = @"SELECT *,ROW_NUMBER()over(ORDER BY glno , part_no  desc) AS rowId  FROM view_cmc_project_task_manageN WHERE 1=1  ";
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
             if (User_Id != 1)
@@ -237,11 +237,9 @@ namespace PDMS.Project.Services
                 {
                     foreach (var item in MainData)
                     {
-                        Guid task_id = Guid.Parse(item["task_id"].ToString());
-                        Guid mapping_id = Guid.Parse(item["mapping_id"].ToString());
                         Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
-                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.mapping_id == mapping_id && x.project_task_id == project_task_id).FirstOrDefault();
+                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x =>  x.project_task_id == project_task_id).FirstOrDefault();
 
                         if (pTask != null)
                         {
@@ -261,7 +259,7 @@ namespace PDMS.Project.Services
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(projectTaskLisk, x => new { x.start_date, x.end_date });
+                        DBServerProvider.SqlDapper.UpdateRange(projectTaskLisk, x => new { x.start_date, x.end_date, x.warn, x.warn_leader });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
