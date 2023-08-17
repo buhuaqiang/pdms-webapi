@@ -43,29 +43,56 @@ namespace PDMS.Project.Services
         public List<view_cmc_project_task_mission_manage> getProjectTask(object saveModel)
         {
             List<view_cmc_project_task_mission_manage> Result = new List<view_cmc_project_task_mission_manage>();
-            string sql = $@"SELECT
-	                                       * 
-                                         FROM
-	                                       view_cmc_project_task_mission_manage                 
-                                         WHERE 1=1 ";
-
             var data = JObject.Parse(saveModel.ToString());
             var sets = data["set_ids"];
             var template_id = data["template_id"].ToString();
             var epl_id = data["epl_id"].ToString();
+
+            string sql = $@"
+SELECT
+	ct.task_name AS task_name,
+	pct.task_name AS pre_task_name,
+	temp.template_name,
+	tset.set_type,
+	sl2.DicValue AS set_value,
+	sl2.DicName AS set_name,
+	sl3.DicValue AS gate_code,
+	sl3.DicName AS gate_name,
+	ct.task_desc,
+	map.set_id,
+	map.order_no AS mapOrder,
+	gate.gate_start_date,
+	gate.gate_end_date,
+	gate.project_id,
+	p.* 
+FROM
+	cmc_pdms_project_task AS p
+	LEFT JOIN cmc_common_task AS ct ON ct.task_id = p.task_id
+	LEFT JOIN cmc_common_task AS pct ON pct.task_id = p.pre_task_id
+	LEFT JOIN cmc_common_template_mapping AS map ON map.mapping_id = p.mapping_id
+	LEFT JOIN cmc_common_task_template_set AS tset ON tset.template_id = p.template_id 
+	AND tset.set_id = map.set_id
+	LEFT JOIN cmc_common_task_template AS temp ON temp.template_id = p.template_id
+	INNER JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue = tset.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = tset.set_type ) )
+	LEFT JOIN cmc_common_task_template_set parent ON tset.parent_set_id= parent.set_id
+	INNER JOIN Sys_DictionaryList sl3 ON (
+	sl3.DicValue= parent.set_value 
+	AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
+	LEFT JOIN cmc_pdms_project_gate gate ON gate.gate_code = sl3.DicValue 
+	AND gate.project_id = ( SELECT project_id FROM cmc_pdms_project_epl WHERE epl_id = '{epl_id}' ) 
+WHERE
+	p.epl_id = '{epl_id}' ";
+
             if (!string.IsNullOrEmpty(template_id))
             {
-                sql += $" AND template_id='{template_id}'";
+                sql += $" AND p.template_id='{template_id}'";
             }
             if (sets != null && sets.Count() > 0)
             {
                 string ids = string.Join("','", sets);
-                sql += $" AND set_id in ('{ids}')";
+                sql += $" AND map.set_id in ('{ids}')";
             }
-            if (!string.IsNullOrEmpty(epl_id))
-            {
-                sql += $" AND epl_id='{epl_id}'";
-            }
+            
             sql += $" ORDER BY mapOrder DESC";
             Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_cmc_project_task_mission_manage>(sql, null);
