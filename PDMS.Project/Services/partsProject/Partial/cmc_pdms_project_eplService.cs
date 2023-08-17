@@ -962,9 +962,11 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                     return ResponseContent.Error();
                 }
-
-                string mainStatusStr = $@"UPDATE cmc_pdms_project_main  set project_status='03' WHERE project_id='{projectId}'";
-                var adjustStatus = repository.DapperContext.ExcuteNonQuery(mainStatusStr, null);
+                if (projectStatus == "02") {//專案啟動後最終定版完成改變狀態
+                    string mainStatusStr = $@"UPDATE cmc_pdms_project_main  set project_status='03' WHERE project_id='{projectId}'";
+                    var adjustStatus = repository.DapperContext.ExcuteNonQuery(mainStatusStr, null);
+                }
+               
 
             }
             return ResponseContent.OK();
