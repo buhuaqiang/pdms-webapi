@@ -100,7 +100,8 @@ left join cmc_common_task_template_set parent on sets.parent_set_id=parent.set_i
 left join Sys_DictionaryList sl3 ON ( sl3.DicValue= parent.set_value AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
 left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
 left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
-where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')";
+where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')  and tsk.start_date is not null  and tsk.end_date is not null
+and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
 
             if (!string.IsNullOrEmpty(start_date))
             {
@@ -157,14 +158,17 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             {
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
-                var taskInfo = getinfo.GroupBy(x => new { x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.set_value, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key }).ToList();
 
+                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key }).ToList();
+
+                //var taskInfo222 = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id}).ToList();
                 var gateIndex = 0;
                 var SetIndex = 50;
                 var taskIndex =100;
 
                 List<Dictionary<string, object>> GetaobjList = new List<Dictionary<string, object>>();
                 List<Dictionary<string, object>> SetobjList = new List<Dictionary<string, object>>();
+                List<SetAndTask> setAndTasks = new List<SetAndTask>();
 
                 try
                 {
@@ -217,26 +221,39 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
                         data.status = "phase";
                         info.Add(data);
 
-                        Dictionary<string, object> obj = new Dictionary<string, object>();
-                        obj.Add(item.Key.set_value == null ? "" : item.Key.set_value, SetIndex);
-                        SetobjList.Add(obj);
+                        //Dictionary<string, object> obj = new Dictionary<string, object>();
+                        //obj.Add(item.Key.set_value == null ? "" : item.Key.set_value, SetIndex);
+                        //SetobjList.Add(obj);
 
-
+                        //主要是承上啟下的作用，解決 一個人任務在同一個階段下，不在同一個大日程下
+                        SetAndTask tasks = new SetAndTask();
+                        tasks.gate_code = item.Key.gate_code;
+                        tasks.set_value = item.Key.set_value;
+                        tasks.index = SetIndex;
+                        setAndTasks.Add(tasks);
                     }
                     //任务装箱
                     foreach (var item in taskInfo)
                     {
                         taskIndex++;
                         var index = 0;
-                        //大日程的index
-                        foreach (var temp in SetobjList)
+                        //根據階段和大日程 獲取Parent index
+
+                        var Tempdata= setAndTasks.Where(x => x.gate_code == item.Key.gate_code && x.set_value == item.Key.set_value).FirstOrDefault();
+
+                        if (Tempdata != null)
                         {
-                            if (temp.Keys.Contains(item.Key.set_value == null ? "" : item.Key.set_value))
-                            {
-                                index = Convert.ToInt32(temp[item.Key.set_value]);
-                                break;
-                            }
+                            index = Tempdata.index;
                         }
+
+                        //foreach (var temp in SetobjList)
+                        //{
+                        //    if (temp.Keys.Contains(item.Key.set_value == null ? "" : item.Key.set_value))
+                        //    {
+                        //        index = Convert.ToInt32(temp[item.Key.set_value]);
+                        //        break;
+                        //    }
+                        //}
 
                         //var task_id = item.Key.task_id;
                         //var task_name = item.Key.task_name;
@@ -274,7 +291,6 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
 
             }
 
-
             return info;
         }
 
@@ -303,6 +319,17 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             }
             return str;
         }
+
+
+        public class SetAndTask
+        {
+            public string gate_code { get; set; }
+            public string set_value { get; set; }
+
+            public int  index { get; set; }
+
+        }
+
 
         public class GanttInfo {
 
@@ -378,9 +405,7 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
             var approve_status = saveModel.MainData["approve_status"].ToString();
 
-            //var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
-            var sql = $@"select  *  from cmc_pdms_project_task  where project_task_id='{project_task_id}'";
-            var Data = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null).FirstOrDefault();
+            var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
 
             if (Data != null)
             {
