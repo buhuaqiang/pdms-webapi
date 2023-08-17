@@ -402,8 +402,8 @@ namespace PDMS.Project.Services
                                         pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
                                         pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
                                         pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString();
-                                        pTask.FormId = item["FormId"] == null ? Guid.Parse("") : Guid.Parse(item["FormId"].ToString());
-                                        pTask.FormCode = item["FormCode"] == null ? "" : item["FormCode"].ToString();
+                                        pTask.FormId = item["formId"] == null ? Guid.Parse("") : Guid.Parse(item["formId"].ToString());
+                                        pTask.FormCode = item["formCode"] == null ? "" : item["formCode"].ToString();
                                         addList.Add(pTask);
                                     }
                                     else
