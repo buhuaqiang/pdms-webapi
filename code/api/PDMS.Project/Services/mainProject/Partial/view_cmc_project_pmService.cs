@@ -366,20 +366,30 @@ namespace PDMS.Project.Services
             {
                 saveModel.MainData.Add("release_status", null);
             }
+
+
             string project_id = saveModel.MainData["project_id"].ToString();
-            // var getReleaseStatus = saveModel.MainData["release_status"].ToString();
-            string selectreleaseStatus = $@"SELECT main.release_status FROM cmc_pdms_project_main main WHERE project_id= '{project_id}'";
-            List<cmc_pdms_project_main> result = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
-            var getReleaseStatus = result[0].release_status;
-
-            string orgStr = $@"SELECT * FROM cmc_pdms_project_org WHERE project_id= '{project_id}'";
-            List<cmc_pdms_project_org> orgOld = _repository.DapperContext.QueryList<cmc_pdms_project_org>(orgStr, null);
-            var orgNow = saveModel.Details[1].Data;
-
-            if (orgOld.Count > 2)
+            string selectreleaseStatus = "";
+            var getReleaseStatus = "";
+            List<cmc_pdms_project_main> presult = new List<cmc_pdms_project_main>();
+            if (!string.IsNullOrEmpty(project_id)) //project_id有值
             {
-                orgNow.Clear();
+                selectreleaseStatus = $@"SELECT main.release_status FROM cmc_pdms_project_main main WHERE project_id= '{project_id}'";
+                presult = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
+                getReleaseStatus = presult[0].release_status;
+                string orgStr = $@"SELECT * FROM cmc_pdms_project_org WHERE project_id= '{project_id}'";
+                List<cmc_pdms_project_org> orgOld = _repository.DapperContext.QueryList<cmc_pdms_project_org>(orgStr, null);
+                var orgNow = saveModel.Details[1].Data;
+
+                if (orgOld.Count > 2)
+                {
+                    orgNow.Clear();
+                }
             }
+            
+
+
+
 
             string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
                 var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
