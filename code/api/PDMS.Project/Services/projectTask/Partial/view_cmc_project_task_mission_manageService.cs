@@ -46,12 +46,13 @@ namespace PDMS.Project.Services
             string sql = $@"SELECT
 	                                       * 
                                          FROM
-	                                       view_cmc_project_task_mission_manage                
+	                                       view_cmc_project_task_mission_manage                 
                                          WHERE 1=1 ";
 
             var data = JObject.Parse(saveModel.ToString());
             var sets = data["set_ids"];
             var template_id = data["template_id"].ToString();
+            var epl_id = data["epl_id"].ToString();
             if (!string.IsNullOrEmpty(template_id))
             {
                 sql += $" AND template_id='{template_id}'";
@@ -61,8 +62,12 @@ namespace PDMS.Project.Services
                 string ids = string.Join("','", sets);
                 sql += $" AND set_id in ('{ids}')";
             }
-
+            if (!string.IsNullOrEmpty(epl_id))
+            {
+                sql += $" AND epl_id='{epl_id}'";
+            }
             sql += $" ORDER BY mapOrder DESC";
+            Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_cmc_project_task_mission_manage>(sql, null);
             return Result;
         }
