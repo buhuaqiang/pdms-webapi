@@ -76,11 +76,11 @@ namespace PDMS.Project.Services
             // 在保存数据库前的操作，所有数据都验证通过了，这一步执行完就执行数据库保存           
             var glno = saveDataModel.MainData["glno"].ToString();
             int count = isGlnoRepeated(glno);
-
+            var info = new WebResponseContent();
             //把畫面上數據都寫入數據庫
             if (count == 0)
             {
-                var info = _cmc_pdms_project_mainService.Add(saveDataModel);
+                info = _cmc_pdms_project_mainService.Add(saveDataModel);
                 string selectstr1 = $@"SELECT project_id FROM cmc_pdms_project_main WHERE glno= '{glno}'";
                 List<cmc_pdms_project_main> pidResult = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectstr1, null);
                 var pid = pidResult[0].project_id;
@@ -90,7 +90,7 @@ namespace PDMS.Project.Services
                 var succReleaseStatus = repository.DapperContext.ExcuteNonQuery(releaseStatus, null);
                 string pStatus = $@"UPDATE cmc_pdms_project_main  set project_status='01' WHERE project_id='{pid}'";
                 var projStatus = repository.DapperContext.ExcuteNonQuery(pStatus, null);
-                return info;
+                return webResponse.OK();
             }
             else
             {
@@ -381,16 +381,12 @@ namespace PDMS.Project.Services
                 List<cmc_pdms_project_org> orgOld = _repository.DapperContext.QueryList<cmc_pdms_project_org>(orgStr, null);
                 var orgNow = saveModel.Details[1].Data;
 
-                if (orgOld.Count > 2)
+                if (orgOld.Count > 1)
                 {
                     orgNow.Clear();
                 }
             }
-            
-
-
-
-
+    
             string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
                 var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
                 var gateDates = saveModel.Details[0].Data;//獲取當前頁面大日程數據
