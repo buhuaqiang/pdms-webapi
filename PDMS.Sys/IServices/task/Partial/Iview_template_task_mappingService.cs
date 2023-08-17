@@ -11,6 +11,8 @@ namespace PDMS.Sys.IServices
 {
     public partial interface Iview_template_task_mappingService
     {
+        
         List<view_template_task_mapping> getTaskListByCondition(object saveModel);
+        List<view_template_task_mapping> getTaskListForProject(object saveModel);
     }
  }

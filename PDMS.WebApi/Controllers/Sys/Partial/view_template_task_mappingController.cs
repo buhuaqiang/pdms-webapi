@@ -43,5 +43,13 @@ namespace PDMS.Sys.Controllers
             List<view_template_task_mapping> list = _service.getTaskListByCondition(saveModel);
             return Json(list);
         }
+
+        [Route("getTemplateTaskListProject"), HttpPost]
+        [ApiActionPermission()]
+        public ActionResult GetTaskList([FromBody] object saveModel)
+        {
+            List<view_template_task_mapping> list = _service.getTaskListForProject(saveModel);
+            return Json(list);
+        }
     }
 }
