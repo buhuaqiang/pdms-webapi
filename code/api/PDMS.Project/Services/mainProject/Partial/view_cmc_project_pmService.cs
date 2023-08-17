@@ -372,6 +372,15 @@ namespace PDMS.Project.Services
             List<cmc_pdms_project_main> result = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectreleaseStatus, null);
             var getReleaseStatus = result[0].release_status;
 
+            string orgStr = $@"SELECT * FROM cmc_pdms_project_org WHERE project_id= '{project_id}'";
+            List<cmc_pdms_project_org> orgOld = _repository.DapperContext.QueryList<cmc_pdms_project_org>(orgStr, null);
+            var orgNow = saveModel.Details[1].Data;
+
+            if (orgOld.Count > 2)
+            {
+                orgNow.Clear();
+            }
+
             string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
                 var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
                 var gateDates = saveModel.Details[0].Data;//獲取當前頁面大日程數據
@@ -460,7 +469,7 @@ namespace PDMS.Project.Services
                         }
                     });
 
-                    info = _cmc_pdms_project_mainService.Update(saveModel);//更新保存數據
+                    //info = _cmc_pdms_project_mainService.Update(saveModel);//更新保存數據
 
 
                     
@@ -544,6 +553,7 @@ namespace PDMS.Project.Services
                                 return true;
                             }, (ex) => { throw new Exception(ex.Message); });
                         }
+                        info = _cmc_pdms_project_mainService.Update(saveModel);//更新保存數據
                     }
                     catch (Exception ex)
                     {
@@ -774,7 +784,7 @@ namespace PDMS.Project.Services
                 org.user_id = "201995";
                 org.user_name = "鄧宇柯";
                 org.user_role_id = "A1551";
-                org.user_role_name = "系統工程師ss1";
+                org.user_role_name = "系統工程師ss1200";
 
                 cmc_pdms_project_org org1 = new cmc_pdms_project_org();
                 org1.org_code = "D148";
@@ -782,7 +792,7 @@ namespace PDMS.Project.Services
                 org1.user_id = "775928";
                 org1.user_name = "林敏男";
                 org1.user_role_id = "A2582";
-                org1.user_role_name = "系統工程師ss12";
+                org1.user_role_name = "系統工程師ss1200";
                 list.Add(org1);
                 list.Add(org);
                 return webResponse.OKData(list);
