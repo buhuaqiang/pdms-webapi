@@ -186,8 +186,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.start_date = item.Key.gate_start_date == null ? "" : item.Key.gate_start_date.ToString("yyyy-MM-dd");
                         data.end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
                         data.open = true;
-                        data.type = "project";
-                        data.status = "project";
+                        data.type = "gate";
+                        data.status = "gate";
                         data.StatusInfo = "";
                         info.Add(data);
 
@@ -217,7 +217,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.task_name = item.Key.set_name;
                         data.parent = index;
                         data.open = true;
-                        data.type = "project";
+                        data.type = "gate";//project
                         data.status = "phase";
                         info.Add(data);
 
