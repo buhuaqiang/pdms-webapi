@@ -41,7 +41,7 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "uniqueidentifier")]
         [Editable(true)]
         [Required(AllowEmptyStrings = false)]
-        public Guid mapping_id { get; set; }
+        public Guid? mapping_id { get; set; }
 
         /// <summary>
         ///審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交
@@ -278,8 +278,8 @@ namespace PDMS.Entity.DomainModels
        [DisplayFormat(DataFormatString="10,2")]
        [Column(TypeName="decimal")]
        [Editable(true)]
-       public decimal? task_completion { get; set; }
+       public decimal? task_completion { get; set; }      
 
-       
+
     }
 }
