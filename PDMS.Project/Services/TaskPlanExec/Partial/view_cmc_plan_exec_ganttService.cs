@@ -378,7 +378,9 @@ where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_n
             var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
             var approve_status = saveModel.MainData["approve_status"].ToString();
 
-            var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
+            //var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
+            var sql = $@"select  *  from cmc_pdms_project_task  where project_task_id='{project_task_id}'";
+            var Data = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null).FirstOrDefault();
 
             if (Data != null)
             {
