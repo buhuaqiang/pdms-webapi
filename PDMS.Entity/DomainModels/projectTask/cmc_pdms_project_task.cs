@@ -40,7 +40,6 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "mapping_id")]
         [Column(TypeName = "uniqueidentifier")]
         [Editable(true)]
-        [Required(AllowEmptyStrings = false)]
         public Guid? mapping_id { get; set; }
 
         /// <summary>
