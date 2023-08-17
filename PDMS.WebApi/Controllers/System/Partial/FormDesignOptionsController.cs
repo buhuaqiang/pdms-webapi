@@ -59,8 +59,7 @@ namespace PDMS.System.Controllers
         [Route("submit"), HttpPost]
         public IActionResult Submit([FromBody] SaveModel saveModel)
         {
-
-            if (saveModel.MainData["FormCollectionId"] == null)
+            if(!saveModel.MainData.ContainsKey("FormCollectionId") || saveModel.MainData["FormCollectionId"] == null)
             {
                 var result = FormCollectionObjectService.Instance.Add(saveModel);
                 return Json(result);
