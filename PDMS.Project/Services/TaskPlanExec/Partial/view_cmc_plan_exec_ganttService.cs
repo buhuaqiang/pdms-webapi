@@ -92,7 +92,7 @@ gate.gate_end_date,
 case when ((DATEDIFF(day,  GETDATE(), tsk.end_date))<=tsk.warn and Convert(VARCHAR(10),GETDATE(),23) <=  tsk.end_date) then '0' when (DATEDIFF(day,tsk.end_date , GETDATE())>=tsk.warn_leader) then '1' else '-1' end 'task_status'
 from cmc_pdms_project_task tsk
 left join cmc_common_task  task on tsk.task_id=task.task_id
-left join cmc_common_template_mapping map on map.task_id=tsk.task_id and 
+left join cmc_common_template_mapping map on map.mapping_id=tsk.mapping_id and 
 set_id in (SELECT set_id from cmc_common_task_template_set where template_id=(SELECT main_plan_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01'))
 left join cmc_common_task_template_set sets on map.set_id=sets.set_id
 left join Sys_DictionaryList sl2 ON ( sl2.DicValue= sets.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = sets.set_type ))
