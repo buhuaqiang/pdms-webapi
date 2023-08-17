@@ -65,7 +65,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="用戶名")]
        [MaxLength(20)]
-       [Column(TypeName="nvarchar(20)")]
+       [Column(TypeName="nvarchar(50)")]
        [Editable(true)]
        public string user_name { get; set; }
 
@@ -74,7 +74,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="用戶角色ID-系統")]
        [MaxLength(20)]
-       [Column(TypeName="varchar(20)")]
+       [Column(TypeName="varchar(50)")]
        [Editable(true)]
        public string user_role_id { get; set; }
 
@@ -83,7 +83,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="用戶角色名稱-接口")]
        [MaxLength(20)]
-       [Column(TypeName="varchar(20)")]
+       [Column(TypeName="varchar(50)")]
        [Editable(true)]
        public string user_role_name { get; set; }
 
