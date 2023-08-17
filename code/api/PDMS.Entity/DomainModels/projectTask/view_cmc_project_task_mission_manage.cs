@@ -78,12 +78,30 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(100)]
        [Column(TypeName="nvarchar(100)")]
        [Editable(true)]
-       public string dicName { get; set; }
+       public string set_name { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="project_task_id")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_code")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_code { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_name")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_name { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="project_task_id")]
        [Column(TypeName="uniqueidentifier")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
@@ -190,6 +208,30 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "int")]
         [Editable(true)]
         public int? mapOrder { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_start_date")]
+        [Column(TypeName = "datetime")]
+        [Editable(true)]
+        public DateTime? gate_start_date { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "project_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Required(AllowEmptyStrings = false)]
+        public Guid project_id { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_end_date")]
+        [Column(TypeName = "datetime")]
+        [Editable(true)]
+        public DateTime? gate_end_date { get; set; }
 
         /// <summary>
         ///
