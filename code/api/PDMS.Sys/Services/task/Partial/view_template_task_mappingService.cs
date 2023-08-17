@@ -20,6 +20,7 @@ using PDMS.Sys.IRepositories;
 using System.Collections.Generic;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace PDMS.Sys.Services
 {
@@ -70,6 +71,36 @@ namespace PDMS.Sys.Services
             }
            
             sql +=$" order by st.order_no desc,map.order_no desc";
+            Console.WriteLine(sql);
+            Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
+            return Result;
+        }
+
+        public List<view_template_task_mapping> getTaskListForProject(object saveModel)
+        {
+            List<view_template_task_mapping> Result = new List<view_template_task_mapping>();
+            string sql = 
+                $@"SELECT
+	                    * 
+                        FROM
+	                    view_template_task_mapping                
+                        WHERE 1=1 ";
+
+            var data = JObject.Parse(saveModel.ToString());
+            var sets = data["set_ids"];
+            var template_id = data["template_id"].ToString();
+            if (!string.IsNullOrEmpty(template_id))
+            {
+                sql += $" AND template_id='{template_id}'";
+            }
+            if (sets != null && sets.Count() > 0)
+            {
+                string ids = string.Join("','", sets);
+                sql += $" AND set_id in ('{ids}')";
+            }
+
+            sql += $" ORDER BY order_no , stOrder DESC";
+            Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
             return Result;
         }
