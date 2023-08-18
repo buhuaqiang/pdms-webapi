@@ -999,7 +999,12 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
             List<cmc_pdms_project_epl_his> eplHisList = new List<cmc_pdms_project_epl_his>();
             Guid projectId = Guid.Parse(MainDatas[0]["project_id"].ToString());
             List<cmc_pdms_project_gate> gates = gateList(projectId);
-            string gateType = getValue(gates[0].gate_code);
+            string gateType = "";
+            if (gates.Count > 0)
+            {//若當前時間沒設置大日程，則gateType設為空
+                gateType = getValue(gates[0].gate_code);
+            }
+          
             if (MainDatas.Count != 0)
             {
                 try
