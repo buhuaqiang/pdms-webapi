@@ -59,7 +59,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(20)]
        [Column(TypeName="varchar(20)")]
        [Editable(true)]
-       public string FormCode { get; set; }
+       public string? FormCode { get; set; }
 
        /// <summary>
        ///綁定表單
@@ -76,7 +76,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
-       public string flow_code { get; set; }
+       public string? flow_code { get; set; }
 
        /// <summary>
        ///是否EO/PO任務
@@ -85,7 +85,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        [Editable(true)]
-       public string is_eo { get; set; }
+       public string? is_eo { get; set; }
 
        /// <summary>
        ///是否需要零品承辦參與審核
@@ -94,7 +94,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        [Editable(true)]
-       public string is_part_handle { get; set; }
+       public string? is_part_handle { get; set; }
 
        /// <summary>
        ///是否允許刪除
@@ -103,7 +103,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        [Editable(true)]
-       public string is_delete_able { get; set; }
+       public string? is_delete_able { get; set; }
 
        /// <summary>
        ///是否重點審計項目
@@ -112,7 +112,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        [Editable(true)]
-       public string is_audit_key { get; set; }
+       public string? is_audit_key { get; set; }
 
        /// <summary>
        ///承辦預警時間（天）
@@ -137,7 +137,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(20)]
        [Column(TypeName="varchar(20)")]
        [Editable(true)]
-       public string suit_part_kinds { get; set; }
+       public string? suit_part_kinds { get; set; }
 
        /// <summary>
        ///適用部門
@@ -146,16 +146,16 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
-       public string suit_org_codes { get; set; }
+       public string? suit_org_codes { get; set; }
 
        /// <summary>
        ///任務描述
        /// </summary>
        [Display(Name ="任務描述")]
-       [MaxLength(100)]
-       [Column(TypeName="varchar(100)")]
+       [MaxLength(1000)]
+       [Column(TypeName="nvarchar(1000)")]
        [Editable(true)]
-       public string task_desc { get; set; }
+       public string? task_desc { get; set; }
 
        /// <summary>
        ///
@@ -172,7 +172,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
-       public string Creator { get; set; }
+       public string? Creator { get; set; }
 
        /// <summary>
        ///
@@ -197,7 +197,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
-       public string Modifier { get; set; }
+       public string? Modifier { get; set; }
 
        /// <summary>
        ///
@@ -214,7 +214,7 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(1)]
        [Column(TypeName="char(1)")]
        [Editable(true)]
-       public string del_flag { get; set; }
+       public string? del_flag { get; set; }
 
 
         /// <summary>
@@ -224,7 +224,7 @@ namespace PDMS.Entity.DomainModels
         [MaxLength(1)]
         [Column(TypeName = "int")]
         [Editable(true)]
-        public int work_days { get; set; }
+        public int? work_days { get; set; }
 
     }
 }

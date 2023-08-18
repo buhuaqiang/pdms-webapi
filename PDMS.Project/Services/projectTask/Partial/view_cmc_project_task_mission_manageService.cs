@@ -70,8 +70,7 @@ FROM
 	LEFT JOIN cmc_common_task AS ct ON ct.task_id = p.task_id
 	LEFT JOIN cmc_common_task AS pct ON pct.task_id = p.pre_task_id
 	LEFT JOIN cmc_common_template_mapping AS map ON map.mapping_id = p.mapping_id
-	LEFT JOIN cmc_common_task_template_set AS tset ON tset.template_id = p.template_id 
-	AND tset.set_id = map.set_id
+	LEFT JOIN cmc_common_task_template_set AS tset on tset.set_id=map.set_id
 	LEFT JOIN cmc_common_task_template AS temp ON temp.template_id = p.template_id
 	INNER JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue = tset.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = tset.set_type ) )
 	LEFT JOIN cmc_common_task_template_set parent ON tset.parent_set_id= parent.set_id

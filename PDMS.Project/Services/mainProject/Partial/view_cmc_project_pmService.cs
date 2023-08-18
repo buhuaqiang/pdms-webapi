@@ -105,11 +105,7 @@ namespace PDMS.Project.Services
             var CreateID = userList.User_Id;
             var Creator = userList.UserTrueName;
             var pid = saveModel.MainData["project_id"].ToString();       
-            //List<cmc_pdms_project_gate> gateModList = new List<cmc_pdms_project_gate>();
-            string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
-            var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
-            //var gateid2 = saveModel.Details[0].Data[0]["gate_id"].ToString();
-            //var gateId = saveModel.MainData["gate_id"].ToString();
+           
 
 
             var pageGateData = saveModel.Details[0].Data;//畫面上大日程數據pageGateData
