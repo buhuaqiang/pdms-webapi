@@ -27,6 +27,8 @@ namespace PDMS.System.IServices
 
 
         List<DictionaryInfo> GetDictionaryData(int dic_id, string dic_name);
+
+       public List<DictionaryInfo1> GetDictionaryDataList( object obj);
     }
 }
 
