@@ -343,7 +343,7 @@ namespace PDMS.Project.Services
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
                         if (epl != null)
                         {
-                            epl.main_plan_id = template_id == null ? Guid.Parse("") : Guid.Parse(template_id.ToString());
+                            epl.main_plan_id = template_id == null ? Guid.Empty : Guid.Parse(template_id.ToString());
                         }
                         eplList.Add(epl);
                     }
@@ -392,17 +392,18 @@ namespace PDMS.Project.Services
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
                                         //dateFormat(item, pTask);
                                         pTask.project_task_id = Guid.NewGuid();
-                                        pTask.epl_id = eplId == null ? Guid.Parse("") : Guid.Parse(eplId.ToString());
-                                        pTask.template_id = item["template_id"] == null ? Guid.Parse("") : Guid.Parse(item["template_id"].ToString());
-                                        pTask.task_id = item["task_id"] == null ? Guid.Parse("") : Guid.Parse(item["task_id"].ToString());
-                                        pTask.mapping_id = item["mapping_id"] == null ? Guid.Parse("") : Guid.Parse(item["mapping_id"].ToString());
+                                        pTask.epl_id = eplId == null ? Guid.Empty : Guid.Parse(eplId.ToString());
+                                        pTask.template_id = item["template_id"] == null ? Guid.Empty : Guid.Parse(item["template_id"].ToString());
+                                        pTask.task_id = item["task_id"] == null ? Guid.Empty : Guid.Parse(item["task_id"].ToString());
+                                        pTask.mapping_id = item["mapping_id"] == null ? Guid.Empty : Guid.Parse(item["mapping_id"].ToString());
                                         pTask.action_type = "add";
                                         pTask.approve_status = "00";
                                         pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
                                         pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
                                         pTask.is_part_handle = item["is_part_handle"] == null ? "" : item["is_part_handle"].ToString();
                                         pTask.is_delete_able = item["is_delete_able"] == null ? "" : item["is_delete_able"].ToString();
-                                        pTask.FormId = item["formId"] == null ? Guid.Parse("") : Guid.Parse(item["formId"].ToString());
+                                        //pTask.FormId = item["formId"] == null ? Guid.Parse("") : Guid.Parse(item["formId"].ToString());
+                                        pTask.FormId = item["formId"] == null ? Guid.Empty : Guid.Parse(item["formId"].ToString());
                                         pTask.FormCode = item["formCode"] == null ? "" : item["formCode"].ToString();
                                         addList.Add(pTask);
                                     }
