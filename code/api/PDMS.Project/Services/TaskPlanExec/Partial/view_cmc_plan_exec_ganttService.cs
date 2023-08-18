@@ -100,7 +100,8 @@ left join cmc_common_task_template_set parent on sets.parent_set_id=parent.set_i
 left join Sys_DictionaryList sl3 ON ( sl3.DicValue= parent.set_value AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
 left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
 left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
-where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')  and tsk.start_date is not null  and tsk.end_date is not null
+where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01') 
+and tsk.start_date is not null  and tsk.end_date is not null   and   tsk.start_date<=tsk.end_date
 and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
 
             if (!string.IsNullOrEmpty(start_date))
