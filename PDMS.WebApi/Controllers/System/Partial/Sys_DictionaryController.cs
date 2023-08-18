@@ -5,6 +5,7 @@ using PDMS.Core.Controllers.Basic;
 using PDMS.Core.Extensions;
 using PDMS.Core.Filters;
 using PDMS.System.IServices;
+using static PDMS.System.Services.Sys_DictionaryService;
 
 namespace PDMS.System.Controllers
 {
@@ -65,6 +66,13 @@ namespace PDMS.System.Controllers
         public ActionResult GetDictionaryData(int dic_id=-1, string dic_no = "")
         {
             return Json(Service.GetDictionaryData(dic_id, dic_no));
+        }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("GetDictionaryDataList")]
+        public List<DictionaryInfo1> GetDictionaryDataList([FromBody] object obj )
+        {
+            return Service.GetDictionaryDataList(obj);
         }
 
     }
