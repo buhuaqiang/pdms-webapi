@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using OfficeOpenXml.ConditionalFormatting;
 using PDMS.Core.BaseProvider;
 using PDMS.Core.Const;
@@ -326,10 +327,36 @@ namespace PDMS.System.Services
         }
 
 
+        public List<DictionaryInfo1> GetDictionaryDataList( object obj )
+        {
+            var data = JObject.Parse(obj.ToString());
+            var exchangeRate = data["dicNo1"].ToString();
+            var devFeeRate = data["dicNo2"].ToString();
+            var moldFeeRate = data["dicNo3"].ToString();
+
+            List<DictionaryInfo1> dicList = new List<DictionaryInfo1>();
+
+            var dicNos ="('" +exchangeRate + "','" + devFeeRate + "','" + moldFeeRate+"')";
+
+            string sql = $@" select s.DicNo, d.DicName as 'value' ,d.DicValue as 'key' from  Sys_DictionaryList d left  join   Sys_Dictionary s on d.Dic_ID=s.Dic_ID 
+                where s.DicNo in {dicNos} and d.Enable='1'  and s.Enable='1' ";
+            dicList = repository.DapperContext.QueryList<DictionaryInfo1>(sql, null);
+            return dicList;
+
+        }
+
         public class DictionaryInfo
         {
             public string  key { get; set; }
             public string value { get; set; }
+        }
+
+        public class DictionaryInfo1
+        {
+            public string key { get; set; }
+            public string value { get; set; }
+
+            public string DicNo { get; set; }
         }
     }
 }
