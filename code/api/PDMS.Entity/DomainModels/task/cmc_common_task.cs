@@ -226,5 +226,25 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         public int? work_days { get; set; }
 
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "form_type")]
+        [MaxLength(5)]
+        [Column(TypeName = "varchar(5)")]
+        [Editable(true)]
+        public string? form_type { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "form_url")]
+        [MaxLength(20)]
+        [Column(TypeName = "varchar(20)")]
+        [Editable(true)]
+        public string? form_url { get; set; }
+
     }
 }

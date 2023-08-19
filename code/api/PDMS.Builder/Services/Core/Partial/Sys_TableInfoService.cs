@@ -327,7 +327,7 @@ DISTINCT
         /// <returns></returns>
         public string CreateEntityModel(Sys_TableInfo sysTableInfo)
         {
-            if (sysTableInfo == null
+             if (sysTableInfo == null
                 || sysTableInfo.TableColumns == null
                 || sysTableInfo.TableColumns.Count == 0)
                 return "提交的配置数据不完整";
