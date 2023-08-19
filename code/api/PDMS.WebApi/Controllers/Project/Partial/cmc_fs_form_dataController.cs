@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Project.Controllers
 {
@@ -29,5 +30,25 @@ namespace PDMS.Project.Controllers
             _service = service;
             _httpContextAccessor = httpContextAccessor;
         }
+        [ApiActionPermission()]
+        [HttpPost, Route("GetPageData")]
+        public override ActionResult GetPageData([FromBody] PageDataOptions loadData)
+        {
+            return base.GetPageData(loadData);
+        }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("Add")]
+        public override ActionResult Add([FromBody] SaveModel saveModel)
+        {
+            return base.Add(saveModel);
+        }
+        [ApiActionPermission()]
+        [HttpPost, Route("Update")]
+        public override ActionResult Update([FromBody] SaveModel saveModel)
+        {
+            return base.Update(saveModel);
+        }
     }
+
 }
