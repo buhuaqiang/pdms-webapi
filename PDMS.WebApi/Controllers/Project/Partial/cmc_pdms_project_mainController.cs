@@ -59,5 +59,12 @@ namespace PDMS.Project.Controllers
         {
             return Service.closeProject(obj);
         }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("isLoaded")]
+        public int isLoaded([FromBody] SaveModel saveModel)
+        {
+            return Service.isLoaded(saveModel);
+        }
     }
 }
