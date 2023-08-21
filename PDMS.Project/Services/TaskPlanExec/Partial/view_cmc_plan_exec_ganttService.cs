@@ -162,7 +162,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
 
-                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key,x.form_type,x.form_url }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key,x.form_type,x.form_url, x.gate_start_date, x.gate_end_date }).ToList();
 
                 //var taskInfo222 = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id}).ToList();
                 var gateIndex = 0;
@@ -284,6 +284,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
                         data.form_type = item.Key.form_type == null ? "" : item.Key.form_type.ToString();
                         data.form_url = item.Key.form_url == null ? "" : item.Key.form_url.ToString();
+                        data.gate_start_date = item.Key.gate_start_date == null ? "" : item.Key.gate_start_date.ToString("yyyy-MM-dd");
+                        data.gate_end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
 
 
                         info.Add(data);
@@ -406,6 +408,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
         public WebResponseContent TsSave(SaveModel saveModel, string status = "")
         {
+            var form_type = saveModel.MainData["form_type"].ToString();
             var FormData = saveModel.MainData["FormData"].ToString();
             var FormId = saveModel.MainData["FormId"].ToString();
             var FormCollectionId = saveModel.MainData["FormCollectionId"] == null ? "" : saveModel.MainData["FormCollectionId"].ToString();
@@ -422,6 +425,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             {
                 try
                 {
+                    if(!string.IsNullOrEmpty(form_type) && form_type!="1")
+                    {
                     var isnull = Data.FormCollectionId;
                     if (isnull == null || isnull.ToString().Contains("000000"))
                     {
@@ -483,7 +488,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         }
                         #endregion        
                     }
-
+                    }
 
                     #region  cmc_pdms_project_task  start_date /end_date /approve_status欄位
                     Data.start_date = start_date;
