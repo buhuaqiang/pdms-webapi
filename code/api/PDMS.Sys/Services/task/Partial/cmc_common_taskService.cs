@@ -60,11 +60,15 @@ namespace PDMS.Sys.Services
         public override WebResponseContent Update(SaveModel saveModel)
         {
             string formID = saveModel.MainData["FormId"].ToString();
-            FormDesignOptions fo = _formRepository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Guid.Parse(formID)).FirstOrDefault();
-            if (fo != null)
+            if(!string.IsNullOrEmpty(formID))
             {
-                saveModel.MainData["FormCode"] = fo.FormCode;
+                FormDesignOptions fo = _formRepository.DbContext.Set<FormDesignOptions>().Where(x => x.FormId == Guid.Parse(formID)).FirstOrDefault();
+                if (fo != null)
+                {
+                    saveModel.MainData["FormCode"] = fo.FormCode;
+                }
             }
+           
             return base.Update(saveModel);
         }
 
