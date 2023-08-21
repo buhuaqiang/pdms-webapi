@@ -42,14 +42,15 @@ namespace PDMS.Project.Services
         private readonly Icmc_pdms_project_mainService _cmc_pdms_project_mainService;
         private readonly Icmc_pdms_project_mainRepository _cmc_pdms_project_mainRepository;
         private readonly Icmc_pdms_project_eplService _cmc_pdms_project_eplService;
-
+        private readonly Icmc_pdms_project_gateService _cmc_pdms_project_gateService;
         [ActivatorUtilitiesConstructor]
         public view_cmc_project_pmService(
             Iview_cmc_project_pmRepository dbRepository,
             IHttpContextAccessor httpContextAccessor,
             Icmc_pdms_project_mainService cmc_pdms_project_mainService,
             Icmc_pdms_project_eplService cmc_pdms_project_eplService,
-            Icmc_pdms_project_mainRepository cmc_pdms_project_mainRepository
+            Icmc_pdms_project_mainRepository cmc_pdms_project_mainRepository,
+            Icmc_pdms_project_gateService cmc_pdms_project_gateService
             )
         : base(dbRepository)
         {
@@ -58,6 +59,7 @@ namespace PDMS.Project.Services
             _cmc_pdms_project_mainService = cmc_pdms_project_mainService;
             _cmc_pdms_project_mainRepository = cmc_pdms_project_mainRepository;
             _cmc_pdms_project_eplService= cmc_pdms_project_eplService;
+            _cmc_pdms_project_gateService = cmc_pdms_project_gateService;
             //多租户会用到这init代码，其他情况可以不用
             //base.Init(dbRepository);
         }
@@ -341,10 +343,23 @@ namespace PDMS.Project.Services
 
             return  webResponse.OK();
         }
-        //public override WebResponseContent Del(object[] keys, bool delList = true)
-        //{
-        //    return _cmc_pdms_project_mainService.Del(keys, delList);
-        //}
+        public override WebResponseContent Del(object[] keys, bool delList = true)//delete**
+        {
+            
+            string findGateIdSql = $@"SELECT * FROM cmc_pdms_project_gate  WHERE project_id= '{keys[0].ToString()}'";
+            List<cmc_pdms_project_gate> gateIds = _repository.DapperContext.QueryList<cmc_pdms_project_gate>(findGateIdSql, null);
+            //string[] gateKeys =new string[];
+            List<string> gateIdsList = new List<string>();
+            //object[] termsList = new object[gateIds.Count()];
+            gateIds.ForEach(x =>
+            {
+                gateIdsList.Add(x.gate_id.ToString());
+            });
+            Object [] gidKeys = gateIdsList.ToArray();
+            var gate = new WebResponseContent();
+            gate = _cmc_pdms_project_gateService.Del(gidKeys, delList);
+            return _cmc_pdms_project_mainService.Del(keys, delList);
+        }
 
         public WebResponseContent saveRelease(SaveModel saveModel)
         {//保存並發佈
