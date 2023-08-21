@@ -731,7 +731,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_book")
             { //開發清冊
                 string devTaker = " and  epl.dev_taker_id='" + userId + "'";
-                QuerySql += "  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1 ";
+                QuerySql += "  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1  and  epl.Final_version_status='2'  ";
                 if (userId!=1)
                 {
                     QuerySql += devTaker;
