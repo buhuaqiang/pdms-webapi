@@ -71,6 +71,8 @@ namespace PDMS.Project.Services
             string sql = @$"SELECT 
 task.task_id,
 task.task_name,
+task.form_type,
+task.form_url,
 sl2.DicValue as set_value,
 sl2.DicName as set_name,
 sl3.DicValue as gate_code,
@@ -160,7 +162,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
 
-                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key,x.form_type,x.form_url }).ToList();
 
                 //var taskInfo222 = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id}).ToList();
                 var gateIndex = 0;
@@ -280,6 +282,9 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
                         data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
                         data.task_status = item.Key.task_status == null ? "" : item.Key.task_status.ToString();
+                        data.form_type = item.Key.form_type == null ? "" : item.Key.form_type.ToString();
+                        data.form_url = item.Key.form_url == null ? "" : item.Key.form_url.ToString();
+
 
                         info.Add(data);
 
@@ -391,6 +396,11 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             //大日程结束时间
             public string gate_end_date { get; set; }
 
+            public string form_type { get; set; }
+
+            public string form_url { get; set; }
+
+
         }
 
         //表單彈窗 暫存和保存按鈕， 暫存status="00" 草稿,保存 status="04" 待提交
@@ -471,21 +481,18 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                                 return true;
                             }, (ex) => { throw new Exception(ex.Message); });
                         }
-                        #endregion
-
-                        #region  cmc_pdms_project_task  start_date /end_date /approve_status欄位
-                        Data.start_date = start_date;
-                        Data.end_date = end_date;
-                        Data.approve_status = status;
-                        List<cmc_pdms_project_task> List = new List<cmc_pdms_project_task>();
-                        List.Add(Data);
-                        repository.DapperContext.BeginTransaction((r) =>
-                        {
-                            DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.start_date, x.end_date, x.approve_status });
-                            return true;
-                        }, (ex) => { throw new Exception(ex.Message); });
-                        #endregion
+                        #endregion        
                     }
+
+
+                    #region  cmc_pdms_project_task  start_date /end_date /approve_status欄位
+                    Data.start_date = start_date;
+                    Data.end_date = end_date;
+                    Data.approve_status = status;
+                    List<cmc_pdms_project_task> List = new List<cmc_pdms_project_task>();
+                    List.Add(Data);
+                    UpdateProject_Task(List);
+                    #endregion
 
 
                 }
@@ -495,11 +502,21 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                     ResponseContent.Error(ex.Message);
                 }
             }
+            return ResponseContent.OK();
+        }
 
-
+        //cmc_pdms_project_task  start_date /end_date /approve_status欄位
+        public WebResponseContent UpdateProject_Task(List<cmc_pdms_project_task> List)
+        {
+            repository.DapperContext.BeginTransaction((r) =>
+            {
+                DBServerProvider.SqlDapper.UpdateRange(List, x => new { x.start_date, x.end_date, x.approve_status });
+                return true;
+            }, (ex) => { throw new Exception(ex.Message); });
 
             return ResponseContent.OK();
         }
+
 
         public SaveModel AnalysisData(SaveModel saveModel)
         {
@@ -508,7 +525,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             {
                 var str = saveModel.MainData["checkVal"].ToString();
                 JArray jarry = JArray.Parse(str);
-                TaskIds = string.Join("''", jarry);
+                TaskIds = string.Join("','", jarry);
             }
             else 
             {
@@ -625,24 +642,57 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             List<Dictionary<string, object>> ChannelOne = new List<Dictionary<string, object>>();
             //审批通道2
             List<Dictionary<string, object>> ChannelTwo = new List<Dictionary<string, object>>();
+            //flow_code is null  則表示此任務無需審批,將主鍵ID 存起來
+            List<string>GetProject_task = new List<string>();
+
+            //cmc_pdms_project_task  start_date /end_date /approve_status欄位
+            List<string>UpdateProject_task = new List<string>();
             Sys_User user = new Sys_User();
             foreach (var item in list)
             {
                 foreach (var info in item)
                 {
+                    //item.Key is null 則表示此任務無需審批
                     switch (item.Key)
                     {
                         case "1":
                             ChannelOne.Add(info);
+                            UpdateProject_task.Add(info["project_task_id"].ToString());
                             break;
                         case "2":
-                            ChannelTwo.Add(info);           
+                            ChannelTwo.Add(info);
+                            UpdateProject_task.Add(info["project_task_id"].ToString());
                             break;
                         default:
+                            GetProject_task.Add(info["project_task_id"].ToString());
                             break;
                     }
                 }         
             }
+            //將無需審批的任務，直接調整狀態為通過 approve_status='02' ，完成標識 為 完成 done_status='1'
+            if (GetProject_task.Count != 0)
+            {
+                var data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x=> GetProject_task.Contains(x.project_task_id.ToString())).ToList();
+                data.ForEach((itm) =>{itm.approve_status = "02";itm.done_status = "1";});
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(data, x => new { x.approve_status, x.done_status});
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+                //string sql = $@"update cmc_pdms_project_task set approve_status='02' , done_status='1' where project_task_id in('{str}');";
+                //var succ = repository.DapperContext.ExcuteNonQuery(sql,null);
+            }
+            if (UpdateProject_task.Count != 0)
+            {
+                var data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => UpdateProject_task.Contains(x.project_task_id.ToString())).ToList();
+                data.ForEach((itm) => { itm.approve_status = status;  });
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(data, x => new { x.approve_status });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+
             ModelOne.MainData = saveModel.MainData;
             if (ChannelOne.Count != 0)
             {
