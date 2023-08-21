@@ -81,25 +81,50 @@ namespace PDMS.Sys.Services
             List<view_template_task_mapping> Result = new List<view_template_task_mapping>();
             string sql = 
                 $@"SELECT
-	                    * 
-                        FROM
-	                    view_template_task_mapping                
-                        WHERE 1=1 ";
+	map.*,
+	task.task_name,
+	temp.template_name,
+	st.template_id,
+	st.set_type,
+	st.parent_set_id,
+	sl2.DicValue AS set_value,
+	sl2.DicName AS set_name,
+	sl3.DicValue AS gate_code,
+	sl3.DicName AS gate_name,
+	st.order_no AS stOrder,
+	task.FormId,
+	task.FormCode,
+	task.is_part_handle,
+	task.warn,
+	task.warn_leader,
+	task_desc,
+	'' AS start_date,
+	'' AS end_date 
+FROM
+	cmc_common_template_mapping map
+	LEFT JOIN cmc_common_task task ON map.task_id = task.task_id
+	LEFT JOIN cmc_common_task_template_set st ON st.set_id = map.set_id
+	LEFT JOIN cmc_common_task_template AS temp ON temp.template_id = st.template_id
+	INNER JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue = st.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = st.set_type ) )
+	LEFT JOIN cmc_common_task_template_set parent ON st.parent_set_id = parent.set_id
+	INNER JOIN Sys_DictionaryList sl3 ON ( sl3.DicValue = parent.set_value AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ) ) 
+WHERE
+	1 = 1 ";
 
             var data = JObject.Parse(saveModel.ToString());
             var sets = data["set_ids"];
             var template_id = data["template_id"].ToString();
             if (!string.IsNullOrEmpty(template_id))
             {
-                sql += $" AND template_id='{template_id}'";
+                sql += $" AND temp.template_id='{template_id}'";
             }
             if (sets != null && sets.Count() > 0)
             {
                 string ids = string.Join("','", sets);
-                sql += $" AND set_id in ('{ids}')";
+                sql += $" AND map.set_id in ('{ids}')";
             }
 
-            sql += $" ORDER BY order_no , stOrder DESC";
+            sql += $" ORDER BY  CAST( sl3.DicValue AS INT ) ASC, CAST( st.order_no AS INT ) DESC ";
             Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
             return Result;

@@ -24,18 +24,70 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="nvarchar(100)")]
        public string dicName { get; set; }
 
-       /// <summary>
-       ///任務名稱
-       /// </summary>
-       [Display(Name ="任務名稱")]
+        /// <summary>
+        ///模板
+        /// </summary>
+        [Display(Name = "模板")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        public string template_name { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "set_value")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string set_value { get; set; }
+
+        /// <summary>
+        ///階段
+        /// </summary>
+        [Display(Name = "階段")]
+        [MaxLength(100)]
+        [Column(TypeName = "nvarchar(100)")]
+        [Editable(true)]
+        public string set_name { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_code")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_code { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "gate_name")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_name { get; set; }
+
+        /// <summary>
+        ///任務名稱
+        /// </summary>
+        [Display(Name ="任務名稱")]
        [MaxLength(100)]
        [Column(TypeName="varchar(100)")]
        public string task_name { get; set; }
 
-       /// <summary>
-       ///承辦預警(天)
-       /// </summary>
-       [Display(Name ="承辦預警(天)")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "parent_set_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? parent_set_id { get; set; }
+
+        /// <summary>
+        ///承辦預警(天)
+        /// </summary>
+        [Display(Name ="承辦預警(天)")]
        [Column(TypeName="int")]
        public int? warn { get; set; }
 
@@ -189,14 +241,6 @@ namespace PDMS.Entity.DomainModels
        [MaxLength(10)]
        [Column(TypeName="varchar(10)")]
        public string set_type { get; set; }
-
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="set_value")]
-       [MaxLength(10)]
-       [Column(TypeName="varchar(10)")]
-       public string set_value { get; set; }
 
        /// <summary>
        ///

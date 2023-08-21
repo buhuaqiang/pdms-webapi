@@ -129,8 +129,15 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="nvarchar(4000)")]
        public string ModifyDate { get; set; }
 
+        /// <summary>
+        ///部門編號
+        /// </summary>
+        [Display(Name = "部門編號")]
+        [MaxLength(50)]
+        [Column(TypeName = "nvarchar(50)")]
+        [Editable(true)]
+        public string DepartmentCode { get; set; }
 
 
-       
     }
 }
