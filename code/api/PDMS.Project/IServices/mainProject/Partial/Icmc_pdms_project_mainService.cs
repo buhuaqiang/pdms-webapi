@@ -17,5 +17,7 @@ namespace PDMS.Project.IServices
         public int isLoadDate(SaveModel saveModel);
 
         public WebResponseContent closeProject(object obj);
+
+        public int isLoaded(SaveModel saveModel);
     }
  }
