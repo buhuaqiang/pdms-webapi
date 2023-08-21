@@ -41,6 +41,27 @@ namespace PDMS.Entity.DomainModels
         /// <summary>
         ///
         /// </summary>
+        [Display(Name = "form_type")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string form_type { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "form_url")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string form_url { get; set; }
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
         [Display(Name ="gate_code")]
        [MaxLength(10)]
        [Column(TypeName="varchar(10)")]
