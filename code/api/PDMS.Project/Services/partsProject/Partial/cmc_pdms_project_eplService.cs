@@ -93,7 +93,13 @@ namespace PDMS.Project.Services
                                     epl.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
                                     epl.submit_status = "0";
-                                    epl.org_change_approve_status = "00";
+                                    if (epl.org_change_approve_status=="01") {//審核中變更狀態不變
+                                        epl.org_change_approve_status = item["org_change_approve_status"].ToString(); ;
+                                    }
+                                    else {//其他情況狀態為待提交
+                                        epl.org_change_approve_status = "00";
+                                    }
+                                   
                                     epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
                                 }
                             }
