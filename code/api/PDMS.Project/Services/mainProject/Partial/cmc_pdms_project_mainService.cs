@@ -59,7 +59,7 @@ namespace PDMS.Project.Services
                         {
                             // project.epl_load_date = Convert.ToDateTime(ConvertTime(Now date()));
 
-                            project.epl_load_date = Convert.ToDateTime(DateTime.Now);
+                            project.epl_load_date = Convert.ToDateTime(item["epl_load_date"]);
                             project.project_status = "02";
                         }
                         projectMain.Add(project);
@@ -160,6 +160,18 @@ namespace PDMS.Project.Services
             return count;     
         }
 
+        public int isLoaded(SaveModel saveModel)
+        {//判斷epl是否已經從plm系統抓取到數據
+            int count = 0;
+            var MainDatas = saveModel.MainDatas;
+            var projectId = MainDatas[0]["project_id"].ToString();
+
+            string sql = $@"select  count(*)  from  cmc_pdms_project_epl epl
+                            where epl.project_id='" + projectId + "' and epl_phase='02'  and epl_source='03' ";
+
+            count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            return count;
+        }
 
         public WebResponseContent closeProject(object obj)
         {//結案
