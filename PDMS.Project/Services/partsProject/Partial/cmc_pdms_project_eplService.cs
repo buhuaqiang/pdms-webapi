@@ -72,7 +72,10 @@ namespace PDMS.Project.Services
                             if (Extra.Equal("/view_cmc_project_epl_group"))
                             {//組窗口保存操作
                                 epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
-
+                                if(epl.Final_version_status != "2"){//除了終版其他時候調整後需要重新部門定版
+                                    epl.Final_version_status = item["Final_version_status"] == null ? null : "0";
+                                }
+                                   
                             }
                             else
                             {//部車型窗口保存操作
@@ -85,6 +88,10 @@ namespace PDMS.Project.Services
                                     epl.submit_status = "0";
                                     epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
                                     epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
+                                    if (epl.Final_version_status != "2")
+                                    {//除了終版其他時候調整後需要重新部門定版
+                                        epl.Final_version_status = item["Final_version_status"] == null ? null : "0";
+                                    }
                                 }
                                 else
                                 {//變更了部門
@@ -99,8 +106,12 @@ namespace PDMS.Project.Services
                                     else {//其他情況狀態為待提交
                                         epl.org_change_approve_status = "00";
                                     }
-                                   
                                     epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
+
+                                    if (epl.Final_version_status != "2")
+                                    {//除了終版其他時候調整後需要重新部門定版
+                                        epl.Final_version_status = item["Final_version_status"] == null ? null : "0";
+                                    }
                                 }
                             }
 
@@ -120,7 +131,7 @@ namespace PDMS.Project.Services
                     {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.dev_taker_id });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.dev_taker_id,x.Final_version_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
@@ -128,7 +139,7 @@ namespace PDMS.Project.Services
                     {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.dev_taker_id, x.original_part_no, x.submit_status, x.org_change_approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.dev_taker_id, x.original_part_no, x.submit_status, x.org_change_approve_status ,x.Final_version_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
