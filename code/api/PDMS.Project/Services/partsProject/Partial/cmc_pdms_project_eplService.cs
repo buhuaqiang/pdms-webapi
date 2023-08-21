@@ -84,6 +84,7 @@ namespace PDMS.Project.Services
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
                                     epl.submit_status = "0";
                                     epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
+                                    epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
                                 }
                                 else
                                 {//變更了部門
@@ -93,6 +94,7 @@ namespace PDMS.Project.Services
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
                                     epl.submit_status = "0";
                                     epl.org_change_approve_status = "00";
+                                    epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
                                 }
                             }
 
@@ -120,7 +122,7 @@ namespace PDMS.Project.Services
                     {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.original_part_no, x.submit_status, x.org_change_approve_status });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.kd_type, x.group_code, x.new_org_code, x.dev_taker_id, x.original_part_no, x.submit_status, x.org_change_approve_status });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
