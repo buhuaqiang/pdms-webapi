@@ -412,5 +412,23 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         public decimal? fs_2_rate { get; set; }
 
+        /// <summary>
+        ///開發費稅率默認值
+        /// </summary>
+        [Display(Name = "開發費稅率默認值")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_1_rate_def { get; set; }
+
+        /// <summary>
+        ///模具費稅率默認值
+        /// </summary>
+        [Display(Name = "模具費稅率默認值")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_2_rate_def { get; set; }
+
     }
 }
