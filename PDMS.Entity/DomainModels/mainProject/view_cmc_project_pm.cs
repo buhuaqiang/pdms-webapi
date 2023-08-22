@@ -242,5 +242,32 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "decimal")]
         [Editable(true)]
         public decimal? eo_fee { get; set; }
+
+        /// <summary>
+        ///大日程字典Gode
+        /// </summary>
+        [Display(Name = "大日程字典Gode")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public string gate_code { get; set; }
+
+        /// <summary>
+        ///定版狀態
+        /// </summary>
+        [Display(Name = "定版狀態")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        [Editable(true)]
+        public string Final_statsu { get; set; }
+
+        /// <summary>
+        ///FS成本編列狀態
+        /// </summary>
+        [Display(Name = "FS成本編列狀態")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        [Editable(true)]
+        public string fs_status { get; set; }
     }
 }
