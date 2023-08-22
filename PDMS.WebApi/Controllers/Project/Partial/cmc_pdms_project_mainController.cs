@@ -66,5 +66,12 @@ namespace PDMS.Project.Controllers
         {
             return Service.isLoaded(saveModel);
         }
+
+        [ApiActionPermission()]
+        [HttpPost, Route("cancelProject")]
+        public WebResponseContent cancelProject([FromBody] object obj)
+        {
+            return Service.cancelProject(obj);
+        }
     }
 }
