@@ -92,7 +92,7 @@ WHERE
                 sql += $" AND map.set_id in ('{ids}')";
             }
             
-            sql += $" ORDER BY mapOrder DESC";
+            sql += $" ORDER BY CAST( sl3.DicValue AS INT ) ASC, CAST( sl2.DicValue AS INT ) DESC, CAST( map.order_no AS INT ) DESC";
             Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_cmc_project_task_mission_manage>(sql, null);
             return Result;
