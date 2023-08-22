@@ -712,11 +712,31 @@ namespace PDMS.Project.Services
                 }
 
             }
-            QuerySql = @" SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+            QuerySql = @" select case  when tab.t1>0 then '部門定版中' when tab.t2>0 then '已定版' else '待部門定版' end Final_statsu,
+                                case when tab.fs1>0 then '審核中' when tab.fs2>0 then '審核完成' else '待提交' end fs_status,
+                                tab.project_id,tab.entity,tab.glno,tab.project_name,tab.project_type,tab.project_reg_date,tab.start_date,
+                                tab.end_date,tab.project_gate_date,tab.project_budget,tab.project_purpose,tab.project_describe,tab.project_status,
+                                tab.release_status,tab.model_type,tab.model_year,tab.model_dest,tab.epl_load_date,tab.version,tab.CreateID,
+                                tab.Creator,tab.CreateDate,tab.ModifyID,tab.Modifier,tab.ModifyDate,tab.eo_fee,tab.gate_code    
+
+                        from (
+                         SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                        pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
 	                        pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                             ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
-	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee  
+	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee,
+
+                            (select top 1 gate_code from cmc_pdms_project_gate gate where gate.project_id=pm.project_id 
+								and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code ,
+                            (select count(*) from cmc_pdms_project_epl where project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =epl_phase)
+										 and Final_version_status='1')as t1	,
+							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase)
+										and pe.Final_version_status='2')as t2,
+							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
+										and pe.fs_approve_status='01')as fs1,
+							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
+										and pe.fs_approve_status in ('02','03'))as fs2
+
                         FROM cmc_pdms_project_main AS pm  ";
 	                      
 
@@ -753,6 +773,8 @@ namespace PDMS.Project.Services
                 }                
                 QuerySql += where;
             }
+
+            QuerySql += " ) tab ";
 
             return base.GetPageData(options);
         }
