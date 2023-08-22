@@ -1090,6 +1090,9 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_1_rate = item["fs_1_rate"] == null ? null : item["fs_1_rate"].ToDecimal();
                                 epl.fs_2_rate = item["fs_2_rate"] == null ? null : item["fs_2_rate"].ToDecimal();
 
+                                epl.fs_1_rate_def = item["fs_1_rate_def"] == null ? null : item["fs_1_rate_def"].ToDecimal();
+                                epl.fs_2_rate_def = item["fs_2_rate_def"] == null ? null : item["fs_2_rate_def"].ToDecimal();
+
                                 eplHisList.Add(eplHis);
                             }
                             else{ //審批為草稿或拒絕時直接更新epl表
@@ -1105,6 +1108,8 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_2_ntd = item["fs_2_ntd"] == null ? null : item["fs_2_ntd"].ToDecimal();
                                 epl.fs_1_rate = item["fs_1_rate"] == null ? null : item["fs_1_rate"].ToDecimal();
                                 epl.fs_2_rate = item["fs_2_rate"] == null ? null : item["fs_2_rate"].ToDecimal();
+                                epl.fs_1_rate_def = item["fs_1_rate_def"] == null ? null : item["fs_1_rate_def"].ToDecimal();
+                                epl.fs_2_rate_def = item["fs_2_rate_def"] == null ? null : item["fs_2_rate_def"].ToDecimal();
 
                             }
                             
@@ -1123,7 +1128,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                     if (eplList.Count > 0) {
                         repository.DapperContext.BeginTransaction((r) =>
                         {
-                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status ,x.gate_type,x.exchange_rate,x.fs_1_ntd,x.fs_2_ntd,x.fs_1_rate,x.fs_2_rate });
+                            DBServerProvider.SqlDapper.UpdateRange(eplList, x => new {x.currency, x.fs_1,x.fs_2,x.fs_3,x.fs_remark,x.fs_approve_status ,x.gate_type,x.exchange_rate,x.fs_1_ntd,x.fs_2_ntd,x.fs_1_rate,x.fs_2_rate,x.fs_1_rate_def,x.fs_2_rate_def });
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
                     }
