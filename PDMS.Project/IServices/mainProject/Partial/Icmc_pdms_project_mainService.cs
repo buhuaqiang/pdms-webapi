@@ -19,5 +19,7 @@ namespace PDMS.Project.IServices
         public WebResponseContent closeProject(object obj);
 
         public int isLoaded(SaveModel saveModel);
+
+        public WebResponseContent cancelProject(object obj);
     }
  }
