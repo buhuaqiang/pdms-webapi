@@ -99,7 +99,231 @@ namespace PDMS.Project.Services
                 return webResponse.Error("專案編號不可重複!");
             }
         }
+
         public override WebResponseContent Update(SaveModel saveModel)
+        {//更新保存
+
+            var info = new WebResponseContent();
+            var glno = saveModel.MainData["glno"].ToString();
+            Guid projectID = Guid.Parse(saveModel.MainData["project_id"].ToString());
+            string releaseStatus = saveModel.MainData["release_status"].ToString();
+            //變更前的大日程
+            var dateList = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.project_id == projectID).ToList();
+            //頁面中有變動的大日程
+            var gateDates =JsonConvert.DeserializeObject<List< cmc_pdms_project_gate >>(JsonConvert.SerializeObject(saveModel.Details[0].Data));
+            //判斷是否變更標識
+            var change = false;
+            List<cmc_pdms_project_gate_his> gateHis = new List<cmc_pdms_project_gate_his>();
+            var dels = saveModel.Details[0].DelKeys;
+
+            if (dels != null) {//將刪除的大日程寫入歷史表
+                dels.ForEach(x =>
+                {
+                    Guid gateId = Guid.Parse(x.ToString());
+                    cmc_pdms_project_gate gate = dateList.Where(k => k.gate_id == gateId).FirstOrDefault();
+                    change = true;
+                    if (gate.version != null)
+                    { //存在版本號，已經發佈過，刪除時需要記錄到歷史表
+                        cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                        his.gate_his_id = Guid.NewGuid();
+                        his.project_id = gate.project_id;
+                        his.gate_id = gate.gate_id;
+                        his.gate_code = gate.gate_code;
+                        his.gate_start_date = gate.gate_start_date;
+                        his.gate_end_date = gate.gate_end_date;
+                        his.version = gate.version;
+                        his.action_type = "delete";
+                        gateHis.Add(his);
+                    }
+
+                });
+            }
+            if (gateDates!=null) {
+                change = true;
+            }
+            if (change && releaseStatus == "02")
+            {//發佈後且大日程有變動，更新狀態
+                saveModel.MainData["release_status"] = "03";
+            }
+
+            //數據保存到數據庫
+            info = _cmc_pdms_project_mainService.Update(saveModel);
+
+            //保存歷史記錄表
+            try
+            {
+                if (gateHis.Count != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.BulkInsert(gateHis, "cmc_pdms_project_gate_his");
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_gate_his 表，cmc_pdms_project_gate_his 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                return webResponse.Error();
+            }
+
+            return webResponse.OK();
+        }
+
+      
+
+        public WebResponseContent saveRelease(SaveModel saveModel)
+        {//保存並發佈
+            var info = new WebResponseContent();
+            var glno = saveModel.MainData["glno"].ToString();
+            var isRep = isGlnoRepeated(glno);//判斷glno是否重複
+            string project_id = saveModel.MainData["project_id"].ToString();
+
+            string newVersionStr = $@"SELECT REPLACE(REPLACE(REPLACE(REPLACE(CONVERT(VARCHAR, GETDATE(), 120), '-', ''), ':', ''), ' ', ''), ',', '') AS current_datetime;";
+            //獲取版本號
+            var newVersion = repository.DapperContext.ExecuteScalar(newVersionStr, null);
+            //獲取當前頁面大日程數據
+            var gateDates = JsonConvert.DeserializeObject<List<cmc_pdms_project_gate>>(JsonConvert.SerializeObject(saveModel.Details[0].Data));
+
+
+            List<cmc_pdms_project_gate_his> gateHis = new List<cmc_pdms_project_gate_his>();
+            List<cmc_pdms_project_gate> gateList = new List<cmc_pdms_project_gate>();
+
+            if (string.IsNullOrEmpty(project_id))
+            {//第一次新增時直接保存並發佈
+                if (isRep != 0)
+                {
+                    return webResponse.Error("專案編號不可重複!");
+                }
+                saveModel.MainData["release_status"] = "02";
+                saveModel.MainData["project_status"] = "01";
+                gateDates.ForEach(x =>
+                {
+                    x.version = newVersion.ToString();
+                });
+
+                info = _cmc_pdms_project_mainService.Add(saveModel);
+
+                cmc_pdms_project_main main = new cmc_pdms_project_main();
+                //獲取專案信息
+                main = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.glno == saveModel.MainData["glno"].ToString()).FirstOrDefault();
+                //獲取大日程
+                var List = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.project_id == main.project_id).ToList();
+                try
+                {
+                    //第一次新增保存並發佈後，將大日程數據直接寫入到歷史表中，做基礎版
+                    List.ForEach(date =>
+                    {
+                        cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                        //將第一版大日程數據寫入到歷史表中
+                        his.gate_his_id = Guid.NewGuid();
+                        his.project_id = main.project_id;
+                        his.gate_id = date.gate_id;
+                        his.gate_code = date.gate_code;
+                        his.gate_start_date = date.gate_start_date;
+                        his.gate_end_date = date.gate_end_date;
+                        his.version = newVersion.ToString();
+                        his.action_type = "add";
+                        gateHis.Add(his);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "第一次保存並發佈時装箱 cmc_pdms_project_gate_his 表，cmc_pdms_project_gate_his 文件-->foreach：" + DateTime.Now + ":" + ex.Message);
+
+                    return webResponse.Error(ex.Message);
+                }
+            }
+            else { //專案存在後保存並發佈
+               
+                WebResponseContent data =  Update(saveModel);
+
+                Guid projectID = Guid.Parse(saveModel.MainData["project_id"].ToString());
+                //歷史表中的數據與當前大日成的數據做比較，判斷是否有add與modify
+                //獲取保存後的大日程
+                var gateLists = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.project_id == projectID).ToList();
+                gateLists.ForEach(item =>
+                {//循環大日程與曆史表中最新數據做比較，
+                    cmc_pdms_project_gate_his gateHis2 = repository.DbContext.Set<cmc_pdms_project_gate_his>().Where(x => x.gate_id == item.gate_id).OrderByDescending(x => x.CreateDate).FirstOrDefault();
+                    if (gateHis2 != null)
+                    {
+                        if (item.gate_code != gateHis2.gate_code || item.gate_start_date != gateHis2.gate_start_date || item.gate_end_date != gateHis2.gate_end_date) { //變更了大日程
+                            cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                            his.gate_his_id = Guid.NewGuid();
+                            his.project_id = item.project_id;
+                            his.gate_id = item.gate_id;
+                            his.gate_code = item.gate_code;
+                            his.gate_start_date = item.gate_start_date;
+                            his.gate_end_date = item.gate_end_date;
+                            his.version = item.version;
+                            his.action_type = "modify";
+                            gateHis.Add(his);
+                            cmc_pdms_project_gate gate = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.gate_id == item.gate_id).FirstOrDefault();
+                            if (gate != null) {
+                                gate.version = newVersion.ToString();
+                            }
+                            gateList.Add(gate);
+
+                        }
+
+                    }
+                    else { //不存在新增數據到his
+                        cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                        his.gate_his_id = Guid.NewGuid();
+                        his.project_id = item.project_id;
+                        his.gate_id = item.gate_id;
+                        his.gate_code = item.gate_code;
+                        his.gate_start_date = item.gate_start_date;
+                        his.gate_end_date = item.gate_end_date;
+                        his.version = newVersion.ToString();
+                        his.action_type = "add";
+                        gateHis.Add(his);
+
+                        cmc_pdms_project_gate gate = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.gate_id == item.gate_id).FirstOrDefault();
+                        if (gate != null)
+                        {
+                            gate.version = newVersion.ToString();
+                        }
+                        gateList.Add(gate);
+                    }
+
+                });
+
+                //更新專案狀態
+                string mainStatus = $@"UPDATE cmc_pdms_project_main  set release_status='02' WHERE project_id='{projectID}'";
+                var mainStatusStr = repository.DapperContext.ExcuteNonQuery(mainStatus, null);
+            }
+
+            try
+            {
+                if (gateHis.Count != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.BulkInsert(gateHis, "cmc_pdms_project_gate_his");
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                if (gateList.Count!=0) {//更新大日程版本
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(gateList, x => new { x.version });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_gate_his 表，cmc_pdms_project_gate_his 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                return webResponse.Error();
+            }
+
+           
+
+            return webResponse.OK();
+        }
+
+      /*  public override WebResponseContent Update(SaveModel saveModel)
         {
             //var d1 = saveModel.Details[0].Data[0];
             //獲取點選專案的大日程
@@ -191,7 +415,7 @@ namespace PDMS.Project.Services
                                 
                                 '{actype}'
                                 )";
-                                var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);                                
+                                var sccGateHis = repository.DapperContext.ExcuteNonQuery(sqlGateHis, null);                               
                                 
                                 string sqlGate = $@"insert into cmc_pdms_project_gate (
                                 gate_id,
@@ -342,7 +566,7 @@ namespace PDMS.Project.Services
             }
 
             return  webResponse.OK();
-        }
+        }*/
         public override WebResponseContent Del(object[] keys, bool delList = true)//delete**
         {
             
@@ -361,7 +585,7 @@ namespace PDMS.Project.Services
             return _cmc_pdms_project_mainService.Del(keys, delList);
         }
 
-        public WebResponseContent saveRelease(SaveModel saveModel)
+        /*public WebResponseContent saveRelease1(SaveModel saveModel)
         {//保存並發佈
             var mains = saveModel;
 
@@ -416,6 +640,55 @@ namespace PDMS.Project.Services
                     });
 
                     info = _cmc_pdms_project_mainService.Add(saveModel);
+
+                    //第一次新增保存並發佈後，將大日程數據直接寫入到歷史表中，做基礎版
+                    List<cmc_pdms_project_gate_his> gateHis = new List<cmc_pdms_project_gate_his>();
+             
+                    cmc_pdms_project_main main = new cmc_pdms_project_main();
+                    //獲取專案信息
+                    main = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.glno == saveModel.MainData["glno"].ToString()).FirstOrDefault();
+                    //獲取大日程
+                    var List = repository.DbContext.Set<cmc_pdms_project_gate>().Where(x => x.project_id == main.project_id).ToList();
+                    try
+                    {
+                        List.ForEach(date =>
+                        {
+                            cmc_pdms_project_gate_his his = new cmc_pdms_project_gate_his();
+                            //將第一版大日程數據寫入到歷史表中
+                            his.gate_his_id = Guid.NewGuid();
+                            his.project_id = main.project_id;
+                            his.gate_id = date.gate_id;
+                            his.gate_code = date.gate_code;
+                            his.gate_start_date = date.gate_start_date;
+                            his.gate_end_date = date.gate_end_date;
+                            his.version = newVersion.ToString();
+                            his.action_type = "add";
+                            gateHis.Add(his);
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "第一次保存並發佈時装箱 cmc_pdms_project_gate_his 表，cmc_pdms_project_gate_his 文件-->foreach：" + DateTime.Now + ":" + ex.Message);
+
+                        return webResponse.Error(ex.Message);
+                    }
+                    try
+                    {
+                        if (gateHis.Count != 0)
+                        {
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.BulkInsert(gateHis, "cmc_pdms_project_gate_his");
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_gate_his 表，cmc_pdms_project_gate_his 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                        return webResponse.Error();
+                    }
+
                 }
                 else if (getReleaseStatus == "01")
                 {
@@ -583,7 +856,7 @@ namespace PDMS.Project.Services
 
            // return info;
             return webResponse.OK();
-        }
+        }*/
 
 
 
