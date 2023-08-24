@@ -266,7 +266,15 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(20)")]
         [Required(AllowEmptyStrings = false)]
         public string is_audit_key { get; set; }
-        
 
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "task_id")]
+        [MaxLength(10)]
+        [Column(TypeName = "varchar(10)")]
+        [Editable(true)]
+        public Guid epl_id { get; set; }
     }
 }
