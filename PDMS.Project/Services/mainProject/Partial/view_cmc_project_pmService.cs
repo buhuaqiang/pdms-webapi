@@ -1065,7 +1065,7 @@ namespace PDMS.Project.Services
                 }
                 pm.project_name= "專案名稱"+new Random().Next(100, 999);
                 pm.start_date= DateTime.Now;
-                pm.end_date= DateTime.Now;
+                pm.end_date= DateTime.Now.AddYears(1);
                 return webResponse.OKData(pm);
             }
             else
