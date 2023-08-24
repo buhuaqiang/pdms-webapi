@@ -500,6 +500,13 @@ namespace PDMS.Project.Services
                         epl.del_flag = item.del_flag;
                         epl.currency = item.currency;
                         epl.action_type = item.action_type;
+                        epl.exchange_rate = item.exchange_rate;
+                        epl.fs_1_ntd = item.fs_1_ntd;
+                        epl.fs_2_ntd = item.fs_2_ntd;
+                        epl.fs_1_rate = item.fs_1_rate;
+                        epl.fs_2_rate = item.fs_2_rate;
+                        epl.fs_1_rate_def = item.fs_1_rate_def;
+                        epl.fs_2_rate_def = item.fs_2_rate_def;
                         eplList.Add(epl);
                     }
                     catch (Exception ex)
