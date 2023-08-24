@@ -342,11 +342,15 @@ namespace PDMS.Project.Services
                             {
                                 epl.submit_status = "1";
                                 epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
+                                epl.org_code = item["org_code"] == null ? "" : item["org_code"].ToString();
                             }
                             else
                             { //部門變更邏輯待完善
-                                epl.submit_status = item["submit_status"] == null ? "" : item["submit_status"].ToString();
-                                epl.org_change_approve_status = "01";
+                                //擋板提交直接部門變更通過
+                                epl.submit_status = "";
+                               // epl.submit_status = item["submit_status"] == null ? "" : item["submit_status"].ToString();
+                                epl.org_change_approve_status = "02";
+                                epl.org_code = item["new_org_code"].ToString();
                             }
                         }
                         eplList.Add(epl);
@@ -361,7 +365,7 @@ namespace PDMS.Project.Services
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status,x.org_change_approve_status });
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status,x.org_change_approve_status,x.org_code });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
