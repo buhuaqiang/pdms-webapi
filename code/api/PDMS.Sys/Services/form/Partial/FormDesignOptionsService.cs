@@ -23,6 +23,7 @@ using System;
 using Newtonsoft.Json;
 using System.Net;
 using System.Web;
+using PDMS.Core.DBManager;
 
 namespace PDMS.System.Services
 {
@@ -146,43 +147,7 @@ namespace PDMS.System.Services
                             //_responseContent = base.CustomBatchProcessEntity(saveModel);
                             #endregion
 
-                            #region 修改任務表 cmc_common_task    
-                            string updateTaskFormId = $@"update cmc_common_task set FormId='{Temp}' where FormCode='{FormCode}'";
-                            var count3 = repository.DapperContext.ExcuteNonQuery(updateTaskFormId, null);
-                            /* var taskList = repository.DbContext.Set<cmc_common_task>().Where(x => x.FormCode == FormCode).ToList();
-                             if (taskList != null)
-                             {
-                                 foreach (var task in taskList)
-                                 {
-                                     task.FormId = Temp;
-                                     SaveModel.DetailListDataResult upTaskResult = new SaveModel.DetailListDataResult();
-                                     upTaskResult.optionType = SaveModel.MainOptionType.update;
-                                     upTaskResult.detailType = typeof(cmc_common_task);
-                                     upTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(task)));
-                                     saveModel.DetailListData.Add(upTaskResult);
-                                 }
-
-                             }       */
-                            #endregion
-
-                            #region 修改子專案工作計劃表 cmc_pdms_project_task  
-                            string updateProjectTaskFormId = $@"update cmc_pdms_project_task set FormId='{Temp}' where FormCode='{FormCode}' and (FormCollectionId is null or approve_status='00')";
-                            var count = repository.DapperContext.ExcuteNonQuery(updateProjectTaskFormId, null);
-                            /*var ProjcetList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.FormCode == FormCode && (x.FormCollectionId == null || x.approve_status == "00")).ToList();
-                            if (ProjcetList != null)
-                            {
-                                foreach (var proj in ProjcetList)
-                                {
-                                    proj.FormId = Temp;
-                                    SaveModel.DetailListDataResult upPTaskResult = new SaveModel.DetailListDataResult();
-                                    upPTaskResult.optionType = SaveModel.MainOptionType.update;
-                                    upPTaskResult.detailType = typeof(cmc_pdms_project_task);
-                                    upPTaskResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(proj)));
-                                    saveModel.DetailListData.Add(upPTaskResult);
-                                }
-                               
-                            }        */
-                            #endregion
+                           
                         }
                         catch (Exception ex)
                         {
@@ -255,8 +220,54 @@ namespace PDMS.System.Services
                 {
                     str = string.Join("','", keys);
                 }
-                string sql = $@" update	FormDesignOptions set status=1  where FormId in('{str}')";
-                int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
+                try
+                {
+                    List<FormDesignOptions> orderLists = repository.DbContext.Set<FormDesignOptions>().Where(x => keys.Contains(x.FormId) && x.status == "0").ToList();
+                    if (orderLists.Count > 0)
+                    {
+                        List<cmc_common_task> allTask=new List<cmc_common_task>();
+                        List<cmc_pdms_project_task> allProjectTask=new  List<cmc_pdms_project_task>();
+                        foreach (FormDesignOptions order in orderLists) {
+                            List<cmc_common_task> tslist=repository.DbContext.Set<cmc_common_task>().Where(a=>a.FormCode==order.FormCode).ToList();
+                            tslist.ForEach((item) => {
+                                item.FormId = order.FormId;
+                            });
+                            allTask= allTask.Union(tslist).ToList();
+
+
+                            List<cmc_pdms_project_task> ptslist= repository.DbContext.Set<cmc_pdms_project_task>().Where(a => a.FormCode == order.FormCode && (a.approve_status=="00" || a.FormCollectionId==null)).ToList();
+                            ptslist.ForEach((item) =>
+                            {
+                                item.FormId = order.FormId;
+                            });
+                            allProjectTask= allProjectTask.Union(ptslist).ToList();
+                        }
+                        if(allTask.Count > 0)
+                        {
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.UpdateRange(allTask, x => new { x.FormId });
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
+                        }
+                       if(allProjectTask.Count > 0)
+                        {
+                            repository.DapperContext.BeginTransaction((r) =>
+                            {
+                                DBServerProvider.SqlDapper.UpdateRange(allProjectTask, x => new { x.FormId });
+                                return true;
+                            }, (ex) => { throw new Exception(ex.Message); });
+
+                        }
+                    }
+                    string sql = $@" update	FormDesignOptions set status=1  where status=0 and  FormId in('{str}')";
+                    int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
+                }
+                catch(Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "PDMS:參數設置--->表單配置：发布功能：FormDesignOptionsService 文件：" + DateTime.Now + ":" + ex.Message);
+                }
+               
             }
             catch (Exception ex)
             {
