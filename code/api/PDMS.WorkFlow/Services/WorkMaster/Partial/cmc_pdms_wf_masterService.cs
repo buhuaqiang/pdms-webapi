@@ -21,6 +21,7 @@ using PDMS.Core.ManageUser;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using PDMS.Core.DBManager;
+using System.Net;
 
 namespace PDMS.WorkFlow.Services
 {
@@ -65,6 +66,7 @@ namespace PDMS.WorkFlow.Services
                     saveModel.MainData["wf_master_id"] = wf_master_ids;
                     saveModel.MainData["approve_status"] = status;
                     saveModel.MainData["org_code"] = GetOrgCode();
+                    saveModel.MainData["master_no"] = GetMaster_no(apply_type);
                     if (!status.Equals("00"))
                     {
                         if (!saveModel.MainData.ContainsKey("project_id"))
@@ -386,11 +388,213 @@ namespace PDMS.WorkFlow.Services
         /// <returns></returns>
         public cmc_pdms_wf_master getMasterByDBID(string wf_master_id)
         {
-
-
-
             string sSql = "select * from cmc_pdms_wf_master where wf_master_id='" + wf_master_id + "'";
             return _repository.DapperContext.QueryFirst<cmc_pdms_wf_master>(sSql, null);
         }
+
+
+        //根据申请类型 获取最大Master_no
+        public string GetMaster_no(string Apply_type)
+        {
+
+            string strType = "";
+            switch (Apply_type)
+            {
+                case"01":
+                    strType = "D";
+                    break;
+                case "02":
+                    strType = "F";
+                    break;
+                case "03":
+                    strType = "P";
+                    break;
+                case "04":
+                    strType = "T";
+                    break;
+                default:
+                    break;
+            }
+
+            string bid_no = "";
+            string Time = DateTime.Now.ToString("yyyyMMdd");
+            string newNum = "";
+            try
+            {
+                //string sql = $@"select  MAX(bid_no) bid_no from  viat_wk_master  WHERE  bid_no like 'R%'   ";
+                var List = repository.DbContext.Set<cmc_pdms_wf_master>().Where(x => x.master_no.Contains(strType)).OrderByDescending(x => x.master_no).FirstOrDefault();
+
+                //var List = repository.DapperContext.QueryList<Viat_wk_master>(sql, null);
+                if (List != null)
+                {
+                    bid_no = List.master_no;
+                    string num = bid_no.Substring(1, 8);//20220915
+                    if (Time == num)
+                    {
+                        string EndNum = bid_no.Substring(bid_no.Length - 5, 5);//00009
+                        int temp = Convert.ToInt32(EndNum) + 1;
+
+                        string tempNum = temp.ToString().Length == 1 ? "0000" + temp.ToString() : temp.ToString().Length == 2 ? "000" + temp.ToString() : "00" + temp.ToString();
+                        newNum = "R" + num + "-" + tempNum;
+                    }
+                    else
+                    {
+                        newNum = strType + Time + "-00001";
+                    }
+                }
+                else
+                {
+                    newNum = strType + Time + "-00001";
+                }
+                return newNum;
+            }
+            catch (Exception)
+            {
+
+                newNum = "";
+            }
+
+            return newNum;
+        }
+
+
+        //public WebResponseContent ApprovalProcess(object saveModelData)
+        //{
+        //    try
+        //    {
+        //        ResponseContent = new WebResponseContent();
+        //        List<Dictionary<string, object>> lst = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(saveModelData.ToString());
+        //        if (lst == null || lst.Count == 0)
+        //        {
+        //            return ResponseContent.Error("no data");
+        //        }
+        //        UserInfo userInfo = PDMS.Core.ManageUser.UserContext.Current.UserInfo;
+        //        SaveModel saveModel = new SaveModel();
+        //        saveModel.MainData = lst[0];
+        //        string bidmast_dbid = saveModel.MainData["bidmast_dbid"].ToString();
+        //        cmc_pdms_wf_master masterEntiy = getMasterByDBID(bidmast_dbid);
+        //        //第一步查询人员职位
+        //        Sys_User user = SysUserData();
+        //        //审批意见和审批状态
+        //        string approvalConmment = saveModel.MainData["approveComments"].ToString(), ApprovalProcess = saveModel.MainData["approveStatus"].ToString();
+        //        //审批部门
+        //        string approver = "";
+        //        //下一个审批人
+        //        Sys_User approvaUser = null;
+        //        if (!ApprovalProcess.Equals("04"))
+        //        {
+        //            ApprovalProcess = "01";
+        //            switch ("")
+        //            {
+        //                //case "FF":
+        //                //case "SA":
+        //                //    break;
+        //                case "DSM":
+        //                case "ASD":
+        //                case "INVSA":
+        //                    switch (masterEntiy.apply_type)
+        //                    {
+        //                        //costomer apply提交
+        //                        case "01":
+        //                        case "02":
+        //                            ApprovalProcess = "03";
+        //                            break;
+        //                        //bid/order apply提交
+        //                        case "03":
+        //                            break;
+        //                        //Inventory Allowance Apply 提交
+        //                        case "05":                   
+        //                            break;
+        //                        //return Order
+        //                        case "06":
+        //                            // 获取上级ID
+        //                            //approvaUser = GetLevelDetailEmpData((Guid)user.emp_dbid, userInfo.TerritoryId);
+        //                            break;
+        //                        case "07":
+        //                            ApprovalProcess = "03";
+        //                            break;
+        //                    }
+        //                    break;
+
+        //                case "BU":
+        //                    if (masterEntiy.apply_type.Equal("06"))
+        //                    {
+        //                        ApprovalProcess = "03";
+        //                    }
+        //                    break;
+        //                case "Finance":
+        //                    approver = "PD";
+        //                    break;
+
+        //                case "PD":
+        //                    //直接结束，终审
+        //                    ApprovalProcess = "03";
+        //                    break;
+        //            }
+        //        }
+        //        if ((ApprovalProcess.Equals("03") || ApprovalProcess.Equals("04")) && masterEntiy.apply_type.Equals("03"))
+        //        {
+        //            //if (masterEntiy.star == null)
+        //            //{
+        //            //    masterEntiy.start_date = DateTime.Today;
+        //            //}
+        //            //if (masterEntiy.end_date == null)
+        //            //{
+        //            //    masterEntiy.end_date = Convert.ToDateTime("2099-12-31");
+        //            //}
+        //            //if (ApprovalProcess.Equals("03") && masterEntiy.apply_type.Equals("03"))
+        //            //{
+        //            //    masterEntiy.pending_reason = PendingReasonData(masterEntiy);
+        //            //}
+        //        }
+        //        masterEntiy.ModifyID = userInfo.User_Id;
+        //        masterEntiy.Modifier = userInfo.UserTrueName;
+        //        //MasterUpdate(saveModel, masterEntiy, approvaUser, status: ApprovalProcess, position: approver);
+        //        int type = 0;
+        //        if (masterEntiy.apply_type.Equals("03") && ApprovalProcess.Equals("03"))
+        //        {
+                   
+        //        }
+        //        if (ApprovalProcess.Equals("04") || ApprovalProcess.Equals("03"))
+        //        {
+
+        //                ApprovedMail(saveModel, masterEntiy, ApprovalProcess, approvalConmment);
+
+        //        }
+        //        else
+        //        {
+        //            //發送郵件
+        //            FlowEmail(saveModel, approvaUser == null ? "" : approvaUser.UserName, approver, masterEntiy);
+        //        }
+
+        //        InsertApproveLog(saveModel, masterEntiy.wf_master_id.ToString(), status: ApprovalProcess, userEntity: user, Conmment: approvalConmment, type);
+        //        base.CustomBatchProcessEntity(saveModel);
+        //        string message = "";
+        //        if (ApprovalProcess == "03" || ApprovalProcess == "04")
+        //        {
+        //            message = "End of the examination and approval!";
+        //        }
+        //        else
+        //        {
+        //            if (string.IsNullOrEmpty(approver))
+        //            {
+        //                message = "The next approver :" + approvaUser.UserName;
+        //            }
+        //            else
+        //            {
+        //                message = "The next department :" + approver;
+        //            }
+        //        }
+        //        return ResponseContent.OK(message);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "审批错误信息:" + ex.Message);
+        //        ResponseContent.Code = "-1";
+        //        ResponseContent.Status = false;
+        //        ResponseContent.Error(ex.Message);
+        //        return ResponseContent;
+        //    }
+        //}
     }
 }
