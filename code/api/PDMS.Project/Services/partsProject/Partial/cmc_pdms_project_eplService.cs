@@ -86,12 +86,20 @@ namespace PDMS.Project.Services
                                     epl.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
                                     epl.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
                                     epl.submit_status = "0";
-                                    epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
+                                   // epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
                                     epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
                                     if (epl.Final_version_status != "2")
                                     {//除了終版其他時候調整後需要重新部門定版
                                         epl.Final_version_status = item["Final_version_status"] == null ? null : "0";
                                     }
+                                    if (item["org_change_approve_status"] != null && item["org_change_approve_status"].ToString() == "00")
+                                    {//部門變回原部門後狀態設為null
+                                        epl.org_change_approve_status = "";
+                                    }
+                                    else {
+                                        epl.org_change_approve_status = item["org_change_approve_status"] == null ? "" : item["org_change_approve_status"].ToString();
+                                    }
+                                    
                                 }
                                 else
                                 {//變更了部門
