@@ -77,6 +77,8 @@ sl2.DicValue as set_value,
 sl2.DicName as set_name,
 sl3.DicValue as gate_code,
 sl3.DicName as gate_name,
+tsk.epl_id,
+project_id,
 tsk.project_task_id,
 tsk.start_date,
 tsk.end_date,
@@ -162,7 +164,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                 var GateInfo = getinfo.GroupBy(x => new { x.gate_code, x.gate_name, x.gate_start_date, x.gate_end_date }).ToList();
                 var SetInfo = getinfo.GroupBy(x => new { x.set_value, x.set_name, x.gate_code }).ToList();
 
-                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key,x.form_type,x.form_url, x.gate_start_date, x.gate_end_date }).ToList();
+                var taskInfo = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id, x.task_name, x.approve_status, x.FormId, x.FormCode, x.FormCollectionId, x.start_date, x.end_date, x.project_task_id, x.task_status,x.is_audit_key,x.form_type,x.form_url, x.gate_start_date, x.gate_end_date, x.epl_id, x.project_id }).ToList();
 
                 //var taskInfo222 = getinfo.GroupBy(x => new { x.gate_code, x.set_value, x.task_id}).ToList();
                 var gateIndex = 0;
@@ -286,8 +288,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.form_url = item.Key.form_url == null ? "" : item.Key.form_url.ToString();
                         data.gate_start_date = item.Key.gate_start_date == null ? "" : item.Key.gate_start_date.ToString("yyyy-MM-dd");
                         data.gate_end_date = item.Key.gate_end_date == null ? "" : item.Key.gate_end_date.ToString("yyyy-MM-dd");
-
-
+                        data.epl_id = item.Key.epl_id.ToString();
+                        data.project_id = item.Key.project_id.ToString();
                         info.Add(data);
 
                     }
@@ -401,7 +403,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             public string form_type { get; set; }
 
             public string form_url { get; set; }
-
+            public string epl_id { get; set; }
+            public string project_id { get; set; }
 
         }
 
@@ -694,7 +697,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                 repository.DapperContext.BeginTransaction((r) =>
                 {
                     DBServerProvider.SqlDapper.UpdateRange(data, x => new { x.approve_status });
-                    return true;
+                   return true;
                 }, (ex) => { throw new Exception(ex.Message); });
             }
 
