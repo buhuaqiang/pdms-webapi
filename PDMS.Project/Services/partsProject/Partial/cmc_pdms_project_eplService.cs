@@ -792,7 +792,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                 return ResponseContent.OK();
             }
-            return ResponseContent.Error("no data");
+            return ResponseContent.Error("上傳文件無數據內容");
         }
 
         public int getDepartCount(Object obj)//部門定版時判斷數據是否維護完整
