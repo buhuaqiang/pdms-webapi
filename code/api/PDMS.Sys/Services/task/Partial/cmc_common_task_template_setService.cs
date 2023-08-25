@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Sys.IRepositories;
 using System.Collections.Generic;
 using System;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.Sys.Services
 {
@@ -59,6 +60,40 @@ namespace PDMS.Sys.Services
                 sql += $" and st.template_id= '"+template_id+"'";
             }
             sql += " order by st.order_no desc";
+            Result = repository.DapperContext.QueryList<cmc_common_task_template_set>(sql, null);
+            return Result;
+        }
+
+        public List<cmc_common_task_template_set> GetListHasProject(string template_id , string project_id)
+        {
+            List<cmc_common_task_template_set> Result = new List<cmc_common_task_template_set>();
+            string sql = $@"SELECT
+    st.*,
+		sl2.DicName dicName	
+FROM
+    cmc_common_task_template_set AS st
+		LEFT JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue= st.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = st.set_type ) )
+WHERE
+    template_id = '{template_id}'
+    AND (
+        (st.set_type = 'gate' AND st.set_value IN (
+            SELECT [c].[gate_code]
+            FROM [cmc_pdms_project_gate] AS [c]
+            WHERE [c].[project_id] = '{project_id}'
+        ))
+        OR
+        (st.set_type = 'phase' AND st.parent_set_id IN (
+            SELECT [c].[set_id]
+            FROM [cmc_common_task_template_set] AS [c]
+            WHERE [c].[set_type] = 'gate'
+            AND [c].[set_value]  IN (
+							SELECT [c].[gate_code]
+							FROM [cmc_pdms_project_gate] AS [c]
+							WHERE [c].[project_id] ='{project_id}'
+        )
+        ))
+    )
+		order by st.order_no desc ";
             Result = repository.DapperContext.QueryList<cmc_common_task_template_set>(sql, null);
             return Result;
         }

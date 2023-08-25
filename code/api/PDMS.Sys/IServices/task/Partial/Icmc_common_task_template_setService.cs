@@ -12,6 +12,7 @@ namespace PDMS.Sys.IServices
     public partial interface Icmc_common_task_template_setService
     {
         public List<cmc_common_task_template_set> GetList(string template_id);
+        public List<cmc_common_task_template_set> GetListHasProject(string template_id , string proejct_id);
 
         public WebResponseContent delSet(string set_id);
     }
