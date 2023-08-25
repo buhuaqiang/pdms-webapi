@@ -32,7 +32,7 @@ namespace PDMS.WorkFlow.Controllers
         }
 
 
-        //查詢當前價格群組商品
+        //獲取任務表單審批 頁面
         [ApiActionPermission]
         [HttpPost, Route("GetApproveDataByTaskExec")]
         public ActionResult GetApproveDataByTaskExec([FromBody] PageDataOptions loadData)
