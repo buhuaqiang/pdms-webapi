@@ -279,7 +279,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         data.approve_status = item.Key.approve_status;
                         data.StatusInfo = GetStatusText(item.Key.approve_status);
                         data.task_id = item.Key.task_id.ToString();
-                        data.FormCollectionId = item.Key.FormCollectionId == null ? "" : item.Key.FormCollectionId.ToString();
+                        data.FormCollectionId = item.Key.FormCollectionId;
                         data.FormCode = item.Key.FormCode == null ? "" : item.Key.FormCode.ToString();
                         data.FormId = item.Key.FormId == null ? "" : item.Key.FormId.ToString();
                         data.project_task_id = item.Key.FormCode == null ? "" : item.Key.project_task_id.ToString();
@@ -385,7 +385,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
 
             public string FormId { get; set; }
 
-            public string FormCollectionId { get; set; }
+            public Guid? FormCollectionId { get; set; }
 
             public string approve_status { get; set; }
 
