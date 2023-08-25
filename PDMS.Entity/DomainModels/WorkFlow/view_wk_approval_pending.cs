@@ -187,7 +187,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "project_task_id")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public Guid? project_task_id { get; set; }
 
 
@@ -197,7 +197,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "task_id")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public Guid? task_id { get; set; }
 
 
@@ -208,7 +208,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "FormCollectionId")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public Guid? FormCollectionId { get; set; }
 
 
@@ -219,7 +219,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "FormId")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public Guid? FormId { get; set; }
 
 
@@ -230,7 +230,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "task_name")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public string task_name { get; set; }
 
 
@@ -240,14 +240,18 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "part_name")]
         [MaxLength(100)]
         [Column(TypeName = "varchar(100)")]
-        [Editable(true)]
+        [Editable(false)]
         public string part_name { get; set; }
 
-
-
-
-
-
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "part_name")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(false)]
+        public string detail { get; set; }
+        
 
     }
 }

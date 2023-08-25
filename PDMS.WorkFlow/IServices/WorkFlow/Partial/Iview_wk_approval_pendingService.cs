@@ -9,5 +9,11 @@ namespace PDMS.WorkFlow.IServices
 {
     public partial interface Iview_wk_approval_pendingService
     {
+        /// <summary>
+        /// 查詢群組內產品(customer join group頁面用的查詢方法)
+        /// </summary>
+        /// <param name="pageData"></param>
+        /// <returns></returns>
+        public PageGridData<view_wk_approval_pending> GetApproveDataByTaskExec(PageDataOptions pageData);
     }
  }
