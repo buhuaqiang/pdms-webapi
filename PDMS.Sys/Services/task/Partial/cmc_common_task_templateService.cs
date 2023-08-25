@@ -59,8 +59,18 @@ namespace PDMS.Sys.Services
             cmc_common_task_template template = new cmc_common_task_template();
             template.template_id = newid;
             template.template_name = saveModel.MainData["template_name"].ToString();
-            template.suit_org_codes = saveModel.MainData["suit_org_codes"].ToString();
+            string suit_codes= saveModel.MainData["suit_org_codes"].ToString();
+            if (!string.IsNullOrEmpty(suit_codes))
+            {
+                //string[] codes = (string[])saveModel.MainData["suit_org_codes"];
+
+                List<string> str = JsonConvert.DeserializeObject<List<string>>(suit_codes);
+                
+                template.suit_org_codes = string.Join(",", str); 
+            }
+            template.status = "1";//复制的模版默认启用
             template.template_desc = saveModel.MainData["template_desc"].ToString();
+            template.project_class = saveModel.MainData["project_class"].ToString();
             queueResult.optionType = SaveModel.MainOptionType.add;
             queueResult.detailType = typeof(cmc_common_task_template);
             queueResult.DetailData.Add(JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(template)));
@@ -80,7 +90,6 @@ namespace PDMS.Sys.Services
                         CreateID,
                         Creator,
                         CreateDate,
-                        project_class,
 	                    source_set_id
                     )
                     SELECT 
@@ -94,7 +103,6 @@ namespace PDMS.Sys.Services
                         {CreateID},
                         '{Creator}',
                         GETDATE(),
-                        project_class,
 	                    set_id
                     from  cmc_common_task_template_set where template_id='{oldid}' ";
             int succ = repository.DapperContext.ExcuteNonQuery(sql, null);
