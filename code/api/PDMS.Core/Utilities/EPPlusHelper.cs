@@ -195,11 +195,19 @@ namespace PDMS.Core.Utilities
             List<T> entities = new List<T>();
             using (ExcelPackage package = new ExcelPackage(file))
             {
-                if (package.Workbook.Worksheets.Count == 0 ||
-                    package.Workbook.Worksheets.FirstOrDefault().Dimension.End.Row <= 1)
+                try
+                {
+                    if (package.Workbook.Worksheets.Count == 0 ||
+                 package.Workbook.Worksheets.FirstOrDefault().Dimension.End.Row <= 1)
+                        return responseContent.Error("no import data");
+                    //2020.08.11修复获取表结构信息时，表为别名时查不到数据的问题
+                    //typeof(T).GetEntityTableName()                  
+                }
+                catch (Exception)
+                {
                     return responseContent.Error("no import data");
-                //2020.08.11修复获取表结构信息时，表为别名时查不到数据的问题
-                //typeof(T).GetEntityTableName()
+                }
+
                 List<CellOptions> cellOptions = GetExportColumnInfo(typeof(T).Name, false, false, columns: exportColumns?.GetExpressionToArray());
                 //设置忽略的列
                 if (exportColumns != null)
@@ -214,7 +222,6 @@ namespace PDMS.Core.Utilities
                         .Where(x => !ignoreTemplate.Select(s => s.ToLower()).Contains(x.ColumnName.ToLower()))
                         .ToList();
                 }
-
 
                 ExcelWorksheet sheetFirst = package.Workbook.Worksheets.FirstOrDefault();
 
