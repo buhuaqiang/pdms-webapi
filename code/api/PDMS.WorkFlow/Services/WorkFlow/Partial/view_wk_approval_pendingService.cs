@@ -78,7 +78,7 @@ namespace PDMS.WorkFlow.Services
             QuerySql = @"        	
 	select   ROW_NUMBER()over(order by epl.part_no ) as rowId,
   epl.part_no,epl.part_name,tsk.task_name,ptask.FormId,ptask.FormCollectionId,wftask.wf_epl_task_form_id
-,master.wf_master_id,ptask.project_task_id,ptask.task_id,'查看' as detail
+,master.wf_master_id,ptask.project_task_id,ptask.task_id,	 (case when tsk.form_type='0' then 'FormSubmit' else  tsk.form_url end) as form_url,tsk.form_type
 	from  cmc_pdms_wf_epl_task_form  wftask
 	left join cmc_pdms_wf_master  master  on wftask.wf_master_id=master.wf_master_id
 	left join cmc_pdms_project_task  ptask  on ptask.project_task_id=wftask.project_task_id
