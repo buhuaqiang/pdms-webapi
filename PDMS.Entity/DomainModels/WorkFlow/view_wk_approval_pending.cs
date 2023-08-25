@@ -223,6 +223,15 @@ namespace PDMS.Entity.DomainModels
         public Guid? FormId { get; set; }
 
 
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "wf_epl_task_form_id")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(false)]
+        public Guid? wf_epl_task_form_id { get; set; }
+
 
         /// <summary>
         ///
@@ -251,6 +260,9 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(100)")]
         [Editable(false)]
         public string detail { get; set; }
+
+
+
         
 
     }
