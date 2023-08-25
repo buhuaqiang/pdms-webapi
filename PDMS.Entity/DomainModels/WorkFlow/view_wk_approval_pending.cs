@@ -180,6 +180,74 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string part_no { get; set; }
 
-       
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "project_task_id")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public Guid? project_task_id { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "task_id")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public Guid? task_id { get; set; }
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "FormCollectionId")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public Guid? FormCollectionId { get; set; }
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "FormId")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public Guid? FormId { get; set; }
+
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "task_name")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public string task_name { get; set; }
+
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "part_name")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(true)]
+        public string part_name { get; set; }
+
+
+
+
+
+
+
     }
 }
