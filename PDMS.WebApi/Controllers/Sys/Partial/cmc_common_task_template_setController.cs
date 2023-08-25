@@ -55,6 +55,23 @@ namespace PDMS.Sys.Controllers
 
             return Json(data);
         }
+        
+        [Route("getListHasProject"), HttpGet]
+        [ApiActionPermission()]
+        public ActionResult GetListHasProject(String template_id , String project_id)
+        {
+            List<cmc_common_task_template_set> list = _service.GetListHasProject(template_id, project_id);
+
+            var data = list.Select(s => new
+            {
+                id = s.set_id,
+                ParentId = s.parent_set_id,
+                name = s.dicName
+            });
+
+            return Json(data);
+        }
+
 
         [ApiActionPermission()]
         [Route("Add"), HttpPost]

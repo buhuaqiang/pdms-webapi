@@ -138,6 +138,13 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         public string DepartmentCode { get; set; }
 
+        /// <summary>
+        ///大專案ID
+        /// </summary>
+        [Display(Name = "大專案ID")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? project_id { get; set; }
 
     }
 }

@@ -114,6 +114,7 @@ WHERE
             var data = JObject.Parse(saveModel.ToString());
             var sets = data["set_ids"];
             var template_id = data["template_id"].ToString();
+            var project_id = data["project_id"].ToString();
             if (!string.IsNullOrEmpty(template_id))
             {
                 sql += $" AND temp.template_id='{template_id}'";
@@ -123,7 +124,12 @@ WHERE
                 string ids = string.Join("','", sets);
                 sql += $" AND map.set_id in ('{ids}')";
             }
-
+            if (!string.IsNullOrEmpty(project_id))
+            {
+                sql += $" AND sl3.DicValue IN " +
+                    $"( SELECT [c].[gate_code]  FROM [cmc_pdms_project_gate] AS [c]  " +
+                    $"WHERE [c].[project_id] = '{project_id}') ";
+            }
             sql += $" ORDER BY  CAST( sl3.DicValue AS INT ) ASC, CAST( st.order_no AS INT ) DESC ";
             Console.WriteLine(sql);
             Result = repository.DapperContext.QueryList<view_template_task_mapping>(sql, null);
