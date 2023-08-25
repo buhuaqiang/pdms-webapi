@@ -230,7 +230,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "FormId")]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
-        public Guid FormId { get; set; }
+        public Guid? FormId { get; set; }
 
         /// <summary>
         ///
@@ -238,7 +238,7 @@ namespace PDMS.Entity.DomainModels
         [Display(Name = "FormCollectionId")]
         [Column(TypeName = "uniqueidentifier")]
         [Required(AllowEmptyStrings = false)]
-        public Guid FormCollectionId { get; set; }
+        public Guid? FormCollectionId { get; set; }
 
 
         /// <summary>
