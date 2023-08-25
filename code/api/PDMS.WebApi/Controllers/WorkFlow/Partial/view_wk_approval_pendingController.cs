@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.WorkFlow.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.WorkFlow.Controllers
 {
@@ -28,6 +29,15 @@ namespace PDMS.WorkFlow.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+
+        //查詢當前價格群組商品
+        [ApiActionPermission]
+        [HttpPost, Route("GetApproveDataByTaskExec")]
+        public ActionResult GetApproveDataByTaskExec([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetApproveDataByTaskExec(loadData));
         }
     }
 }
