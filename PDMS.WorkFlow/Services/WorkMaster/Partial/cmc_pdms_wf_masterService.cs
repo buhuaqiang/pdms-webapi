@@ -435,7 +435,7 @@ namespace PDMS.WorkFlow.Services
                         int temp = Convert.ToInt32(EndNum) + 1;
 
                         string tempNum = temp.ToString().Length == 1 ? "0000" + temp.ToString() : temp.ToString().Length == 2 ? "000" + temp.ToString() : "00" + temp.ToString();
-                        newNum = "R" + num + "-" + tempNum;
+                        newNum = strType + num + "-" + tempNum;
                     }
                     else
                     {
