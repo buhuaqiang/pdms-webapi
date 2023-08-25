@@ -269,7 +269,15 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(100)")]
         [Editable(false)]
         public string form_url { get; set; }
+
+        /// </summary>
+        [Display(Name = "form_type")]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        [Editable(false)]
+        public string form_type { get; set; }
         
+
 
 
     }
