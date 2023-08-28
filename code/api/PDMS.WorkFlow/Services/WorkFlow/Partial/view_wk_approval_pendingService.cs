@@ -17,6 +17,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.WorkFlow.IRepositories;
+using Newtonsoft.Json;
+using PDMS.Core.ManageUser;
+using System.Net;
+using PDMS.Core.DBManager;
 
 namespace PDMS.WorkFlow.Services
 {
@@ -38,7 +42,9 @@ namespace PDMS.WorkFlow.Services
             //base.Init(dbRepository);
         }
 
+        WebResponseContent WebResponse = new WebResponseContent();
 
+        //获取待审核列表
         public PageGridData<view_wk_approval_pending> GetApproveDataByTaskExec(PageDataOptions pageData)
         {
             PageGridData<view_wk_approval_pending> pageGridData = new PageGridData<view_wk_approval_pending>();
@@ -108,6 +114,112 @@ namespace PDMS.WorkFlow.Services
             pageGridData.rows = repository.DapperContext.QueryList<view_wk_approval_pending>(sql, null);
             return pageGridData;
 
+        }
+
+
+        public WebResponseContent ApproveData(SaveModel saveModel)
+        {
+            if (saveModel.MainData.ContainsKey("apply_type"))
+            {
+                saveModel.MainData["apply_type"] = "";
+            }
+            string Apply_Type = saveModel.MainData["apply_type"].ToString();
+            try
+            {
+                switch (Apply_Type)
+                {
+                    case "01"://部門變更
+                              //此處實現具體方法
+                        break;
+                    case "02"://成本編列
+                              //此處實現具體方法
+                        break;
+                    case "03"://主工作計劃管理
+                              //此處實現具體方法
+                        break;
+                    case "04"://任務
+                        ApprovePlanExec(saveModel);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "總審批流程，申請類型：Apply_Type="+ Apply_Type + "，view_wk_approval_pendingService 文件-->ApproveData：" + DateTime.Now + ":" + ex.Message);
+                return WebResponse.Error(ex.Message);
+            }
+           return WebResponse.OK();
+        }
+
+
+
+        //表單任務所用 方法
+        public WebResponseContent ApprovePlanExec(SaveModel saveModel)
+        {
+            try
+            {
+                var wf_epl_task_form_id = saveModel.MainData["wf_epl_task_form_id"].ToString();
+                var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
+                var project_task_id = saveModel.MainData["project_task_id"].ToString();
+                var approve_status = saveModel.MainData["approve_status"].ToString();
+                var listTemp = JsonConvert.DeserializeObject<List<string>>(wf_epl_task_form_id);
+                var taskTemp = JsonConvert.DeserializeObject<List<string>>(project_task_id);
+
+                #region //更新Master表和Approvelog 表 ，後續補充郵件隊列
+
+                WebResponse = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, approve_status, "", null, false);
+
+                #endregion
+
+                //獲取所有cmc_pdms_wf_epl_task_form 需要調整為拒絕的內容
+                var task_formList = repository.DbContext.Set<cmc_pdms_wf_epl_task_form>().Where(x => !listTemp.Contains(x.wf_epl_task_form_id.ToString()) && x.wf_master_id== Guid.Parse(wf_master_id)).ToList();
+                task_formList.ForEach(item =>
+                {
+                    item.approve_status = "0";
+                });
+
+                //獲取所有cmc_pdms_project_task 需要調整為同意的內容
+                var AgreeList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => taskTemp.Contains(x.project_task_id.ToString())).ToList();
+                AgreeList.ForEach(item =>
+                {
+                    item.approve_status = "02";
+                });
+
+                //獲取所有cmc_pdms_project_task 需要調整為拒絕的內容
+                var RejectList = repository.DbContext.Set<cmc_pdms_wf_epl_task_form>().Where(x => !taskTemp.Contains(x.project_task_id.ToString()) && x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                RejectList.ForEach(item =>
+                {
+                    item.approve_status = "03";
+                });
+
+                //cmc_pdms_wf_epl_task_form.approve_status="0" 拒絕
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(task_formList, x => new { x.approve_status });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+
+                //cmc_pdms_project_task.approve_status="02" 通過
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(AgreeList, x => new { x.approve_status });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+
+                //cmc_pdms_project_task.approve_status="03"拒絕
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.UpdateRange(RejectList, x => new { x.approve_status });
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_wf_epl_task_form/cmc_pdms_project_task 表，view_wk_approval_pendingService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                return WebResponse.Error(ex.Message);
+            }
+            return WebResponse.OK();
         }
 
 
