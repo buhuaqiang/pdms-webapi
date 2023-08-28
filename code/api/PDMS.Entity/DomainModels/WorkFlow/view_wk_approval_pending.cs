@@ -276,7 +276,27 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(100)")]
         [Editable(false)]
         public string form_type { get; set; }
+
+
+
+        /// </summary>
+        [Display(Name = "end_date")]
+        [MaxLength(100)]
+        [Column(TypeName = "DateTime")]
+        [Editable(false)]
+        public DateTime? end_date { get; set; }
+
+
+        /// </summary>
+        [Display(Name = "start_date")]
+        [MaxLength(100)]
+        [Column(TypeName = "DateTime")]
+        [Editable(false)]
+        public DateTime? start_date { get; set; }
+
+
         
+
 
 
 
