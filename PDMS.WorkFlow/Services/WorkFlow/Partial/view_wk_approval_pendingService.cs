@@ -120,7 +120,7 @@ namespace PDMS.WorkFlow.Services
         //總審批流程
         public WebResponseContent ApproveData(SaveModel saveModel)
         {
-            if (saveModel.MainData.ContainsKey("apply_type"))
+            if (!saveModel.MainData.ContainsKey("apply_type"))
             {
                 saveModel.MainData["apply_type"] = "";
             }
