@@ -44,21 +44,26 @@ namespace PDMS.WorkFlow.Services
         }
         private static readonly Object custApply = new object();
         WebResponseContent ResponseContent = new WebResponseContent();
-        public WebResponseContent MasterUpdate(SaveModel saveModel, string status, string apply_type,Sys_User apprverUser)
+        public WebResponseContent MasterUpdate(SaveModel saveModel, string status, string apply_type,Sys_User apprverUser,bool UpdateFlag=true )
         {
             lock (custApply)
             {
                 #region  更新cmc_pdms_wf_master 數據
                 if (apprverUser == null)
                 {
-                    apprverUser = GetApproveManager();//根據當前登錄人的user_code尋找上級
+                    apprverUser = GetApproveManager(apply_type);//根據當前登錄人的user_code尋找上級
                 }
                 var wf_master_ids = Guid.NewGuid();
                 if (!saveModel.MainData.ContainsKey("wf_master_id"))
                 {
                     saveModel.MainData.Add("wf_master_id", "");
                 }
+                if (!saveModel.MainData.ContainsKey("remark"))
+                {
+                    saveModel.MainData.Add("remark", "");
+                }
                 string Smaster_id = saveModel.MainData["wf_master_id"].ToString();
+                string remark = saveModel.MainData["remark"].ToString();//審核意見
                 Sys_User userEntity = SysUserData();
                 if (string.IsNullOrEmpty(Smaster_id))
                 {
@@ -95,6 +100,7 @@ namespace PDMS.WorkFlow.Services
                 {
                     ////根據主鍵取得master數據,只更新狀態
                     Smaster_id = saveModel.MainData["wf_master_id"].ToString();
+                    remark = saveModel.MainData["remark"].ToString();//審核意見
                     cmc_pdms_wf_master master = getMasterByDBID(Smaster_id);
                     master.approve_status = status;
                     if (!status.Equals("00"))
@@ -102,7 +108,7 @@ namespace PDMS.WorkFlow.Services
                         master.approved_date = DateTime.Now;
                         master.approve_user_id = apprverUser.User_Id;
                         master.org_code = GetOrgCode();
-                        InsertApproveLog(saveModel, Smaster_id.ToString(), status, userEntity, "", 0);
+                        InsertApproveLog(saveModel, Smaster_id.ToString(), status, userEntity, remark, 0);
                         //FlowEmail(saveModel, apprverUser.UserName, "", master);
                     }
                     //修改master数据
@@ -113,24 +119,28 @@ namespace PDMS.WorkFlow.Services
                     saveModel.DetailListData.Add(masterResult);
                 }
                 #endregion
-
-                switch (apply_type)
+                //若只更改Maseter表和 Approvelog表 則不需要對業務表做新增操作
+                if (!UpdateFlag)
                 {
-                    case "01"://部門變更
-                        //此處實現具體方法
-                        break;
-                    case "02"://成本編列
-                              //此處實現具體方法
-                        break;
-                    case "03"://主工作計劃管理
-                        //此處實現具體方法
-                        break;
-                    case "04"://任務
-                        Insert_task_form(saveModel, wf_master_ids);
-                        break;
-                    default:
-                        break;
+                    switch (apply_type)
+                    {
+                        case "01"://部門變更
+                                  //此處實現具體方法
+                            break;
+                        case "02"://成本編列
+                                  //此處實現具體方法
+                            break;
+                        case "03"://主工作計劃管理
+                                  //此處實現具體方法
+                            break;
+                        case "04"://任務
+                            Insert_task_form(saveModel, wf_master_ids);
+                            break;
+                        default:
+                            break;
+                    }
                 }
+          
             }
             return base.CustomBatchProcessEntity(saveModel);
 
@@ -211,17 +221,36 @@ namespace PDMS.WorkFlow.Services
 
 
         //获取下一个审批人
-        public Sys_User GetApproveManager()
+        public Sys_User GetApproveManager(string apply_type)
         {
             Sys_User user_Info = new Sys_User();
             UserInfo info = UserContext.Current.UserInfo;
-            //獲取當前登錄人的user_code
-            string user_code = info.user_code;
-            //再根据user_code取CMC人事系统抓取 下一个审批人
-
-
+            string user_code = "";
+            switch (apply_type)
+            {
+                case "01":
+                    //獲取當前登錄人的user_code
+                    user_code = info.user_code;
+                    //再根据user_code取CMC人事系统抓取 下一个审批人
+                    break;
+                case "02":
+                    //獲取當前登錄人的user_code
+                    user_code = info.user_code;
+                    //再根据user_code取CMC人事系统抓取 下一个审批人
+                    break;
+                case "03":
+                    //獲取當前登錄人的user_code
+                    user_code = info.user_code;
+                    //再根据user_code取CMC人事系统抓取 下一个审批人
+                    break;
+                case "04":
+                    //任務表單審核只有一級，所以只需獲取當前登錄人的信息
+                    user_code = "";
+                    break;
+                default:
+                    break;
+            }
             //再根據主管的user_code 獲取PDMS系統的user_id
-            user_code = "";
             user_Info = SysUserData(user_code);
             return user_Info;
         }
