@@ -199,5 +199,13 @@ namespace PDMS.System.Controllers
         {
             return Json(Service.getUserCode(obj));
         }
+
+        [ApiActionPermission]
+        [HttpPost, Route("getSysUserDeptID")]
+        public ActionResult getSysUserDeptID([FromBody] Object obj)
+        {
+            return Json(Service.getSysUserDeptID(obj));
+        }
+
     }
 }
