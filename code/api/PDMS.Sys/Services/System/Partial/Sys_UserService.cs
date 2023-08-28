@@ -567,7 +567,7 @@ namespace PDMS.System.Services
             var data = JObject.Parse(obj.ToString());
             var userId = data["UserId"].ToString();
             ;
-            string sql = $@"select  * from Sys_UserDepartment where  UserId='" + userId + "'  ";
+            string sql = $@"SELECT  * FROM Sys_UserDepartment WHERE  UserId='" + userId + "' AND Enable = '1'  ";
 
             Result = repository.DapperContext.QueryList<Sys_UserDepartment>(sql, null);
             return Result;
