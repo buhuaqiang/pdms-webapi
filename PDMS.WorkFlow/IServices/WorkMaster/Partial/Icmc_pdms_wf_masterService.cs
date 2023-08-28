@@ -9,6 +9,6 @@ namespace PDMS.WorkFlow.IServices
 {
     public partial interface Icmc_pdms_wf_masterService
     {
-        WebResponseContent MasterUpdate(SaveModel saveModel, string status, string apply_type, Sys_User apprverUser);
+        WebResponseContent MasterUpdate(SaveModel saveModel, string status, string apply_type, Sys_User apprverUser,bool UpdateFlag = true);
     }
  }
