@@ -82,7 +82,7 @@ namespace PDMS.WorkFlow.Services
                         {
                             saveModel.MainData.Add("epl_id", null);
                         }
-                        saveModel.MainData["approved_date"] = DateTime.Now;
+                        //saveModel.MainData["approved_date"] = DateTime.Now;
                         //saveModel.MainData["approval_username"] = apprverUser.UserTrueName;
                         saveModel.MainData["approve_user_id"] = apprverUser.User_Id;
                         cmc_pdms_wf_master masterEntiy = JsonConvert.DeserializeObject<cmc_pdms_wf_master>(JsonConvert.SerializeObject(saveModel.MainData));
@@ -120,7 +120,7 @@ namespace PDMS.WorkFlow.Services
                 }
                 #endregion
                 //若只更改Maseter表和 Approvelog表 則不需要對業務表做新增操作
-                if (!UpdateFlag)
+                if (UpdateFlag)
                 {
                     switch (apply_type)
                     {
