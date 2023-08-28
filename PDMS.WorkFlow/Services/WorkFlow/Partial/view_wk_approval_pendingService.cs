@@ -101,7 +101,7 @@ namespace PDMS.WorkFlow.Services
             }
             if (string.IsNullOrEmpty(wf_epl_task_form_id) == false)
             {
-                QuerySql += @$" and wftask.wf_epl_task_form_id in('{wf_epl_task_form_id}')  ";
+                QuerySql += @$" and wftask.wf_epl_task_form_id not in({wf_epl_task_form_id})  ";
             }
 
             string sql = "select count(1) from (" + QuerySql + ") a";
@@ -117,6 +117,7 @@ namespace PDMS.WorkFlow.Services
         }
 
 
+        //總審批流程
         public WebResponseContent ApproveData(SaveModel saveModel)
         {
             if (saveModel.MainData.ContainsKey("apply_type"))
@@ -151,7 +152,6 @@ namespace PDMS.WorkFlow.Services
             }
            return WebResponse.OK();
         }
-
 
 
         //表單任務所用 方法
