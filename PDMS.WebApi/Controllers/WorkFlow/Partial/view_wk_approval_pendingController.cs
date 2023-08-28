@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.WorkFlow.IServices;
 using PDMS.Core.Filters;
+using PDMS.Core.Utilities;
 
 namespace PDMS.WorkFlow.Controllers
 {
@@ -32,12 +33,21 @@ namespace PDMS.WorkFlow.Controllers
         }
 
 
-        //獲取任務表單審批 頁面
+        //獲取待審批 頁面
         [ApiActionPermission]
         [HttpPost, Route("GetApproveDataByTaskExec")]
         public ActionResult GetApproveDataByTaskExec([FromBody] PageDataOptions loadData)
         {
             return Json(_service.GetApproveDataByTaskExec(loadData));
+        }
+
+
+        //總審批流程 通過Apply_type區分
+        [ApiActionPermission]
+        [HttpPost, Route("ApproveData")]
+        public ActionResult ApproveData([FromBody] SaveModel saveModel)
+        {
+            return Json(_service.ApproveData(saveModel));
         }
     }
 }
