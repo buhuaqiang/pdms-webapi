@@ -16,6 +16,9 @@ using PDMS.Core.Enums;
 using PDMS.Core.Extensions;
 using PDMS.Core.Utilities;
 using MySqlConnector;
+using PDMS.Core.Configuration;
+using Newtonsoft.Json;
+using PDMS.Entity.DomainModels;
 
 namespace PDMS.Core.Dapper
 {
@@ -631,7 +634,29 @@ namespace PDMS.Core.Dapper
         /// <returns></returns>
         public int UpdateRange<T>(IEnumerable<T> entities, Expression<Func<T, object>> updateFileds = null, bool beginTransaction = false)
         {
-            Type entityType = typeof(T);
+            TableDefaultColumns defaultColumns = AppSetting.ModifyMember;
+            UserInfo userInfo = ManageUser.UserContext.Current.UserInfo;
+            var list = JsonConvert.DeserializeObject<List<Dictionary<string,object>>>(JsonConvert.SerializeObject(entities));
+            list.ForEach(item =>
+            {
+                if (item.ContainsKey(defaultColumns.DateField))
+                {
+                    var value = item[defaultColumns.DateField]??DateTime.Now;
+                    item[defaultColumns.DateField] = value;
+                }
+                if (item.ContainsKey(defaultColumns.UserIdField))
+                {
+                    var value = item[defaultColumns.UserIdField]?? userInfo.User_Id;
+                    item[defaultColumns.UserIdField] = value;
+                }
+                if (item.ContainsKey(defaultColumns.UserNameField))
+                {
+                    var value = item[defaultColumns.UserNameField]?? userInfo.UserTrueName;
+                    item[defaultColumns.UserNameField] = value;
+                }
+            });
+            entities = JsonConvert.DeserializeObject<IEnumerable<T>>(JsonConvert.SerializeObject(list));
+             Type entityType = typeof(T);
             var key = entityType.GetKeyProperty();
             if (key == null)
             {
@@ -642,7 +667,7 @@ namespace PDMS.Core.Dapper
             .Where(x => x.Name != key.Name);
             if (updateFileds != null)
             {
-                properties = properties.Where(x => updateFileds.GetExpressionToArray().Contains(x.Name));
+                properties = properties.Where(x => updateFileds.GetExpressionToArray().Contains(x.Name) || defaultColumns.DateField.Contains(x.Name) || defaultColumns.UserIdField.Contains(x.Name) || defaultColumns.UserNameField.Contains(x.Name));
             }
 
             if (DBType.Name == DbCurrentType.MySql.ToString())
