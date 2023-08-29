@@ -298,12 +298,18 @@ namespace PDMS.WorkFlow.Services
             };
             if (status.Equals("01"))
             {
-                approveEntiy.status = "03";
+                approveEntiy.status = "03";//已提交
+            }
+            else if(status.Equals("02"))
+            {
+                approveEntiy.status = "01";//同意       
+            }
+            else if (status.Equals("03"))
+            {
+                approveEntiy.status = "02";//拒絕       
             }
             else
-            {
                 approveEntiy.status = status;
-            }
             //if (type > 0)
             //{
             //    approveEntiy.grade = type;
