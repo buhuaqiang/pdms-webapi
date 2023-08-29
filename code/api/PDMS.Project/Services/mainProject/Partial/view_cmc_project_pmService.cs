@@ -30,6 +30,7 @@ using PDMS.Core.DBManager;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using static PDMS.System.Services.Sys_DictionaryService;
 
 namespace PDMS.Project.Services
 {
@@ -920,6 +921,9 @@ namespace PDMS.Project.Services
 
         public override PageGridData<view_cmc_project_pm> GetPageData(PageDataOptions options)
         {
+
+            PageGridData<view_cmc_project_pm> pageGridData = new PageGridData<view_cmc_project_pm>();
+
             string project_name = "";
             string glno = "";
             string project_type = "";
@@ -985,33 +989,56 @@ namespace PDMS.Project.Services
                 }
 
             }
-            QuerySql = @" select case  when tab.t1>0 then '部門定版中' when tab.t2>0 then '已定版' else '待部門定版' end Final_statsu,
-                                case when tab.fs1>0 then '審核中' when tab.fs2>0 then '審核完成' else '待提交' end fs_status,
-                                tab.project_id,tab.entity,tab.glno,tab.project_name,tab.project_type,tab.project_reg_date,tab.start_date,
-                                tab.end_date,tab.project_gate_date,tab.project_budget,tab.project_purpose,tab.project_describe,tab.project_status,
-                                tab.release_status,tab.model_type,tab.model_year,tab.model_dest,tab.epl_load_date,tab.version,tab.CreateID,
-                                tab.Creator,tab.CreateDate,tab.ModifyID,tab.Modifier,tab.ModifyDate,tab.eo_fee,tab.gate_code    
+            /*  QuerySql = @" select case  when tab.t1>0 then '部門定版中' when tab.t2>0 then '已定版' else '待部門定版' end Final_statsu,
+                                  case when tab.fs1>0 then '審核中' when tab.fs2>0 then '審核完成' else '待提交' end fs_status,
+                                  tab.project_id,tab.entity,tab.glno,tab.project_name,tab.project_type,tab.project_reg_date,tab.start_date,
+                                  tab.end_date,tab.project_gate_date,tab.project_budget,tab.project_purpose,tab.project_describe,tab.project_status,
+                                  tab.release_status,tab.model_type,tab.model_year,tab.model_dest,tab.epl_load_date,tab.version,tab.CreateID,
+                                  tab.Creator,tab.CreateDate,tab.ModifyID,tab.Modifier,tab.ModifyDate,tab.eo_fee,tab.gate_code    
 
-                        from (
-                         SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+                          from (
+                           SELECT distinct pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
+                              pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
+                              pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
+                              ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
+                              pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee,
+
+                              (select top 1 gate_code from cmc_pdms_project_gate gate where gate.project_id=pm.project_id 
+                                  and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code ,
+                              (select count(*) from cmc_pdms_project_epl where project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =epl_phase)
+                                           and Final_version_status='1')as t1	,
+                              (select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase)
+                                          and pe.Final_version_status='2')as t2,
+                              (select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
+                                          and pe.fs_approve_status='01')as fs1,
+                              (select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
+                                          and pe.fs_approve_status in ('02','03'))as fs2
+
+                          FROM cmc_pdms_project_main AS pm  ";*/
+
+
+            if (string.IsNullOrEmpty(options.Sort))
+            {
+                options.Sort = " CreateDate";
+            }
+            if (string.IsNullOrEmpty(options.Order))
+            {
+                options.Order = " desc";
+            }
+
+
+
+            QuerySql = @" with tab1 as (
+                           SELECT distinct    pm.project_id,pm.entity,pm.glno,pm.project_name,pm.project_type,pm.project_reg_date,pm.start_date,
 	                        pm.end_date,pm.project_gate_date,pm.project_budget,pm.project_purpose,pm.project_describe,pm.project_status,
 	                        pm.release_status,pm.model_type,pm.model_year, pm.model_dest,pm.epl_load_date,
                             ( SELECT MAX ( version ) FROM cmc_pdms_project_gate WHERE project_id = pm.project_id GROUP BY project_id ) AS version ,
 	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee,
 
                             (select top 1 gate_code from cmc_pdms_project_gate gate where gate.project_id=pm.project_id 
-								and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code ,
-                            (select count(*) from cmc_pdms_project_epl where project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =epl_phase)
-										 and Final_version_status='1')as t1	,
-							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase)
-										and pe.Final_version_status='2')as t2,
-							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
-										and pe.fs_approve_status='01')as fs1,
-							(select count(*) from cmc_pdms_project_epl pe where pe.project_id=pm.project_id and (case when pm.project_status='01' then '01' else '02' end =pe.epl_phase) 
-										and pe.fs_approve_status in ('02','03'))as fs2
+								and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code 
+                                FROM cmc_pdms_project_main AS pm  ";
 
-                        FROM cmc_pdms_project_main AS pm  ";
-	                      
 
                 if (path == "/view_cmc_project_pm")//
             {
@@ -1047,14 +1074,71 @@ namespace PDMS.Project.Services
                 QuerySql += where;
             }
 
-            QuerySql += " ) tab ";
+              QuerySql += " ), ";
 
-            return base.GetPageData(options);
+            //定版明細
+            QuerySql += @"tab2 as (
+	                   select  epl.org_code,groups.DepartmentName,epl.Final_version_status ,main.project_id ,
+	                        case when epl.Final_version_status='1' then DepartmentName+'已部門定版完成' when Final_version_status='2' then '已定版' else DepartmentName+'待部門定版' end  c3,
+                            (select count(*) from cmc_pdms_project_epl pe where pe.project_id=main.project_id and pe.epl_phase=max(epl.epl_phase) and pe.Final_version_status='1')as c1,
+                            (select count(*) from cmc_pdms_project_epl pe where pe.project_id=main.project_id  and pe.epl_phase=max(epl.epl_phase) and pe.Final_version_status='2')as c2 
+                            from cmc_pdms_project_epl epl 
+                            left join ( select * from  Sys_Department WHERE DepartmentType = '2') groups on groups.DepartmentCode=epl.org_code
+                            left join 	cmc_pdms_project_main main on main.project_id=epl.project_id 
+                             group by epl.org_code,DepartmentName,Final_version_status, main.project_id
+                        ),";
+
+            //成本編列審批明細
+            QuerySql += @"tab3 as ( 
+                        select  epl.group_code,groups.DepartmentName,min(epl.fs_approve_status) as fs_approve_status,main.project_id ,max(Final_version_status) as finalStatus,
+                        (select count(*) from cmc_pdms_project_epl pe where pe.project_id=main.project_id  and pe.epl_phase=max(epl.epl_phase) and (pe.fs_approve_status='00' or pe.fs_approve_status='' or pe.fs_approve_status is null) )as c1 ,
+                        (select count(*) from cmc_pdms_project_epl pe where pe.project_id=main.project_id and pe.epl_phase=max(epl.epl_phase) and pe.fs_approve_status='01')as c2,
+                        (select count(*) from cmc_pdms_project_epl pe where pe.project_id=main.project_id  and pe.epl_phase=max(epl.epl_phase) and pe.fs_approve_status in ('02','03'))as c3,
+                            ( case when min(epl.fs_approve_status)='01' then DepartmentName+'審核中' when (min(epl.fs_approve_status)='02' or min(epl.fs_approve_status)='03') then DepartmentName+'已審核' else DepartmentName+'待提交' end ) as c4 
+
+								from  cmc_pdms_project_epl epl 
+								left join (select * from  Sys_Department WHERE DepartmentType = '3') groups on groups.DepartmentCode=epl.group_code
+								left join 	cmc_pdms_project_main main on main.project_id=epl.project_id 
+                                where  epl.action_type!='delete'	
+								group by main.project_id,epl.group_code,DepartmentName ) ";
+
+
+
+            //統計總條數
+            string str = QuerySql+ @$" select count(1) from ( select distinct  
+                        ROW_NUMBER()over(order by {options.Sort} {options.Order} ) as rowId,
+                    (select top 1 case when c2>0 then '定版完成' when c1=0 then '待部門定版' else (select (select CONVERT(NVARCHAR,c3)+' ; ' from (select   c3  from tab2 t2 where t2.project_id=t1.project_id ) a FOR XML PATH ('') ) t) end as departStatus    
+                            from tab2 t2 where t2.project_id=t1.project_id) as Final_status,
+                    (select  top 1 case when (t3.finalStatus!='2' or t3.finalStatus is null) then '' when (c2=0 and c3=0) then '待提交' when (c1=0 and c2=0) then '已審核' else ( select (select CONVERT(NVARCHAR,c4)+' ; ' from (select   c4  from tab3 t3 where t3.project_id=t1.project_id ) a FOR XML PATH ('') ) t) end as fsStatus  
+                            from tab3 t3 where t3.project_id=t1.project_id ) as fs_status,
+                    t1.*  
+                    from tab1 t1 ) a";
+
+            //查詢所有數據
+            QuerySql += @$" select * from ( select distinct 
+                        ROW_NUMBER()over(order by {options.Sort} {options.Order} ) as rowId,
+                    (select top 1 case when c2>0 then '定版完成' when c1=0 then '待部門定版' else (select (select CONVERT(NVARCHAR,c3)+' ; ' from (select   c3  from tab2 t2 where t2.project_id=t1.project_id ) a FOR XML PATH ('') ) t) end as departStatus    
+                            from tab2 t2 where t2.project_id=t1.project_id) as Final_status,
+                    (select  top 1 case when (t3.finalStatus!='2' or t3.finalStatus is null ) then '' when (c2=0 and c3=0) then '待提交' when (c1=0 and c2=0) then '已審核' else ( select (select CONVERT(NVARCHAR,c4)+' ; ' from (select   c4  from tab3 t3 where t3.project_id=t1.project_id ) a FOR XML PATH ('') ) t) end as fsStatus  
+                            from tab3 t3 where t3.project_id=t1.project_id ) as fs_status,
+                    t1.*  
+                      from tab1 t1 ) a";
+
+
+
+            pageGridData.total = repository.DapperContext.ExecuteScalar(str, null).GetInt();
+
+            str = @$""+ QuerySql + $"  where a.rowId between {((options.Page - 1) * options.Rows + 1)} and {options.Page * options.Rows} ";
+            pageGridData.rows = repository.DapperContext.QueryList<view_cmc_project_pm>(str, null);
+            return pageGridData;
+
+
+            //return pageGridData;
+           // return base.GetPageData(options);
         }
 
-
-
-       public WebResponseContent getProjectInfoFromCMS(string glno)
+   
+        public WebResponseContent getProjectInfoFromCMS(string glno)
         {
             view_cmc_project_pm pm=new view_cmc_project_pm();
             if(!string.IsNullOrEmpty(glno))
