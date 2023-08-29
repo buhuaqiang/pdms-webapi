@@ -284,6 +284,7 @@ namespace PDMS.Core.Extensions
         {
 
             if (entityList == null || entityList.Count() == 0) return "";
+            TableDefaultColumns defaultColumns = AppSetting.ModifyMember;
             PropertyInfo[] propertyInfo = typeof(T).GetProperties().ToArray();
             if (propertyInfo.Count() == 0)
             {
@@ -296,7 +297,7 @@ namespace PDMS.Core.Extensions
             {
                 arr = fixedColumns.GetExpressionToArray();
                 PropertyInfo keyProperty = typeof(T).GetKeyProperty();
-                propertyInfo = propertyInfo.Where(x => (containsKey && x.Name == keyProperty.Name) || arr.Contains(x.Name)).ToArray();
+                propertyInfo = propertyInfo.Where(x => (containsKey && x.Name == keyProperty.Name) || arr.Contains(x.Name) ||defaultColumns.DateField.Contains(x.Name) || defaultColumns.UserIdField.Contains(x.Name) || defaultColumns.UserNameField.Contains(x.Name)).ToArray();
             }
             if (ignoreFileds != null)
             {
