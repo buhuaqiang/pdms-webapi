@@ -82,15 +82,23 @@ namespace PDMS.WorkFlow.Services
                     }
                 }
             }
-            QuerySql = @"        	
-	select   ROW_NUMBER()over(order by epl.part_no ) as rowId,
+            if (string.IsNullOrEmpty(pageData.Sort))
+            {
+                pageData.Sort = "epl.part_no";
+            }
+            if (string.IsNullOrEmpty(pageData.Order))
+            {
+                pageData.Order = "asc";
+            }
+            QuerySql = @$"        	
+	select   ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,
   epl.part_no,epl.part_name,tsk.task_name,ptask.FormId,ptask.FormCollectionId,wftask.wf_epl_task_form_id
 ,master.wf_master_id,ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,(case when tsk.form_type='0' then 'FormSubmit' else  tsk.form_url end) as form_url,tsk.form_type
 	from  cmc_pdms_wf_epl_task_form  wftask
 	left join cmc_pdms_wf_master  master  on wftask.wf_master_id=master.wf_master_id
 	left join cmc_pdms_project_task  ptask  on ptask.project_task_id=wftask.project_task_id
 	left join cmc_pdms_project_epl  epl  on ptask.epl_id=epl.epl_id
-	left join cmc_common_task  tsk on ptask.task_id=tsk.task_id   where 1=1      ";
+	left join cmc_common_task  tsk on ptask.task_id=tsk.task_id   where 1=1   and   master.approve_status='01'  ";
             if (string.IsNullOrEmpty(approve_status) == false)
             {
                 QuerySql += @$" and wftask.approve_status='{approve_status}'";
