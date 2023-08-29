@@ -18,5 +18,7 @@ namespace PDMS.WorkFlow.IServices
 
         //總審批流程
         public WebResponseContent ApproveData(SaveModel saveModel);
+
+        public List<string> GetSingleString<T>(IEnumerable<T> List, Expression<Func<T, object>> SelectFileds = null);
     }
  }
