@@ -48,7 +48,7 @@ namespace PDMS.WorkFlow.Services
         {
             lock (custApply)
             {
-                #region  更新cmc_pdms_wf_master 數據
+                #region  更新cmc_pdms_wf_master/InsertApproveLog/Email队列數據
                 if (apprverUser == null)
                 {
                     apprverUser = GetApproveManager(apply_type);//根據當前登錄人的user_code尋找上級

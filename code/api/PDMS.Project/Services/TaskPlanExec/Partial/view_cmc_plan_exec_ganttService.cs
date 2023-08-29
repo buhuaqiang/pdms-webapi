@@ -632,6 +632,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             {
                 TempStatus = saveModel.MainData["status"].ToString();
             }
+            //審批通過後的二次提交
             if (TempStatus == "02")
             {
                 #region  寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
@@ -652,7 +653,6 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             List<Dictionary<string, object>> ChannelTwo = new List<Dictionary<string, object>>();
             //flow_code is null  則表示此任務無需審批,將主鍵ID 存起來
             List<string>GetProject_task = new List<string>();
-
             //cmc_pdms_project_task  start_date /end_date /approve_status欄位
             List<string>UpdateProject_task = new List<string>();
             Sys_User user = new Sys_User();
@@ -700,7 +700,6 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                    return true;
                 }, (ex) => { throw new Exception(ex.Message); });
             }
-
             ModelOne.MainData = saveModel.MainData;
             if (ChannelOne.Count != 0)
             {
