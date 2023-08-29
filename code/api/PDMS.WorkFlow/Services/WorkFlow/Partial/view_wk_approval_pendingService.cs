@@ -21,6 +21,10 @@ using Newtonsoft.Json;
 using PDMS.Core.ManageUser;
 using System.Net;
 using PDMS.Core.DBManager;
+using System.Collections.Generic;
+using System.Reflection;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using System.Xml.Linq;
 
 namespace PDMS.WorkFlow.Services
 {
@@ -93,7 +97,7 @@ namespace PDMS.WorkFlow.Services
             QuerySql = @$"        	
 	select   ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,
   epl.part_no,epl.part_name,tsk.task_name,ptask.FormId,ptask.FormCollectionId,wftask.wf_epl_task_form_id
-,master.wf_master_id,ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,(case when tsk.form_type='0' then 'FormSubmit' else  tsk.form_url end) as form_url,tsk.form_type
+,master.wf_master_id,master.apply_type,ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,(case when tsk.form_type='0' then 'FormSubmit' else  tsk.form_url end) as form_url,tsk.form_type
 	from  cmc_pdms_wf_epl_task_form  wftask
 	left join cmc_pdms_wf_master  master  on wftask.wf_master_id=master.wf_master_id
 	left join cmc_pdms_project_task  ptask  on ptask.project_task_id=wftask.project_task_id
@@ -173,14 +177,31 @@ namespace PDMS.WorkFlow.Services
         {
             try
             {
-                var wf_epl_task_form_id = saveModel.MainData["wf_epl_task_form_id"].ToString();
                 var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
-                var project_task_id = saveModel.MainData["project_task_id"].ToString();
-                var Reject_project_task_id = saveModel.MainData["Reject_project_task_id"].ToString();
+                List<string> task_form_idlist = new List<string>();//wf_epl_task_form_id 集合
+                List<string> task_idlist = new List<string>();//project_task_id 集合
+                List<cmc_pdms_wf_epl_task_form> task_formlist = new List<cmc_pdms_wf_epl_task_form>();
+                if (!saveModel.MainData.ContainsKey("Reject_wf_epl_task_form_id"))
+                {
+                    saveModel.MainData["Reject_wf_epl_task_form_id"] = "";
+                }    
+                var Reject_wf_epl_task_form_id = saveModel.MainData["Reject_wf_epl_task_form_id"].ToString();
                 var approve_status = saveModel.MainData["approve_status"].ToString();
-                var task_form_idTemp = JsonConvert.DeserializeObject<List<string>>(wf_epl_task_form_id);
-                var taskAgreeTemp = JsonConvert.DeserializeObject<List<string>>(project_task_id);
-                var taskRejectTemp = JsonConvert.DeserializeObject<List<string>>(Reject_project_task_id);
+
+                var taskRejectTemp = JsonConvert.DeserializeObject<List<string>>(Reject_wf_epl_task_form_id);
+
+                //在外層主頁面 點擊審核 是無非獲取到wf_epl_task_form_id,故根據wf_master_id去查詢,排除拒絕的總數據
+                task_formlist = repository.DbContext.Set<cmc_pdms_wf_epl_task_form>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+
+                //wf_epl_task_form_id 同意集合
+                task_form_idlist = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).Except(taskRejectTemp).ToList();
+                //project_task_id 同意集合
+                var AgreeTemp = task_formlist.Where(x => task_form_idlist.Contains(x.wf_epl_task_form_id.ToString()));
+                task_idlist = GetSingleString(AgreeTemp, x => new { x.project_task_id });
+
+                var task_form_idTemp = task_form_idlist;
+                var taskAgreeTemp = task_idlist;
+               
 
                 #region //更新Master表和Approvelog 表 ，後續補充郵件隊列
 
@@ -247,6 +268,29 @@ namespace PDMS.WorkFlow.Services
                 return WebResponse.Error(ex.Message);
             }
             return WebResponse.OK();
+        }
+
+        public List<string> GetSingleString<T>(IEnumerable<T> List, Expression<Func<T, object>> SelectFileds = null)
+        {
+            List<string> temp = new List<string>();
+            string[] arr = null;
+            if (List.Count() != 0)
+            {
+                var templist = JsonConvert.DeserializeObject<List<T>>(JsonConvert.SerializeObject(List));
+                if (SelectFileds != null)
+                {
+                    arr = SelectFileds.GetExpressionToArray();
+                    if (arr.Length != 0)
+                    {
+                        foreach (var item in arr)
+                        {
+                            var thisvalue = templist.Select(p => p.GetType().GetProperty(item).GetValue(p)).Distinct().ToList();
+                            temp = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(thisvalue));
+                        }
+                    }
+                }        
+            }   
+            return temp;
         }
 
 
