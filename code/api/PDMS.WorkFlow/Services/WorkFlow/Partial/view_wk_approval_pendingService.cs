@@ -179,7 +179,8 @@ namespace PDMS.WorkFlow.Services
             {
                 var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
                 List<string> task_form_idlist = new List<string>();//wf_epl_task_form_id 集合
-                List<string> task_idlist = new List<string>();//project_task_id 集合
+                List<string> Agreetask_idlist = new List<string>();//project_task_id 同意集合
+                List<string> Rejecttask_idlist = new List<string>();//project_task_id 同意集合
                 List<cmc_pdms_wf_epl_task_form> task_formlist = new List<cmc_pdms_wf_epl_task_form>();
                 if (!saveModel.MainData.ContainsKey("Reject_wf_epl_task_form_id"))
                 {
@@ -188,6 +189,7 @@ namespace PDMS.WorkFlow.Services
                 var Reject_wf_epl_task_form_id = saveModel.MainData["Reject_wf_epl_task_form_id"].ToString();
                 var approve_status = saveModel.MainData["approve_status"].ToString();
 
+                //將拒絕列表轉成List<string>集合
                 var taskRejectTemp = JsonConvert.DeserializeObject<List<string>>(Reject_wf_epl_task_form_id);
 
                 //在外層主頁面 點擊審核 是無非獲取到wf_epl_task_form_id,故根據wf_master_id去查詢,排除拒絕的總數據
@@ -197,11 +199,13 @@ namespace PDMS.WorkFlow.Services
                 task_form_idlist = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).Except(taskRejectTemp).ToList();
                 //project_task_id 同意集合
                 var AgreeTemp = task_formlist.Where(x => task_form_idlist.Contains(x.wf_epl_task_form_id.ToString()));
-                task_idlist = GetSingleString(AgreeTemp, x => new { x.project_task_id });
+                Agreetask_idlist = GetSingleString(AgreeTemp, x => new { x.project_task_id });
+
+                //project_task_id 拒絕集合
+                Rejecttask_idlist= GetSingleString(task_formlist.Where(x=> taskRejectTemp.Contains(x.wf_epl_task_form_id.ToString())).ToList(), x => new { x.project_task_id }).ToList();
 
                 var task_form_idTemp = task_form_idlist;
-                var taskAgreeTemp = task_idlist;
-               
+                var taskAgreeTemp = Agreetask_idlist;
 
                 #region //更新Master表和Approvelog 表 ，後續補充郵件隊列
 
@@ -225,7 +229,7 @@ namespace PDMS.WorkFlow.Services
                 });
 
                 //獲取所有cmc_pdms_project_task 需要調整為拒絕的內容
-                var RejectList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => taskRejectTemp.Contains(x.project_task_id.ToString())).ToList();
+                var RejectList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => Rejecttask_idlist.Contains(x.project_task_id.ToString())).ToList();
                 RejectList.ForEach(item =>
                 {
                     item.approve_status = "03";
