@@ -256,17 +256,17 @@ namespace PDMS.Entity.DomainModels
         ///定版狀態
         /// </summary>
         [Display(Name = "定版狀態")]
-        [MaxLength(50)]
-        [Column(TypeName = "varchar(50)")]
+        [MaxLength(200)]
+        [Column(TypeName = "varchar(200)")]
         [Editable(true)]
-        public string Final_statsu { get; set; }
+        public string Final_status { get; set; }
 
         /// <summary>
         ///FS成本編列狀態
         /// </summary>
         [Display(Name = "FS成本編列狀態")]
-        [MaxLength(50)]
-        [Column(TypeName = "varchar(50)")]
+        [MaxLength(200)]
+        [Column(TypeName = "varchar(200)")]
         [Editable(true)]
         public string fs_status { get; set; }
     }
