@@ -218,7 +218,7 @@ namespace PDMS.WorkFlow.Services
                 var taskRejectTemp = new List<string>();
                 if (approve_status == "03")
                 {
-                    taskRejectTemp = EPPlusHelper.GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).ToList(); ;
+                    taskRejectTemp = EPPlusHelper.GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).ToList();
                 }
                 else
                 {
