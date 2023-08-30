@@ -34,7 +34,7 @@ namespace PDMS.Project.Controllers
         //处理eo数据，
         [ApiActionPermission]
         [HttpPost, Route("dealEoData")]
-        public ActionResult dealEoData([FromBody] string  date)
+        public ActionResult dealEoData(string  date)
         {
             return Json(_service.dealEoData(date));
         }
