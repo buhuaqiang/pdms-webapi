@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Sys.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Sys.Controllers
 {
@@ -18,16 +19,25 @@ namespace PDMS.Sys.Controllers
     {
         private readonly Iview_cmc_group_model_setService _service;//访问业务代码
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly Icmc_group_model_setService group_model_setService;
 
         [ActivatorUtilitiesConstructor]
         public view_cmc_group_model_setController(
             Iview_cmc_group_model_setService service,
+            Icmc_group_model_setService setService,
             IHttpContextAccessor httpContextAccessor
         )
         : base(service)
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+            group_model_setService = setService;
+        }
+        [ApiActionPermission()]
+        [Route("dealUnSetGroup"), HttpPost]
+        public  ActionResult dealUnSetGroup()
+        {
+            return Json(group_model_setService.dealUnSetGroup());
         }
     }
 }

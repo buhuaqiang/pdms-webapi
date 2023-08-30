@@ -88,16 +88,98 @@ namespace PDMS.Sys.Services
                 };
                 List.Add(queueEntity);
             }
-                    
-           
-            repository.DapperContext.BeginTransaction((r) =>
+            try
             {
-                DBServerProvider.SqlDapper.BulkInsert(List, "cmc_group_model_set");
-                return true;
-            }, (ex) => { throw new Exception(ex.Message); });
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.BulkInsert(List, "cmc_group_model_set");
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch(Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增車型組窗口設置 cmc_group_model_set表，cmc_common_task_templateService 文件-->" + DateTime.Now + ":" + ex.Message);
+            }           
 
             return _responseContent.OK();
 
+        }
+
+
+        public WebResponseContent dealUnSetGroup()
+        {
+            try
+            {
+                //查詢出所有群組
+                string allGroup = @$"SELECT * from Sys_Department where ParentId in (
+                                SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode in 
+                                (SELECT DicValue from Sys_DictionaryList where Dic_ID=(SELECT Dic_ID from Sys_Dictionary WHERE DicNo='define_dept_code')))";
+                List<Sys_Department> list = _repository.DapperContext.QueryList<Sys_Department>(allGroup, null);
+               
+                //查詢出專案對應的車型
+                string modelSet = "SELECT DISTINCT model_type from cmc_pdms_project_main where project_status IN ('01','02','03')";
+                List<cmc_pdms_project_main> setsList = _repository.DapperContext.QueryList<cmc_pdms_project_main>(modelSet,null);
+                //List<string> list = view_wk_approval_pendingService.Instance.GetSingleString(setsList, x => new { x.model_type })
+
+                //查詢出群組設置的所有數據
+                string selectSet = "select * from cmc_group_model_set where set_type='01'";
+                List<cmc_group_model_set> existSet = _repository.DapperContext.QueryList<cmc_group_model_set>(selectSet, null);
+                List<cmc_group_model_set> notExist = new List<cmc_group_model_set>();
+                if (list != null && list.Count > 0 && setsList!=null && setsList.Count>0)
+                {
+                    list.ForEach(dept => {
+                        setsList.ForEach(set =>
+                        {
+                            cmc_group_model_set newSet=new cmc_group_model_set();
+                            newSet.DepartmentCode= dept.DepartmentCode;
+                            newSet.model_type=set.model_type;
+                            var ex= existSet.Where(x => x.DepartmentCode==newSet.DepartmentCode && x.model_type==set.model_type).FirstOrDefault();
+                            if (ex!=null)
+                            {
+                                //說明對應組的車型窗口已設置
+                            }
+                            else
+                            {
+                                notExist.Add(newSet);
+                            }
+                        });
+                    });
+                    if(notExist.Count > 0)
+                    {
+                        //查詢是否已經提醒過，如果已提醒過一次則把組經理設置為組窗口
+                        string notice = "select * from sys_notice";
+                        List<sys_notice> allNotice= _repository.DapperContext.QueryList<sys_notice>(notice, null);
+                        var grouList=notExist.GroupBy(g => new {g.DepartmentCode}).ToList();
+                        /*notExist.ForEach(x => {
+                            
+                        });*/
+                        //未提醒過則發送郵件和公告通知
+                    }
+                }
+               
+            }
+            catch (Exception ex) {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "處理未設置組窗口的車型 cmc_group_model_set表，cmc_common_task_templateService 文件-->" + DateTime.Now + ":" + ex.Message);
+            }
+            return _responseContent.OK();
+        }
+        /// <summary>
+        /// 查詢部門經理/組經理
+        /// </summary>
+        /// <param name="deptCode"></param>
+        /// <returns></returns>
+        string getDeptManager(string deptCode)
+        {
+            string userid = "1";
+            if (deptCode == "D157")
+            {
+                userid = "4406";
+            } 
+            else if (deptCode == "D157")
+             {
+                userid = "4383";
+            }
+                return userid;
         }
     }
 }

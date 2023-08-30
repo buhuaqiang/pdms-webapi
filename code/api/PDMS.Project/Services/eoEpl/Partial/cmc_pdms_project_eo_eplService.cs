@@ -46,8 +46,11 @@ namespace PDMS.Project.Services
             }
             try
             {
+                //將讀取到的三個文件分別寫入對應表
+
                 //查询出所有进行中的专案
                 string getAllProject = "SELECT * from cmc_pdms_project_main where project_status IN ('01','02','03')";
+                
                 //查询YTECH表
                 string getEOsql = @$"select * from YTECH WHERE EC_DATE={date}";
                 //根据查询结果的model_year查询对应专案，写入表cmc_pdms_eo_project
