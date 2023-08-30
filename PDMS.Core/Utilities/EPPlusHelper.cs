@@ -954,7 +954,9 @@ namespace PDMS.Core.Utilities
                             if (!pi.CanWrite) continue;
                             object value = dr[tempName];
                             if (value != DBNull.Value)
-                                pi.SetValue(t, value, null);
+                               // pi.SetValue(t, value, null);
+                                pi.SetValue(t, Convert.ChangeType(value, pi.PropertyType), null);
+
                         }
                     }
                     ts.Add(t);
