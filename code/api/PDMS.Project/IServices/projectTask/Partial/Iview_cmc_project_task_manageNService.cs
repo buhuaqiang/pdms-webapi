@@ -10,6 +10,7 @@ namespace PDMS.Project.IServices
     public partial interface Iview_cmc_project_task_manageNService
     {
         public WebResponseContent submitReview(SaveModel obj);
+        public WebResponseContent submit(SaveModel obj);
         public WebResponseContent setPartTaker(SaveModel obj);
         public WebResponseContent updateMissionData(SaveModel obj);
         public WebResponseContent addMissionData(SaveModel obj);

@@ -34,9 +34,15 @@ namespace PDMS.Project.Controllers
 
         [ApiActionPermission()]
         [Route("submitReview"), HttpPost]
-        public WebResponseContent submit([FromBody] SaveModel obj)
+        public WebResponseContent submitReview([FromBody] SaveModel obj)
         {
             return Service.submitReview(obj);
+        }
+        [ApiActionPermission()]
+        [Route("submit"), HttpPost]
+        public WebResponseContent submit([FromBody] SaveModel obj)
+        {
+            return Service.submit(obj);
         }
 
         [ApiActionPermission()]
