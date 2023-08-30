@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System.Xml.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace PDMS.WorkFlow.Services
 {
@@ -130,6 +131,29 @@ namespace PDMS.WorkFlow.Services
         }
 
 
+        //批量審核
+        public WebResponseContent BatchApproveData(SaveModel saveModel)
+        {
+            SaveModel Model = new SaveModel();
+            Dictionary<string, object> dic = new Dictionary<string, object>();
+            var apply_typeJarray = JsonConvert.DeserializeObject<List<string>>(saveModel.MainData["apply_type"].ToString());
+            var wf_master_idJarray = JsonConvert.DeserializeObject<List<string>>(saveModel.MainData["wf_master_id"].ToString());
+            var approve_status = saveModel.MainData["approve_status"].ToString();
+            var remark= saveModel.MainData["remark"].ToString();
+            for (int i = 0; i < apply_typeJarray.Count; i++)
+            {
+                dic = new Dictionary<string, object>();
+                dic.Add("wf_master_id", wf_master_idJarray[i]);
+                dic.Add("apply_type", apply_typeJarray[i]);
+                dic.Add("approve_status", approve_status);
+                dic.Add("remark", remark);
+                Model.MainData = dic;
+                WebResponse = ApproveData(Model);
+            }
+            return WebResponse.OK();
+        }
+
+
         //總審批流程
         public WebResponseContent ApproveData(SaveModel saveModel)
         {
@@ -188,22 +212,30 @@ namespace PDMS.WorkFlow.Services
                 }    
                 var Reject_wf_epl_task_form_id = saveModel.MainData["Reject_wf_epl_task_form_id"].ToString();
                 var approve_status = saveModel.MainData["approve_status"].ToString();
-
-                //將拒絕列表轉成List<string>集合
-                var taskRejectTemp = JsonConvert.DeserializeObject<List<string>>(Reject_wf_epl_task_form_id);
-
                 //在外層主頁面 點擊審核 是無非獲取到wf_epl_task_form_id,故根據wf_master_id去查詢,排除拒絕的總數據
                 task_formlist = repository.DbContext.Set<cmc_pdms_wf_epl_task_form>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
-
+               
+                var taskRejectTemp = new List<string>();
+                if (approve_status == "03")
+                {
+                    taskRejectTemp = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).ToList(); ;
+                }
+                else
+                {
+                    //將拒絕列表轉成List<string>集合
+                    taskRejectTemp = string.IsNullOrEmpty(Reject_wf_epl_task_form_id) ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(Reject_wf_epl_task_form_id);
+                }   
+                #region  數據包裝         
                 //wf_epl_task_form_id 同意集合
                 task_form_idlist = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).Except(taskRejectTemp).ToList();
                 //project_task_id 同意集合
                 var AgreeTemp = task_formlist.Where(x => task_form_idlist.Contains(x.wf_epl_task_form_id.ToString()));
+
                 Agreetask_idlist = GetSingleString(AgreeTemp, x => new { x.project_task_id });
 
                 //project_task_id 拒絕集合
-                Rejecttask_idlist= GetSingleString(task_formlist.Where(x=> taskRejectTemp.Contains(x.wf_epl_task_form_id.ToString())).ToList(), x => new { x.project_task_id }).ToList();
-
+                Rejecttask_idlist = GetSingleString(task_formlist.Where(x=> taskRejectTemp.Contains(x.wf_epl_task_form_id.ToString())).ToList(), x => new { x.project_task_id }).ToList();
+                #endregion
                 var task_form_idTemp = task_form_idlist;
                 var taskAgreeTemp = Agreetask_idlist;
 
@@ -274,6 +306,7 @@ namespace PDMS.WorkFlow.Services
             return WebResponse.OK();
         }
 
+        //實體映射，獲取某個屬性的全部數據 轉換成List<string>
         public List<string> GetSingleString<T>(IEnumerable<T> List, Expression<Func<T, object>> SelectFileds = null)
         {
             List<string> temp = new List<string>();
