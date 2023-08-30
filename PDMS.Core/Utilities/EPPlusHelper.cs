@@ -14,6 +14,7 @@ using PDMS.Core.Infrastructure;
 using PDMS.Entity.DomainModels;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using Newtonsoft.Json;
+using System.Collections;
 
 namespace PDMS.Core.Utilities
 {
@@ -813,6 +814,179 @@ namespace PDMS.Core.Utilities
             string base64Str = Convert.ToBase64String(bt);
             filestream.Close();
             return base64Str;
+        }
+
+        public static DataSet ImportExcel(string filePath)
+        {
+            DataSet ds = null;
+            try
+            {
+                //打开文件
+                FileStream fileStream = new FileStream(filePath, FileMode.Open);
+                //读取文件流
+                ExcelPackage package = new ExcelPackage(fileStream);
+                //获取sheet表
+                ExcelWorksheets worksheets = package.Workbook.Worksheets;
+                ExcelWorksheet worksheet = null;
+                ds = new DataSet();
+                DataTable dt = null;
+                for (int i = 1; i <= worksheets.Count; i++)
+                {
+                    dt = new DataTable();
+                    dt.TableName = "table" + i.ToString();
+                    worksheet = worksheets[i];
+                    //获取行数
+                    int rowCount = worksheet.Dimension.End.Row;
+                    //获取列数
+                    int colCount = worksheet.Dimension.End.Column;
+                    //起始行为1
+                    int rowIndex = worksheet.Dimension.Start.Row;
+                    //起始列为1
+                    int colIndex = worksheet.Dimension.Start.Column;
+                    DataColumn dc = null;
+                    for (int j = colIndex; j <= colCount; j++)
+                    {
+                        dc = new DataColumn(worksheet.Cells[rowIndex, j].Value.ToString());
+                        dt.Columns.Add(dc);
+                    }
+                    try
+                    {
+                        rowIndex++;
+                        for (int k = rowIndex; k <= rowCount; k++)
+                        {
+                            DataRow dr = dt.NewRow();
+                            for (int l = colIndex; l <= colCount; l++)
+                            {
+                                if (worksheet.GetValue(k, l) == null)
+                                {
+                                    continue;
+                                }
+                                dr[l - 1] = worksheet.GetValue(k, l).ToString();
+                            }
+                            ds.Tables.Add(dt);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                        throw;
+                    }
+                  
+                    package.Dispose();
+                    worksheet = null;
+                    worksheets = null;
+                    package = null;
+                    fileStream.Close();
+                    fileStream.Dispose();
+                }
+            }
+
+            catch (Exception ex)
+            {
+                throw;
+            }
+            return ds;
+        }
+
+
+
+        //根據指定路徑 讀取Excel
+        public static DataTable ReadExcel(string filePath)
+        {
+            using (var package = new ExcelPackage(new FileInfo(filePath)))
+            {
+                var workbook = package.Workbook;
+                var worksheet = workbook.Worksheets.First();
+                var table = new DataTable();
+
+                var startRow = worksheet.Dimension.Start.Row;
+                var endRow = worksheet.Dimension.End.Row;
+                var startColumn = worksheet.Dimension.Start.Column;
+                var endColumn = worksheet.Dimension.End.Column;
+
+                for (int i = startColumn; i <= endColumn; i++)
+                {
+                    table.Columns.Add(worksheet.Cells[startRow, i].Value.ToString());
+                }
+
+                for (int row = startRow + 1; row <= endRow; row++)
+                {
+                    var dataRow = table.NewRow();
+
+                    for (int col = startColumn; col <= endColumn; col++)
+                    {
+                        dataRow[col - 1] = worksheet.Cells[row, col].Value;
+                    }
+
+                    table.Rows.Add(dataRow);
+                }
+
+                return table;
+            }
+        }
+
+
+
+        //將DataTable 轉換成 List
+        //使用方法  List<CustomerContact> list2 = DtToList<CustomerContact>.ConvertToModel(dt);
+        public static class DtToList<T> where T : new()
+        {
+            /// <summary>
+            /// datatable to list
+            /// </summary>
+            /// <param name="dt"></param>
+            /// <returns></returns>
+            public static List<T> ConvertToModel(DataTable dt)
+            {
+
+                List<T> ts = new List<T>();// 定义集合
+                Type type = typeof(T); // 获得此模型的类型
+                string tempName = "";
+                foreach (DataRow dr in dt.Rows)
+                {
+                    T t = new T();
+                    PropertyInfo[] propertys = t.GetType().GetProperties();// 获得此模型的公共属性
+                    foreach (PropertyInfo pi in propertys)
+                    {
+                        tempName = pi.Name;
+                        if (dt.Columns.Contains(tempName))
+                        {
+                            if (!pi.CanWrite) continue;
+                            object value = dr[tempName];
+                            if (value != DBNull.Value)
+                                pi.SetValue(t, value, null);
+                        }
+                    }
+                    ts.Add(t);
+                }
+                return ts;
+            }
+
+        }
+
+        //將list 轉換成 datatable
+        //使用方法  DataTable dt = ListToDt<CustomerContact>(list);
+        public static DataTable ListToDt<T>(IEnumerable<T> collection)
+        {
+            var props = typeof(T).GetProperties();
+            var dt = new DataTable();
+            dt.Columns.AddRange(props.Select(p => new
+            DataColumn(p.Name, p.PropertyType)).ToArray());
+            if (collection.Count() > 0)
+            {
+                for (int i = 0; i < collection.Count(); i++)
+                {
+                    ArrayList tempList = new ArrayList();
+                    foreach (PropertyInfo pi in props)
+                    {
+                        object obj = pi.GetValue(collection.ElementAt(i), null);
+                        tempList.Add(obj);
+                    }
+                    object[] array = tempList.ToArray();
+                    dt.LoadDataRow(array, true);
+                }
+            }
+            return dt;
         }
 
 
