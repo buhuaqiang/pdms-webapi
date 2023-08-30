@@ -75,9 +75,9 @@ namespace PDMS.Entity.DomainModels
        ///
        /// </summary>
        [Display(Name ="EC_DATE")]
-       [Column(TypeName="datetime")]
+       [Column(TypeName= "nvarchar(50)")]
        [Editable(true)]
-       public DateTime? EC_DATE { get; set; }
+       public string EC_DATE { get; set; }
 
        /// <summary>
        ///
