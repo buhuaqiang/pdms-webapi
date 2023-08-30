@@ -49,5 +49,15 @@ namespace PDMS.WorkFlow.Controllers
         {
             return Json(_service.ApproveData(saveModel));
         }
+        //總審批流程 通過Apply_type區分
+        [ApiActionPermission]
+        [HttpPost, Route("BatchApproveData")]
+        public ActionResult BatchApproveData([FromBody] SaveModel saveModel)
+        {
+            return Json(_service.BatchApproveData(saveModel));
+        }
     }
+
+
+  
 }
