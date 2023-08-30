@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
+using PDMS.Core.Filters;
 
 namespace PDMS.Project.Controllers
 {
@@ -28,6 +29,14 @@ namespace PDMS.Project.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        //处理eo数据，
+        [ApiActionPermission]
+        [HttpPost, Route("dealEoData")]
+        public ActionResult dealEoData([FromBody] string  date)
+        {
+            return Json(_service.dealEoData(date));
         }
     }
 }
