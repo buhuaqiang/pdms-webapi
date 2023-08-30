@@ -13,6 +13,7 @@ using PDMS.Core.Extensions;
 using PDMS.Core.Infrastructure;
 using PDMS.Entity.DomainModels;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
+using Newtonsoft.Json;
 
 namespace PDMS.Core.Utilities
 {
@@ -814,6 +815,30 @@ namespace PDMS.Core.Utilities
             return base64Str;
         }
 
+
+        //實體映射，獲取某個屬性的全部數據 轉換成List<string>
+        public static List<string> GetSingleString<T>(IEnumerable<T> List, Expression<Func<T, object>> SelectFileds = null)
+        {
+            List<string> temp = new List<string>();
+            string[] arr = null;
+            if (List.Count() != 0)
+            {
+                var templist = JsonConvert.DeserializeObject<List<T>>(JsonConvert.SerializeObject(List));
+                if (SelectFileds != null)
+                {
+                    arr = SelectFileds.GetExpressionToArray();
+                    if (arr.Length != 0)
+                    {
+                        foreach (var item in arr)
+                        {
+                            var thisvalue = templist.Select(p => p.GetType().GetProperty(item).GetValue(p)).Distinct().ToList();
+                            temp = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(thisvalue));
+                        }
+                    }
+                }
+            }
+            return temp;
+        }
 
     }
 
