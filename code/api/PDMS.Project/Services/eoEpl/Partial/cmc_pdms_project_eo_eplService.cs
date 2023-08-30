@@ -23,6 +23,8 @@ using System.Collections.Generic;
 using PDMS.Core.DBManager;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using static PDMS.Core.Utilities.EPPlusHelper;
 
 namespace PDMS.Project.Services
 {
@@ -58,6 +60,9 @@ namespace PDMS.Project.Services
 
                 #region  根據當前時間查詢，當天的所有變更EO，中轉站處理,最後寫入cmc_pdms_eo_project
                 //根據當前時間查詢，當天的所有變更EO
+                
+
+
                 var List = repository.DbContext.Set<YTECH>().Where(x => x.EC_DATE ==Convert.ToDateTime(date)).ToList();
                 //將查出的數據，放進中轉站處理,最後寫入cmc_pdms_eo_project
                 ResponseContent = GetStrData(List);
@@ -93,12 +98,12 @@ namespace PDMS.Project.Services
         {
             string date = DateTime.Now.ToString("yyyyMMdd");
             string localPath = $"c:/home/site/Upload/PDMS/EoPo/20230830142020/YTECB_2023.xlsx".MapPath();
-            string localPath2 = $"c:/home/site/Upload/PDMS/EoPo/20230830142020/YYTECH_2023.xlsx".MapPath();
+            string localPath2 = $"c:/home/site/Upload/PDMS/EoPo/20230830142020/YTECH_2023.xlsx".MapPath();
             string localPath3 = $"c:/home/site/Upload/PDMS/EoPo/20230830142020/YTECS_2023.xlsx".MapPath();
             try
-            {
-                Response = EPPlusHelper.ReadToDataTable<T>(localPath, null);
-                var list = Response.Data as List<YTECB>;
+            { 
+                DataTable Data = EPPlusHelper.ReadExcel(localPath);
+                var list = DtToList<YTECB>.ConvertToModel(Data);
                 repository.DapperContext.BeginTransaction((r) =>
                 {
                     DBServerProvider.SqlDapper.BulkInsert(list, "YTECB");
@@ -106,9 +111,8 @@ namespace PDMS.Project.Services
                 }, (ex) => { throw new Exception(ex.Message); });
 
 
-
-                Response = EPPlusHelper.ReadToDataTable<T>(localPath2, null);
-                var list2 = Response.Data as List<YTECB>;
+                DataTable Data2 = EPPlusHelper.ReadExcel(localPath2);
+                var list2 = DtToList<YTECH>.ConvertToModel(Data2);
                 repository.DapperContext.BeginTransaction((r) =>
                 {
                     DBServerProvider.SqlDapper.BulkInsert(list2, "YTECH");
@@ -117,8 +121,8 @@ namespace PDMS.Project.Services
 
 
 
-                Response = EPPlusHelper.ReadToDataTable<T>(localPath3, null);
-                var list3 = Response.Data as List<YTECB>;
+                DataTable Data3 = EPPlusHelper.ReadExcel(localPath3);
+                var list3 = DtToList<YTECS>.ConvertToModel(Data3);
                 repository.DapperContext.BeginTransaction((r) =>
                 {
                     DBServerProvider.SqlDapper.BulkInsert(list3, "YTECS");
@@ -134,18 +138,18 @@ namespace PDMS.Project.Services
             }
             finally
             {
-                if (File.Exists(localPath))
-                {
-                    File.Delete(localPath);
-                }
-                if (File.Exists(localPath2))
-                {
-                    File.Delete(localPath2);
-                }
-                if (File.Exists(localPath3))
-                {
-                    File.Delete(localPath3);
-                }
+                //if (File.Exists(localPath))
+                //{
+                //    File.Delete(localPath);
+                //}
+                //if (File.Exists(localPath2))
+                //{
+                //    File.Delete(localPath2);
+                //}
+                //if (File.Exists(localPath3))
+                //{
+                //    File.Delete(localPath3);
+                //}
             }
             return ResponseContent.OK();
         }
@@ -185,6 +189,17 @@ namespace PDMS.Project.Services
                                 }
                             }
                         }
+                        else if (item.Key.MODEL_YEAR.IndexOf("|") != -1)
+                        {
+                            var arrs = item.Key.MODEL_YEAR.Split("|");
+                            if (!arrs[0].Contains("ALL") && !arrs[0].Contains("---"))
+                                model_type.Add(arrs[0]);
+                            if (!arrs[1].Contains("ALL") && !arrs[1].Contains("---"))
+                                model_year.Add(arrs[1]);
+                            if (!arrs[2].Contains("ALL") && !arrs[2].Contains("---"))
+                                model_dest.Add(arrs[2]);
+                        }
+
                         var ListTemp = project_mainList.Where(x => model_type.Contains(x.model_type) && model_year.Contains(x.model_year) && model_dest.Contains(x.model_dest)).ToList();
                         var project_idList = EPPlusHelper.GetSingleString(ListTemp, x => new { x.project_id }).ToList();
                         foreach (var id in project_idList)
@@ -197,11 +212,14 @@ namespace PDMS.Project.Services
                             });
                         }
                     }
-                    repository.DapperContext.BeginTransaction((r) =>
+                    if (projects.Count() > 0)
                     {
-                        DBServerProvider.SqlDapper.BulkInsert(projects, "cmc_pdms_eo_project");
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });  
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(projects, "cmc_pdms_eo_project");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }      
                 }
             }
             catch (Exception ex)
