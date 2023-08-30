@@ -218,7 +218,7 @@ namespace PDMS.WorkFlow.Services
                 var taskRejectTemp = new List<string>();
                 if (approve_status == "03")
                 {
-                    taskRejectTemp = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).ToList(); ;
+                    taskRejectTemp = EPPlusHelper.GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).ToList(); ;
                 }
                 else
                 {
@@ -227,14 +227,14 @@ namespace PDMS.WorkFlow.Services
                 }   
                 #region  數據包裝         
                 //wf_epl_task_form_id 同意集合
-                task_form_idlist = GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).Except(taskRejectTemp).ToList();
+                task_form_idlist = EPPlusHelper.GetSingleString(task_formlist, x => new { x.wf_epl_task_form_id }).Except(taskRejectTemp).ToList();
                 //project_task_id 同意集合
                 var AgreeTemp = task_formlist.Where(x => task_form_idlist.Contains(x.wf_epl_task_form_id.ToString()));
 
-                Agreetask_idlist = GetSingleString(AgreeTemp, x => new { x.project_task_id });
+                Agreetask_idlist = EPPlusHelper.GetSingleString(AgreeTemp, x => new { x.project_task_id });
 
                 //project_task_id 拒絕集合
-                Rejecttask_idlist = GetSingleString(task_formlist.Where(x=> taskRejectTemp.Contains(x.wf_epl_task_form_id.ToString())).ToList(), x => new { x.project_task_id }).ToList();
+                Rejecttask_idlist = EPPlusHelper.GetSingleString(task_formlist.Where(x=> taskRejectTemp.Contains(x.wf_epl_task_form_id.ToString())).ToList(), x => new { x.project_task_id }).ToList();
                 #endregion
                 var task_form_idTemp = task_form_idlist;
                 var taskAgreeTemp = Agreetask_idlist;
@@ -306,29 +306,7 @@ namespace PDMS.WorkFlow.Services
             return WebResponse.OK();
         }
 
-        //實體映射，獲取某個屬性的全部數據 轉換成List<string>
-        public List<string> GetSingleString<T>(IEnumerable<T> List, Expression<Func<T, object>> SelectFileds = null)
-        {
-            List<string> temp = new List<string>();
-            string[] arr = null;
-            if (List.Count() != 0)
-            {
-                var templist = JsonConvert.DeserializeObject<List<T>>(JsonConvert.SerializeObject(List));
-                if (SelectFileds != null)
-                {
-                    arr = SelectFileds.GetExpressionToArray();
-                    if (arr.Length != 0)
-                    {
-                        foreach (var item in arr)
-                        {
-                            var thisvalue = templist.Select(p => p.GetType().GetProperty(item).GetValue(p)).Distinct().ToList();
-                            temp = JsonConvert.DeserializeObject<List<string>>(JsonConvert.SerializeObject(thisvalue));
-                        }
-                    }
-                }        
-            }   
-            return temp;
-        }
+      
 
 
     }
