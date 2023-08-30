@@ -277,8 +277,8 @@ namespace PDMS.Entity.DomainModels
        [DisplayFormat(DataFormatString="10,2")]
        [Column(TypeName="decimal")]
        [Editable(true)]
-       public decimal? task_completion { get; set; }      
+       public decimal? task_completion { get; set; }
 
-
+ 
     }
 }

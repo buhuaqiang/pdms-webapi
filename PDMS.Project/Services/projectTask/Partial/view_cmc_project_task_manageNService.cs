@@ -25,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Globalization;
 using Quartz.Util;
+using Microsoft.Extensions.Primitives;
 
 namespace PDMS.Project.Services
 {
@@ -125,6 +126,167 @@ namespace PDMS.Project.Services
         public WebResponseContent submitReview(SaveModel saveModel)
         {
             var MainData = saveModel.MainData;
+            var epl_ids = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
+            //List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            List<string> eplResStr = new List<string>();
+            List<string> partTakerResStr = new List<string>();
+            if (!string.IsNullOrEmpty(epl_ids))
+            {
+                try
+                {
+                    JArray epl_idArray = JArray.Parse(epl_ids);
+                    List<string> invalidEplIds = new List<string>();
+                    List<string> invalidPartTaker = new List<string>();
+                    view_cmc_project_task_manageN manageN = new view_cmc_project_task_manageN();
+                    foreach (string epl_id in epl_idArray)
+                    {
+                        Guid gepl_id = Guid.Parse(epl_id);
+                        var template_id = "";
+                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == gepl_id).FirstOrDefault();
+                        if (manageN != null)
+                        {
+                            template_id = manageN.template_id.ToString(); 
+                        }
+                        //如果沒有設置零品承辦
+                        if (!manageN.part_taker_id.HasValue)
+                        {
+                            invalidPartTaker.Add(epl_id);
+                        }
+                        //如果連模板都還沒有
+                        if (template_id == "")
+                        {
+                            invalidEplIds.Add(epl_id);
+                            continue;
+                        }
+
+                        string sql = $@"
+                                                       SELECT
+	ct.task_name AS task_name,
+	pct.task_name AS pre_task_name,
+	temp.template_name,
+	tset.set_type,
+	sl2.DicValue AS set_value,
+	sl2.DicName AS set_name,
+	sl3.DicValue AS gate_code,
+	sl3.DicName AS gate_name,
+	ct.task_desc,
+	map.set_id,
+	map.order_no AS mapOrder,
+	gate.gate_start_date,
+	gate.gate_end_date,
+	gate.project_id,
+	p.* 
+FROM
+	cmc_pdms_project_task AS p
+	LEFT JOIN cmc_common_task AS ct ON ct.task_id = p.task_id
+	LEFT JOIN cmc_common_task AS pct ON pct.task_id = p.pre_task_id
+	LEFT JOIN cmc_common_template_mapping AS map ON map.mapping_id = p.mapping_id
+	LEFT JOIN cmc_common_task_template_set AS tset on tset.set_id=map.set_id
+	LEFT JOIN cmc_common_task_template AS temp ON temp.template_id = p.template_id
+	INNER JOIN Sys_DictionaryList sl2 ON ( sl2.DicValue = tset.set_value AND sl2.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = tset.set_type ) )
+	LEFT JOIN cmc_common_task_template_set parent ON tset.parent_set_id= parent.set_id
+	INNER JOIN Sys_DictionaryList sl3 ON (
+	sl3.DicValue= parent.set_value 
+	AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = parent.set_type ))
+	LEFT JOIN cmc_pdms_project_gate gate ON gate.gate_code = sl3.DicValue 
+	AND gate.project_id = ( SELECT project_id FROM cmc_pdms_project_epl WHERE epl_id = '{epl_id}' ) 
+WHERE
+	p.epl_id = '{epl_id}' ";
+                        if (!string.IsNullOrEmpty(template_id))
+                        {
+                            sql += $" AND p.template_id='{template_id}'";
+                        }
+                        sql += $" ORDER BY CAST( sl3.DicValue AS INT ) ASC, CAST( sl2.DicValue AS INT ) DESC, CAST( map.order_no AS INT ) DESC";
+                        Console.WriteLine(sql);
+                        List<view_cmc_project_task_mission_manage> result = new List<view_cmc_project_task_mission_manage>();
+                        result = repository.DapperContext.QueryList<view_cmc_project_task_mission_manage>(sql, null);
+                        foreach (var item in result)
+                        {
+                            // 檢查日期是否為正常值
+                            if (!IsValidDate(item.gate_end_date) ||
+                                !IsValidDate(item.end_date) ||
+                                !IsValidDate(item.start_date) ||
+                                !IsValidDate(item.gate_start_date))
+                            {
+                                // 邏輯不符合，將 epl_id 加入到 invalidEplIds 列表中
+                                invalidEplIds.Add(epl_id);
+                                break; // 跳出迴圈，進行下一個 epl_id
+                            }
+                            // 邏輯檢查
+                            if (item.gate_end_date >= item.end_date &&
+                                item.end_date >= item.start_date &&
+                                item.start_date >= item.gate_start_date)
+                            {
+                               
+                            }
+                            else
+                            {
+                                // 邏輯不對，將 epl_id 存起來
+                                invalidEplIds.Add(epl_id);
+                                break;
+                            }
+                            if (item.warn.HasValue && item.warn.Value < 0)
+                            {
+                                invalidEplIds.Add(epl_id);
+                                break; // 跳出迴圈，進行下一個 epl_id
+                            }
+
+                            if (item.warn_leader.HasValue && item.warn_leader.Value < 0)
+                            {
+                                invalidEplIds.Add(epl_id);
+                                break; // 跳出迴圈，進行下一個 epl_id
+                            }
+                        }
+                    }
+
+                    foreach (string inepl_id in invalidPartTaker)
+                    {
+                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == Guid.Parse(inepl_id)).FirstOrDefault();
+                        string resultString = $"[Glno:{manageN.glno}-{manageN.project_name}-{manageN.part_name}]";
+                        partTakerResStr.Add(resultString);
+                    }
+                    foreach (string inepl_id in invalidEplIds)
+                    {
+                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == Guid.Parse(inepl_id)).FirstOrDefault();
+                        string resultString = $"[Glno:{manageN.glno}-{manageN.project_name}-{manageN.part_name}]";
+                        eplResStr.Add(resultString);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "提交審批資料檢查  view_cmc_project_task_mission_manage 表，view_cmc_project_task_mission_manage 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+
+                // 將結果用逗號分隔合併為一個字串
+                string combinedPartTaker = string.Join(" , ", partTakerResStr);
+                string combinedResult = string.Join(" , ", eplResStr);
+
+                string finalErrorMsg = "";
+                if (!string.IsNullOrEmpty(combinedPartTaker))
+                {
+                    finalErrorMsg += combinedPartTaker + " 未設置零品承辦。";
+                }
+                if (!string.IsNullOrEmpty(combinedResult))
+                {
+                    finalErrorMsg += combinedResult + " 任務資料未填妥。";
+                }
+                if (!string.IsNullOrEmpty(finalErrorMsg))
+                {
+                    return ResponseContent.Error(finalErrorMsg);
+                }
+            }
+            return ResponseContent.OK();
+        }
+        // 檢查日期是否為正常值的方法
+        private bool IsValidDate(DateTime? date)
+        {
+            return date.HasValue && date.Value != DateTime.MinValue && date.Value != DateTime.MaxValue;
+        }
+
+        public WebResponseContent submitReviewOLD(SaveModel saveModel)
+        {
+            var MainData = saveModel.MainData;
             var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             if (!string.IsNullOrEmpty(epl_id))
@@ -164,6 +326,51 @@ namespace PDMS.Project.Services
             }
             return ResponseContent.OK();
         }
+
+        public WebResponseContent submit(SaveModel saveModel)
+        {
+            var MainData = saveModel.MainData;
+            var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
+
+            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            if (!string.IsNullOrEmpty(epl_id))
+            {
+                try
+                {
+                    JArray epl_idArray = JArray.Parse(epl_id);
+                    foreach (string item in epl_idArray)
+                    {
+                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
+                        if (epl != null)
+                        {
+                            
+                        }
+                        eplList.Add(epl);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.part_taker_id });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
+            return ResponseContent.OK();
+        }
+
         public WebResponseContent setPartTaker(SaveModel saveModel)
         {
             var MainData = saveModel.MainData;
