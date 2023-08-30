@@ -9,5 +9,10 @@ namespace PDMS.Sys.IServices
 {
     public partial interface Icmc_group_model_setService
     {
+        /// <summary>
+        /// 查詢處理未設置的群組
+        /// </summary>
+        /// <returns></returns>
+        WebResponseContent dealUnSetGroup();
     }
  }
