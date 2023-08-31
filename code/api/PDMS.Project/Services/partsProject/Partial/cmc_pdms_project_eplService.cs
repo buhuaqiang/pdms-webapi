@@ -30,6 +30,7 @@ using System.Reflection;
 using System;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using System.Security.Cryptography;
+using PDMS.WorkFlow.Services;
 
 namespace PDMS.Project.Services
 {
@@ -327,6 +328,9 @@ namespace PDMS.Project.Services
 
             var MainDatas = saveModel.MainDatas;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            //存取有部門變更的數據
+            List<Dictionary<string, object>> approveDatras = new List<Dictionary<string, object>>();
+            SaveModel ModelOne = new SaveModel();
             if (MainDatas.Count != 0)
             {
                 try
@@ -349,8 +353,10 @@ namespace PDMS.Project.Services
                                 //擋板提交直接部門變更通過
                                 epl.submit_status = "";
                                // epl.submit_status = item["submit_status"] == null ? "" : item["submit_status"].ToString();
-                                epl.org_change_approve_status = "02";
-                                epl.org_code = item["new_org_code"].ToString();
+                                epl.org_change_approve_status = "01";
+                                epl.org_code = item["org_code"] == null ? "" : item["org_code"].ToString();
+                                //epl.org_code = item["new_org_code"].ToString();
+                                approveDatras.Add(item);
                             }
                         }
                         eplList.Add(epl);
@@ -374,6 +380,12 @@ namespace PDMS.Project.Services
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
 
                     return ResponseContent.Error();
+                }
+
+                if (approveDatras.Count>0) {//存在部門變更，做變更審核流程
+                    ModelOne.MainData = saveModel.MainDatas[0];
+                    ModelOne.MainDatas = approveDatras;
+                    ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "01", null);
                 }
 
             }
