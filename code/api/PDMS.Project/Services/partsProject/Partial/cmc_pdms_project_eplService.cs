@@ -328,6 +328,9 @@ namespace PDMS.Project.Services
 
             var MainDatas = saveModel.MainDatas;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+            //歷史記錄表
+            List<cmc_pdms_project_epl_his> eplHisList = new List<cmc_pdms_project_epl_his>();
+
             //存取有部門變更的數據
             List<Dictionary<string, object>> approveDatras = new List<Dictionary<string, object>>();
             SaveModel ModelOne = new SaveModel();
@@ -338,6 +341,7 @@ namespace PDMS.Project.Services
                     foreach (var item in MainDatas)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                        cmc_pdms_project_epl_his eplHis = new cmc_pdms_project_epl_his();
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
 
                         if (epl != null)
@@ -356,6 +360,34 @@ namespace PDMS.Project.Services
                                 epl.org_change_approve_status = "01";
                                 epl.org_code = item["org_code"] == null ? "" : item["org_code"].ToString();
                                 //epl.org_code = item["new_org_code"].ToString();
+
+                                //寫入數據到歷史表
+                                eplHis.epl_his_id = Guid.NewGuid();
+                                eplHis.epl_id = Guid.Parse(item["epl_id"].ToString());
+                                eplHis.project_id = Guid.Parse(item["project_id"].ToString());
+                                eplHis.epl_source = item["epl_source"] == null ? "" : item["epl_source"].ToString();
+                                eplHis.epl_phase = item["epl_phase"] == null ? "" : item["epl_phase"].ToString();
+                                eplHis.upg_id = item["upg_id"] == null ? "" : item["upg_id"].ToString();
+                                eplHis.level = item["level"] == null ? null : Convert.ToInt32(item["level"]);
+                                eplHis.part_no = item["part_no"] == null ? "" : item["part_no"].ToString();
+                                eplHis.part_name = item["part_name"] == null ? "" : item["part_name"].ToString();
+                                eplHis.company_code = item["company_code"] == null ? "" : item["company_code"].ToString();
+                                eplHis.kd_type = item["kd_type"] == null ? "" : item["kd_type"].ToString();
+                                eplHis.org_code = item["org_code"] == null ? "" : item["org_code"].ToString();
+                                eplHis.new_org_code = item["new_org_code"] == null ? "" : item["new_org_code"].ToString();
+                                eplHis.group_code = item["group_code"] == null ? "" : item["group_code"].ToString();
+                                eplHis.dev_taker_id = item["dev_taker_id"]==null ? null : Convert.ToInt32(item["dev_taker_id"]);
+                                eplHis.part_taker_id = item["part_taker_id"] == null ? null : Convert.ToInt32(item["part_taker_id"]);
+                                eplHis.Final_version_status = item["Final_version_status"] == null ? "" : item["Final_version_status"].ToString();
+                                eplHis.gate_type = item["gate_type"] == null ? "" : item["gate_type"].ToString();
+                                eplHis.is_eo = item["is_eo"] == null ? "" : item["is_eo"].ToString();
+                                eplHis.original_part_no = item["original_part_no"] == null ? "" : item["original_part_no"].ToString();
+                                eplHis.del_flag = "0";
+                                eplHis.action_type = "modify";
+                                eplHis.data_source = "2";
+                                eplHisList.Add(eplHis);
+                                
+                                //寫入審批表
                                 approveDatras.Add(item);
                             }
                         }
@@ -374,6 +406,15 @@ namespace PDMS.Project.Services
                         DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.submit_status,x.org_change_approve_status,x.org_code });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
+
+                    if (eplHisList.Count != 0)
+                    {//寫入數據到歷史表
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(eplHisList, "cmc_pdms_project_epl_his");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
                 }
                 catch (Exception ex)
                 {
