@@ -706,6 +706,10 @@ SELECT
                     pTask.start_date = DateTime.ParseExact(startD, format2, CultureInfo.InvariantCulture);
                 }
             }
+            else 
+            {
+                pTask.start_date = null;
+            }
             if (!string.IsNullOrEmpty(endD))
             {
                 if (endD.Contains("/"))
@@ -718,6 +722,10 @@ SELECT
                 {
                     pTask.end_date = DateTime.ParseExact(endD, endformat2, CultureInfo.InvariantCulture);
                 }
+            }
+            else
+            {
+                pTask.end_date = null;
             }
         }
 
