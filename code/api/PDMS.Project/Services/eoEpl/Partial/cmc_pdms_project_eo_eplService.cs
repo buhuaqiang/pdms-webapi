@@ -55,14 +55,12 @@ namespace PDMS.Project.Services
             try
             {
                 #region   先将 YTECH/YTECS/YTECB 写入对应的表
-                ResponseContent = ImportData();
+                ResponseContent = ImportEOData();
                 #endregion
 
                 #region  根據當前時間查詢，當天的所有變更EO，中轉站處理,最後寫入cmc_pdms_eo_project
                 //根據當前時間查詢，當天的所有變更EO
                 
-
-
                 var List = repository.DbContext.Set<YTECH>().Where(x => x.EC_DATE ==Convert.ToDateTime(date)).ToList();
                 //將查出的數據，放進中轉站處理,最後寫入cmc_pdms_eo_project
                 ResponseContent = GetStrData(List);
@@ -90,11 +88,7 @@ namespace PDMS.Project.Services
            
             return ResponseContent.OK();
         }
-
-
-
-        private WebResponseContent Response { get; set; }
-        public WebResponseContent ImportData()
+        public WebResponseContent ImportEOData()
         {
             string date = DateTime.Now.ToString("yyyyMMdd");
             string localPath = $"c:/home/site/Upload/PDMS/EoPo/20230830142020/YTECB_2023.xlsx".MapPath();
