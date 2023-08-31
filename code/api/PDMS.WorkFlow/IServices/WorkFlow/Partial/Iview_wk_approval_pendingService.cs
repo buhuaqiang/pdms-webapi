@@ -16,6 +16,8 @@ namespace PDMS.WorkFlow.IServices
         /// <returns></returns>
         public PageGridData<view_wk_approval_pending> GetApproveDataByTaskExec(PageDataOptions pageData);
 
+        public PageGridData<view_wk_approval_eplOrg> GetApproveDataByEplOrg(PageDataOptions pageData);
+
         //總審批流程
         public WebResponseContent ApproveData(SaveModel saveModel);
 
