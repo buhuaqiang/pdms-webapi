@@ -284,67 +284,75 @@ WHERE
             return date.HasValue && date.Value != DateTime.MinValue && date.Value != DateTime.MaxValue;
         }
 
-        public WebResponseContent submitReviewOLD(SaveModel saveModel)
-        {
-            var MainData = saveModel.MainData;
-            var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
-            List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            if (!string.IsNullOrEmpty(epl_id))
-            {
-                try
-                {
-                    JArray epl_idArray = JArray.Parse(epl_id);
-                    foreach (string item in epl_idArray)
-                    {
-                        cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
-                        if (epl != null)
-                        {
-                            epl.task_define_approve_status = "01";
-                        }
-                        eplList.Add(epl);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
-                }
-                try
-                {
-                    repository.DapperContext.BeginTransaction((r) =>
-                    {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.task_define_approve_status });
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
-                }
-            }
-            return ResponseContent.OK();
-        }
-
         public WebResponseContent submit(SaveModel saveModel)
         {
             var MainData = saveModel.MainData;
-            var epl_id = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
+            var epl_ids = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
 
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
-            if (!string.IsNullOrEmpty(epl_id))
+            if (!string.IsNullOrEmpty(epl_ids))
             {
                 try
                 {
-                    JArray epl_idArray = JArray.Parse(epl_id);
-                    foreach (string item in epl_idArray)
+                    JArray epl_idArray = JArray.Parse(epl_ids);
+                    view_cmc_project_task_manageN manageN = new view_cmc_project_task_manageN();
+                    foreach (string epl_id in epl_idArray)
                     {
+                        Guid gepl_id = Guid.Parse(epl_id);
+                        var template_id = "";
+                        int? part_taker = null;
+                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == gepl_id).FirstOrDefault();
+                        if (manageN != null)
+                        {
+                            template_id = manageN.template_id.ToString();
+                            part_taker = manageN.part_taker_id;
+                        }
+
+                        //判斷是否需要零品承辦參與審核
+                        string need_part = "";
+                        string partSQL = $@"
+SELECT
+    CASE
+        WHEN (
+            SELECT COUNT(0)
+            FROM cmc_common_template_mapping map
+            LEFT JOIN cmc_common_task task ON map.task_id = task.task_id
+            LEFT JOIN cmc_common_task_template_set st ON st.set_id = map.set_id 
+            WHERE st.template_id = @TemplateId
+            AND task.is_part_handle = '1'
+        ) = (
+            SELECT COUNT(0)
+            FROM cmc_pdms_project_task
+            WHERE epl_id = @EplId
+            AND is_part_handle = '1'
+        ) THEN '1'
+        ELSE '0'
+    END AS is_part_handle;
+";
+                        List<cmc_common_task> result = new List<cmc_common_task>();
+                        result = repository.DapperContext.QueryList<cmc_common_task>(partSQL, new { TemplateId = template_id, EplId = epl_id });
+                        if (result != null)
+                        {
+                            need_part = result[0].is_part_handle;
+                        }
+
+                        if (need_part == "1")
+                        {
+                            //審核人 = 零品承辦
+
+                        }
+                        else if (need_part == "0")
+                        {
+                            //審核人 = 開發承辦上級(組經理?)
+
+                        }
+
+
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
+                        epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(epl_id)).FirstOrDefault();
                         if (epl != null)
                         {
-                            
+                            epl.task_define_approve_status = "01";
                         }
                         eplList.Add(epl);
                     }
@@ -680,6 +688,8 @@ WHERE
         {
             string format1 = "yyyy/MM/dd";
             string format2 = "yyyy-MM-dd";
+            string endformat1 = "yyyy/MM/dd HH:mm:ss";
+            string endformat2 = "yyyy-MM-dd HH:mm:ss";
 
             var startD = item["start_date"]?.ToString() ?? "";
             var endD = item["end_date"]?.ToString() ?? "";
@@ -700,13 +710,13 @@ WHERE
             {
                 if (endD.Contains("/"))
                 {
-                    DateTime dateTimeValue = DateTime.ParseExact(endD, format1, CultureInfo.InvariantCulture);
-                    string endDate = dateTimeValue.ToString("yyyy-MM-dd");
-                    pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
+                    DateTime dateTimeValue = DateTime.ParseExact(endD, endformat1, CultureInfo.InvariantCulture);
+                    string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
+                    pTask.end_date = DateTime.ParseExact(endDate, endformat2, CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    pTask.end_date = DateTime.ParseExact(endD, format2, CultureInfo.InvariantCulture);
+                    pTask.end_date = DateTime.ParseExact(endD, endformat2, CultureInfo.InvariantCulture);
                 }
             }
         }
