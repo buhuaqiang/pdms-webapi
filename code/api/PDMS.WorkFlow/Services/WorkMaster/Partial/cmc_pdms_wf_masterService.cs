@@ -102,7 +102,7 @@ namespace PDMS.WorkFlow.Services
                     Smaster_id = saveModel.MainData["wf_master_id"].ToString();
                     remark = saveModel.MainData["remark"].ToString();//審核意見
                     cmc_pdms_wf_master master = getMasterByDBID(Smaster_id);
-                    master.approve_status = status;
+                    master.approve_status = status=="03"?"02": status;
                     if (!status.Equals("00"))
                     {
                         master.approved_date = DateTime.Now;
