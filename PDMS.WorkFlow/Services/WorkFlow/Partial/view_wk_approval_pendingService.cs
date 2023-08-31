@@ -283,7 +283,7 @@ namespace PDMS.WorkFlow.Services
                 var eplOrgRejectTemp = new List<string>();
                 if (approveStatus == "03")//核退
                 {
-                    eplOrgRejectTemp = GetSingleString(eplOrgList, x => new { x.wf_epl_org_id }).ToList(); ;
+                    eplOrgRejectTemp = EPPlusHelper.GetSingleString(eplOrgList, x => new { x.wf_epl_org_id }).ToList(); ;
                 }
                 else
                 {
@@ -291,14 +291,14 @@ namespace PDMS.WorkFlow.Services
                     eplOrgRejectTemp = string.IsNullOrEmpty(rejectEplOrgId) ? new List<string>() : JsonConvert.DeserializeObject<List<string>>(rejectEplOrgId);
                 }
                 //獲取核定的id
-                eplOrgIds = GetSingleString(eplOrgList, x => new { x.wf_epl_org_id }).Except(eplOrgRejectTemp).ToList();
+                eplOrgIds = EPPlusHelper.GetSingleString(eplOrgList, x => new { x.wf_epl_org_id }).Except(eplOrgRejectTemp).ToList();
                 //核定的數據集合
                 var AgreeTemp = eplOrgList.Where(x => eplOrgIds.Contains(x.wf_epl_org_id.ToString()));
                 //核定數據的epl_id集合，用於更新epl主表
-                agreeEplOrgIds = GetSingleString(AgreeTemp, x => new { x.epl_id });
+                agreeEplOrgIds = EPPlusHelper.GetSingleString(AgreeTemp, x => new { x.epl_id });
 
                 //核退數據的epl_id集合，用於更新epl主表
-                rejectEplOrgIds = GetSingleString(eplOrgList.Where(x => eplOrgRejectTemp.Contains(x.wf_epl_org_id.ToString())).ToList(), x => new { x.epl_id }).ToList();
+                rejectEplOrgIds = EPPlusHelper.GetSingleString(eplOrgList.Where(x => eplOrgRejectTemp.Contains(x.wf_epl_org_id.ToString())).ToList(), x => new { x.epl_id }).ToList();
                //更新master主表
                 WebResponse = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, approveStatus, "", null, false);
 
