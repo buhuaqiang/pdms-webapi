@@ -26,6 +26,7 @@ using Newtonsoft.Json;
 using System.Globalization;
 using Quartz.Util;
 using Microsoft.Extensions.Primitives;
+using PDMS.WorkFlow.Services;
 
 namespace PDMS.Project.Services
 {
@@ -287,25 +288,30 @@ WHERE
         public WebResponseContent submit(SaveModel saveModel)
         {
             var MainData = saveModel.MainData;
-            var epl_ids = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString()).ToString();
-
+            var epl_ids = MainData["epl_id"] == null ? "" : JArray.Parse(saveModel.MainData["epl_id"].ToString().Trim()).ToString();
+            //var epl_ids = MainData["epl_id"]?.ToString().Trim();
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             if (!string.IsNullOrEmpty(epl_ids))
             {
                 try
                 {
                     JArray epl_idArray = JArray.Parse(epl_ids);
+                    //string[] epl_idArray = epl_ids.Split(',');
                     view_cmc_project_task_manageN manageN = new view_cmc_project_task_manageN();
                     foreach (string epl_id in epl_idArray)
                     {
-                        Guid gepl_id = Guid.Parse(epl_id);
+                        SaveModel ModelOne = new SaveModel();
+                        ModelOne.MainData = new Dictionary<string, object>();
+                        ModelOne.MainData["epl_id"] = epl_id;
+                        
                         var template_id = "";
                         int? part_taker = null;
-                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == gepl_id).FirstOrDefault();
+                        manageN = repository.DbContext.Set<view_cmc_project_task_manageN>().Where(x => x.epl_id == Guid.Parse(epl_id)).FirstOrDefault();
                         if (manageN != null)
                         {
                             template_id = manageN.template_id.ToString();
                             part_taker = manageN.part_taker_id;
+                            ModelOne.MainData["project_id"] = manageN.project_id;
                         }
 
                         //判斷是否需要零品承辦參與審核
@@ -335,18 +341,19 @@ SELECT
                         {
                             need_part = result[0].is_part_handle;
                         }
-
+                        
                         if (need_part == "1")
                         {
                             //審核人 = 零品承辦
-
+                            Sys_User userInfo = new Sys_User();
+                            userInfo = repository.DbContext.Set<Sys_User>().Where(x => x.User_Id == part_taker).FirstOrDefault();
+                            ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "03", userInfo);
                         }
                         else if (need_part == "0")
                         {
                             //審核人 = 開發承辦上級(組經理?)
-
+                            ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "03", null);
                         }
-
 
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(epl_id)).FirstOrDefault();
@@ -366,7 +373,7 @@ SELECT
                 {
                     repository.DapperContext.BeginTransaction((r) =>
                     {
-                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.part_taker_id });
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.task_define_approve_status });
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
                 }
