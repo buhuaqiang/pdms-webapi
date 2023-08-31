@@ -14,5 +14,11 @@ namespace PDMS.Project.IServices
         /// </summary>
         /// <param name="date"></param>
         public WebResponseContent dealEoData(string date);
+
+        /// <summary>
+        /// 方便定時任務調閱，參數待定
+        /// </summary>
+        /// <param name=""></param>
+        public WebResponseContent ImportEOData();
     }
  }
