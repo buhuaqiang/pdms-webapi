@@ -126,6 +126,7 @@ namespace PDMS.WorkFlow.Services
                     {
                         case "01"://部門變更
                                   //此處實現具體方法
+                            Insert_epl_org(saveModel, wf_master_ids);
                             break;
                         case "02"://成本編列
                                   //此處實現具體方法
@@ -146,7 +147,45 @@ namespace PDMS.WorkFlow.Services
 
         }
 
-        //新增一筆 cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
+        //寫入數據到EPL部門變更審核表中
+        public void Insert_epl_org(SaveModel saveModel, Guid wf_master_ids)
+        {
+            var TempList = saveModel.MainDatas;
+            if (TempList.Count > 0) {
+                try
+                {
+                    List<cmc_pdms_wf_epl_org> eplOrgs = new List<cmc_pdms_wf_epl_org>();
+                    foreach (var item in TempList)
+                    {
+                        cmc_pdms_wf_epl_org eplOrg = new cmc_pdms_wf_epl_org();
+                        eplOrg.wf_epl_org_id = Guid.NewGuid();
+                        eplOrg.wf_master_id = wf_master_ids;
+                        eplOrg.approve_status = "1";//默认给1 通过
+                        eplOrg.epl_id = Guid.Parse(item["epl_id"].ToString());
+                        eplOrg.original_org_code = item["org_code"].ToString();
+                        eplOrg.current_org_code = item["new_org_code"].ToString();
+                        eplOrgs.Add(eplOrg);
+                    }
+                    if (eplOrgs.Count != 0)
+                    {
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(eplOrgs, "cmc_pdms_wf_epl_org");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量寫入執行 cmc_pdms_wf_epl_org 表，cmc_pdms_wf_masterService 文件-->Insert_epl_org-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                }
+
+            }
+
+        }
+
+
+            //新增一筆 cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
         public void Insert_task_form(SaveModel saveModel, Guid wf_master_ids)
         {
             //MainDatas 批量提交
