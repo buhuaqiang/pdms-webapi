@@ -88,10 +88,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string kd_type { get; set; }
 
-       /// <summary>
-       ///組別代碼
-       /// </summary>
-       [Display(Name ="組別代碼")]
+        /// <summary>
+        ///部門代碼
+        /// </summary>
+        [Display(Name = "部門代碼")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        [Editable(true)]
+        public string org_code { get; set; }
+
+        /// <summary>
+        ///組別代碼
+        /// </summary>
+        [Display(Name ="組別代碼")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
@@ -233,6 +242,13 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public DateTime? task_end_date { get; set; }
 
-       
+
+        /// <summary>
+        ///所屬大日程
+        /// </summary>
+        [Display(Name = "所屬大日程")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? eo_gate_id { get; set; }
     }
 }

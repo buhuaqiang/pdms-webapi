@@ -42,6 +42,15 @@ namespace PDMS.Entity.DomainModels
         [Editable(true)]
         public Guid? mapping_id { get; set; }
 
+
+        /// <summary>
+        /// eo任務所屬大日程id
+        /// </summary>
+        [Display(Name = "eo_gate_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? eo_gate_id { get; set; }
+
         /// <summary>
         ///審核狀態00 草稿，01審核中，02通過，03拒絕，04待提交
         /// </summary>
