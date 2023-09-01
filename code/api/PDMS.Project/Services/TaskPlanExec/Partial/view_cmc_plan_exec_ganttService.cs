@@ -418,8 +418,8 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             var project_task_id = saveModel.MainData["project_task_id"].ToString();
             var task_id = saveModel.MainData["task_id"].ToString();
             var title = saveModel.MainData["title"].ToString();
-            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
-            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString()+"00:00:00");
+            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString()+"23:59:59");
             var approve_status = saveModel.MainData["approve_status"].ToString();
 
             var Data = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == Guid.Parse(project_task_id)).FirstOrDefault();
@@ -597,15 +597,15 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
         public WebResponseContent UpdateTaskDate(SaveModel saveModel)
         {
             var project_task_id =Guid.Parse(saveModel.MainData["project_task_id"].ToString());
-            var start_date = Convert.ToDateTime(saveModel.MainData["start_date"].ToString());
-            var end_date = Convert.ToDateTime(saveModel.MainData["end_date"].ToString());
+            var start_date = saveModel.MainData["start_date"].ToString()+"00:00:00";
+            var end_date = saveModel.MainData["end_date"].ToString() + "23:59:59";
             var approve_status = saveModel.MainData["approve_status"].ToString();
             try
             {
                 List<cmc_pdms_project_task> taskList = new List<cmc_pdms_project_task>();
                 var temp = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
-                temp.start_date = start_date;
-                temp.end_date = end_date;
+                temp.start_date = Convert.ToDateTime(start_date);
+                temp.end_date = Convert.ToDateTime(end_date);
                 taskList.Add(temp);
                 repository.DapperContext.BeginTransaction((r) =>
                 {
