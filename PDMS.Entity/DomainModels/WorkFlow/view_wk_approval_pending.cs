@@ -180,6 +180,15 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string part_no { get; set; }
 
+        /// <summary>
+        ///專案狀態 01:專案建立 02:專案啟動 03:專案工作管理 05:結案
+        /// </summary>
+        [Display(Name = "專案狀態 01:專案建立 02:專案啟動 03:專案工作管理  05:結案")]
+        [MaxLength(2)]
+        [Column(TypeName = "varchar(2)")]
+        [Editable(true)]
+        public string project_status { get; set; }
+
 
         /// <summary>
         ///
