@@ -818,6 +818,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                         warn = ptask.warn,
                         warn_leader = ptask.warn_leader,
                         action_type = ptask.action_type,
+                        mapping_id=ptask.mapping_id,
                         data_source ="01"
                     }); 
                 }
