@@ -25,6 +25,13 @@ using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using static PDMS.Core.Utilities.EPPlusHelper;
+using Microsoft.AspNetCore.SignalR;
+using static Dapper.SqlMapper;
+using System;
+using static System.Reflection.Metadata.BlobBuilder;
+using ExpressionType = PDMS.Core.Utilities.ExpressionType;
+using System.Collections;
+using Dapper;
 
 namespace PDMS.Project.Services
 {
@@ -55,7 +62,7 @@ namespace PDMS.Project.Services
             try
             {
                 #region   先将 YTECH/YTECS/YTECB 写入对应的表
-                ResponseContent = ImportEOData();
+                //ResponseContent = ImportEOData();
                 #endregion
 
                 #region  根據當前時間查詢，當天的所有變更EO，中轉站處理,最後寫入cmc_pdms_eo_project
@@ -154,16 +161,19 @@ namespace PDMS.Project.Services
         public WebResponseContent GetStrData(List<YTECH> list)
         {
             List<List<string>> dicData = new List<List<string>>();
-            var model_type = new List<string>();
-            var model_year = new List<string>();
-            var model_dest = new List<string>();
+            var model_type = "";
+            var model_year = "";
+            var model_dest = "";
             List<cmc_pdms_eo_project> projects = new List<cmc_pdms_eo_project>();
+            List<cmc_pdms_project_main> MainList = new List<cmc_pdms_project_main>();
+            List<cmc_pdms_project_main> Result = new List<cmc_pdms_project_main>();
             try
             {
                 if (list.Count() > 0)
                 {
                     var project_mainList = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => (x.project_status == "01" || x.project_status == "02" || x.project_status == "03")).ToList();
                     var Groups = list.GroupBy(x => new { x.EC_NO, x.MODEL_YEAR }).ToList();
+  
                     foreach (var item in Groups)
                     {
                         if (item.Key.MODEL_YEAR.IndexOf(",") != -1)
@@ -175,11 +185,13 @@ namespace PDMS.Project.Services
                                 {
                                     var arrs = ArrItem.Split("|");
                                     if (!arrs[0].Contains("ALL") && !arrs[0].Contains("---"))
-                                        model_type.Add(arrs[0]);
+                                        model_type=(arrs[0]);
                                     if (!arrs[1].Contains("ALL") && !arrs[1].Contains("---"))
-                                        model_year.Add(arrs[1]);
+                                        model_year=(arrs[1]);
                                     if (!arrs[2].Contains("ALL") && !arrs[2].Contains("---"))
-                                        model_dest.Add(arrs[2]);
+                                        model_dest=(arrs[2]);
+                                     MainList = GetList(model_type, model_year, model_dest, project_mainList);
+                                     Result = Result.Union(MainList).ToList<cmc_pdms_project_main>(); //剔除重复项                
                                 }
                             }
                         }
@@ -187,22 +199,20 @@ namespace PDMS.Project.Services
                         {
                             var arrs = item.Key.MODEL_YEAR.Split("|");
                             if (!arrs[0].Contains("ALL") && !arrs[0].Contains("---"))
-                                model_type.Add(arrs[0]);
+                                model_type=(arrs[0]);
                             if (!arrs[1].Contains("ALL") && !arrs[1].Contains("---"))
-                                model_year.Add(arrs[1]);
+                                model_year=(arrs[1]);
                             if (!arrs[2].Contains("ALL") && !arrs[2].Contains("---"))
-                                model_dest.Add(arrs[2]);
-                        }
-
-                        var ListTemp = project_mainList.Where(x => model_type.Contains(x.model_type) && model_year.Contains(x.model_year) && model_dest.Contains(x.model_dest)).ToList();
-                        var project_idList = EPPlusHelper.GetSingleString(ListTemp, x => new { x.project_id }).ToList();
+                                model_dest=(arrs[2]);
+                            Result = GetList(model_type, model_year, model_dest, project_mainList);
+                        }                   
+                        var project_idList = EPPlusHelper.GetSingleString(Result, x => new { x.project_id }).ToList();
                         foreach (var id in project_idList)
                         {
                             projects.Add(new cmc_pdms_eo_project
                             {
                                 ec_no = item.Key.EC_NO,
                                 project_id = Guid.Parse(id)
-
                             });
                         }
                     }
@@ -213,7 +223,9 @@ namespace PDMS.Project.Services
                             DBServerProvider.SqlDapper.BulkInsert(projects, "cmc_pdms_eo_project");
                             return true;
                         }, (ex) => { throw new Exception(ex.Message); });
-                    }      
+                    }
+                    //释放实体
+                    Result = null;
                 }
             }
             catch (Exception ex)
@@ -224,6 +236,28 @@ namespace PDMS.Project.Services
             return ResponseContent.OK();
         }
 
+        //拼接Lamada 表达式并查询数据
+        public List<cmc_pdms_project_main> GetList(string model_type,string model_year,string model_dest,List<cmc_pdms_project_main> TempList)
+        {
+            List<cmc_pdms_project_main> MainList = new List<cmc_pdms_project_main>();
+            //1.定义对象，传入泛型
+            var oLamadaExtention = new LamadaExtention<cmc_pdms_project_main>();
+            if (!string.IsNullOrEmpty(model_type))
+            {
+                oLamadaExtention.GetExpression("model_type", model_type, ExpressionType.Equal);
+            }
+            if (!string.IsNullOrEmpty(model_year))
+            {
+                oLamadaExtention.GetExpression("model_year", model_year, ExpressionType.Equal);
+            }
+            if (!string.IsNullOrEmpty(model_dest))
+            {
+                oLamadaExtention.GetExpression("model_dest", model_dest, ExpressionType.Equal);
+            }
+            var lamada = (oLamadaExtention.GetLambda());
+            MainList = TempList.Where(lamada.Compile()).ToList();
 
+            return MainList;
+        }
     }
 }
