@@ -300,6 +300,7 @@ WHERE
                     view_cmc_project_task_manageN manageN = new view_cmc_project_task_manageN();
                     foreach (string epl_id in epl_idArray)
                     {
+                        string TempStatus = "";
                         SaveModel ModelOne = new SaveModel();
                         ModelOne.MainData = new Dictionary<string, object>();
                         ModelOne.MainData["epl_id"] = epl_id;
@@ -312,6 +313,14 @@ WHERE
                             template_id = manageN.template_id.ToString();
                             part_taker = manageN.part_taker_id;
                             ModelOne.MainData["project_id"] = manageN.project_id;
+                            TempStatus = manageN.task_define_approve_status;
+                        }
+                        if (TempStatus == "02")
+                        {
+                            #region  寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+                            ResponseContent = Insert_task_hist(saveModel);
+                            #endregion
+
                         }
 
                         //判斷是否需要零品承辦參與審核
@@ -367,7 +376,7 @@ SELECT
                 catch (Exception ex)
                 {
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件：eplList：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
+                    return ResponseContent.Error(ex.Message);
                 }
                 try
                 {
@@ -380,7 +389,7 @@ SELECT
                 catch (Exception ex)
                 {
                     Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，cmc_pdms_project_eplService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
-                    return ResponseContent.Error();
+                    return ResponseContent.Error(ex.Message);
                 }
             }
             return ResponseContent.OK();
@@ -409,16 +418,6 @@ SELECT
                     foreach (string item in epl_idArray)
                     {
                         cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
-                        //if (Guid.TryParse(item, out Guid eplGuid))
-                        //{
-                        //    epl = repository.DbContext.Set<cmc_pdms_project_epl>().FirstOrDefault(x => x.epl_id == eplGuid);
-                        //    if (epl != null)
-                        //    {
-                        //        epl.part_taker_id = userId;
-                        //    }
-                        //    eplList.Add(epl);
-                        //}
-
                         epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item)).FirstOrDefault();
                         if (epl != null)
                         {
@@ -758,5 +757,66 @@ SELECT
             }
             return ResponseContent.OK();
         }
+
+
+        //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+        public WebResponseContent Insert_task_hist(SaveModel saveModel)
+        {
+            var TempList = saveModel.MainDatas;
+            if (TempList.Count == 0)
+            {
+                //表單單筆提交
+                TempList[0] = saveModel.MainData;
+            }
+            List<cmc_pdms_project_task_hist> task_List = new List<cmc_pdms_project_task_hist>();
+            try
+            {
+                foreach (var item in TempList)
+                {
+                    var project_task_id = Guid.Parse(item["project_task_id"].ToString());
+                    var ptask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
+                    task_List.Add(new cmc_pdms_project_task_hist
+                    {
+                        project_task_his_id = Guid.NewGuid(),
+                        project_task_id = project_task_id,
+                        epl_id = ptask.epl_id,
+                        approve_status = ptask.approve_status,
+                        done_status = ptask.done_status,
+                        check_flag = ptask.check_flag,
+                        template_id = ptask.template_id,
+                        task_id = ptask.task_id,
+                        FormCode = ptask.FormCode,
+                        FormId = ptask.FormId,
+                        FormCollectionId = ptask.FormCollectionId,
+                        start_date = ptask.start_date,
+                        end_date = ptask.end_date,
+                        order_no = ptask.order_no,
+                        pre_task_id = ptask.pre_task_id,
+                        rule_id = ptask.rule_id,
+                        is_eo = ptask.is_eo,
+                        is_part_handle = ptask.is_part_handle,
+                        is_delete_able = ptask.is_delete_able,
+                        is_audit_key = ptask.is_audit_key,
+                        warn = ptask.warn,
+                        warn_leader = ptask.warn_leader,
+                        action_type = ptask.action_type,
+                        data_source = "01"
+                    });
+                }
+
+                repository.DapperContext.BeginTransaction((r) =>
+                {
+                    DBServerProvider.SqlDapper.BulkInsert(task_List, "cmc_pdms_project_task_hist");
+                    return true;
+                }, (ex) => { throw new Exception(ex.Message); });
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task_hist 表，view_cmc_plan_exec_ganttService 文件-->Insert_task_hist-->BulkInsert:" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error();
+            }
+            return ResponseContent.OK();
+        }
+
     }
 }

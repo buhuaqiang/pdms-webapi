@@ -132,7 +132,7 @@ namespace PDMS.WorkFlow.Services
                                   //此處實現具體方法
                             break;
                         case "03"://主工作計劃管理
-                            //Insert_epl_task_define(saveModel, wf_master_ids);
+                            Insert_epl_task_define(saveModel, wf_master_ids);
                             break;
                         case "04"://任務
                             Insert_task_form(saveModel, wf_master_ids);
@@ -188,37 +188,106 @@ namespace PDMS.WorkFlow.Services
         //寫入數據到子專案工作計畫審核表中 cmc_pdms_wf_epl_task_define
         public void Insert_epl_task_define(SaveModel saveModel, Guid wf_master_ids)
         {
-            var TempList = saveModel.MainDatas;
-            if (TempList.Count > 0)
-            {
-                try
-                {
-                    List<cmc_pdms_wf_epl_org> eplOrgs = new List<cmc_pdms_wf_epl_org>();
-                    foreach (var item in TempList)
+            var MainData = saveModel.MainData;
+            var epl_id = MainData["epl_id"].ToString();
+            try
+             {
+                var taskList = repository.DbContext.Set<cmc_pdms_project_task>()
+                                                .Where(x => x.epl_id == Guid.Parse(epl_id))
+                                                .Select(x => new Dictionary<string, object>
+                                                {
+                                                    { "epl_id", x.epl_id },
+                                                    { "project_task_id", x.project_task_id },
+                                                    { "action_type", x.action_type },
+                                                    { "approve_status", x.approve_status },
+                                                    { "done_status", x.done_status },
+                                                    { "check_flag", x.check_flag },
+                                                    { "template_id", x.template_id },
+                                                    { "task_id", x.task_id },
+                                                    { "FormCode", x.FormCode },
+                                                    { "FormId", x.FormId },
+                                                    { "FormCollectionId", x.FormCollectionId },
+                                                    { "start_date", x.start_date },
+                                                    { "end_date", x.end_date },
+                                                    { "order_no", x.order_no },
+                                                    { "pre_task_id", x.pre_task_id },
+                                                    { "rule_id", x.rule_id },
+                                                    { "is_eo", x.is_eo },
+                                                    { "is_part_handle", x.is_part_handle },
+                                                    { "is_delete_able", x.is_delete_able },
+                                                    { "is_audit_key", x.is_audit_key },
+                                                    { "warn", x.warn },
+                                                    { "warn_leader", x.warn_leader },
+                                                }).ToList();
+                List<cmc_pdms_wf_epl_task_define> taskDefine = new List<cmc_pdms_wf_epl_task_define>();
+                 foreach (var item in taskList)
+                 {
+                    cmc_pdms_wf_epl_task_define define = new cmc_pdms_wf_epl_task_define();
+                    define.wf_epl_task_define_id = Guid.NewGuid();
+                    define.wf_master_id = wf_master_ids;
+                    define.epl_id = Guid.Parse(item["epl_id"].ToString());
+                    //這邊要判斷
+                    var latestTask = repository.DbContext.Set<cmc_pdms_wf_epl_task_define>()
+                                                .Where(x => x.project_task_id == Guid.Parse(item["project_task_id"].ToString()))
+                                                .OrderByDescending(x => x.CreateDate) // 根據 CreateDate 降冪排序
+                                                .FirstOrDefault(); // 取得第一筆，即最新的一筆資料
+                    if (latestTask != null)
                     {
-                        cmc_pdms_wf_epl_org eplOrg = new cmc_pdms_wf_epl_org();
-                        eplOrg.wf_epl_org_id = Guid.NewGuid();
-                        eplOrg.wf_master_id = wf_master_ids;
-                        eplOrg.approve_status = "1";//默认给1 通过
-                        eplOrg.epl_id = Guid.Parse(item["epl_id"].ToString());
-                        eplOrg.original_org_code = item["org_code"].ToString();
-                        eplOrg.current_org_code = item["new_org_code"].ToString();
-                        eplOrgs.Add(eplOrg);
-                    }
-                    if (eplOrgs.Count != 0)
-                    {
-                        repository.DapperContext.BeginTransaction((r) =>
+                        switch (latestTask.action_type)
                         {
-                            DBServerProvider.SqlDapper.BulkInsert(eplOrgs, "cmc_pdms_wf_epl_task_define");
-                            return true;
-                        }, (ex) => { throw new Exception(ex.Message); });
+                            case "add":
+                                define.action_type = "modify";
+                                break;
+                            case "modify":
+                                define.action_type = "modify";
+                                break;
+                            case "delete":
+                                define.action_type = "add";
+                                break;
+                            default:
+                                define.action_type = "";
+                                break;
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量寫入執行 cmc_pdms_wf_epl_task_define 表，cmc_pdms_wf_masterService 文件-->Insert_epl_task_define-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
-                }
-            }
+                    else
+                    {
+                        define.action_type = "add";
+                    }
+                    define.approve_status = "02"; // 00草稿 01待審批 02通過 03拒絕 04待提交
+                    define.done_status = item["done_status"]?.ToString();
+                    define.check_flag = item["check_flag"]?.ToString();
+                    define.template_id = item["template_id"] == null ? null : Guid.Parse(item["template_id"].ToString());
+                    define.project_task_id =  Guid.Parse(item["project_task_id"].ToString());
+                    define.task_id = item["task_id"] == null ? null : Guid.Parse(item["task_id"].ToString());
+                    define.FormCode = item["FormCode"]?.ToString();
+                    define.FormId = item["FormId"] == null ? null : Guid.Parse(item["FormId"].ToString());
+                    define.FormCollectionId = item["FormCollectionId"] == null ? null : Guid.Parse(item["FormCollectionId"].ToString());
+                    define.start_date = Convert.ToDateTime(item["start_date"]?.ToString());
+                    define.end_date = Convert.ToDateTime(item["end_date"]?.ToString());
+                    define.order_no = (int?)item["order_no"];
+                    define.pre_task_id = item["pre_task_id"] == null ? null : Guid.Parse(item["pre_task_id"].ToString());
+                    define.rule_id = item["rule_id"] == null ? null : Guid.Parse(item["rule_id"].ToString());
+                    define.is_eo = item["is_eo"]?.ToString();
+                    define.is_part_handle = item["is_part_handle"]?.ToString();
+                    define.is_delete_able = item["is_delete_able"]?.ToString();
+                    define.is_audit_key = item["is_audit_key"]?.ToString();
+                    define.warn = (int?)item["warn"];
+                    define.warn_leader = (int?)item["warn_leader"];
+                    taskDefine.Add(define);
+                 }
+                 if (taskDefine.Count != 0)
+                 {
+                     repository.DapperContext.BeginTransaction((r) =>
+                     {
+                         DBServerProvider.SqlDapper.BulkInsert(taskDefine, "cmc_pdms_wf_epl_task_define");
+                         return true;
+                     }, (ex) => { throw new Exception(ex.Message); });
+                 }
+             }
+             catch (Exception ex)
+             {
+                 Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量寫入執行 cmc_pdms_wf_epl_task_define 表，cmc_pdms_wf_masterService 文件-->Insert_task_define-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+             }
         }
 
         //新增一筆 cmc_pdms_wf_epl_task_form子專案工作計劃-任務審核
