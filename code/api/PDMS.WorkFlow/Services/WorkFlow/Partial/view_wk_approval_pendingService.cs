@@ -195,9 +195,74 @@ namespace PDMS.WorkFlow.Services
             return pageGridData;
         }
 
+        //主工作計畫審批頁詳情查詢
+        public PageGridData<view_wk_approval_eplOrg> GetApproveDataByMainProject(PageDataOptions pageData)
+        {
+            PageGridData<view_wk_approval_eplOrg> pageGridData = new PageGridData<view_wk_approval_eplOrg>();
+            string approve_status = "";
+            string wf_epl_org_id = "";
+            string wf_master_id = "";
+            /*解析查询条件*/
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(pageData.Wheres))
+            {
+                searchParametersList = pageData.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
 
-            //批量審核
-            public WebResponseContent BatchApproveData(SaveModel saveModel)
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "approve_status".ToLower())
+                        {
+                            approve_status = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "wf_master_id".ToLower())
+                        {
+                            wf_master_id = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "wf_epl_org_id".ToLower())
+                        {
+                            wf_epl_org_id = string.Format("'{0}'", sp.Value.Replace(",", "','"));
+                            continue;
+                        }
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(pageData.Sort))
+            {
+                pageData.Sort = " org.CreateDate";
+            }
+            if (string.IsNullOrEmpty(pageData.Order))
+            {
+                pageData.Order = " desc";
+            }
+            QuerySql = @$"        	
+	            select  ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,  epl.part_name,epl.part_no,epl.company_code,org.*  
+                        from cmc_pdms_wf_epl_org org 
+                        left join cmc_pdms_project_epl epl on epl.epl_id=org.epl_id   
+                        where 1=1   ";
+            if (string.IsNullOrEmpty(wf_master_id) == false)
+            {
+                QuerySql += @$" and wf_master_id ='{wf_master_id}' ";
+            }
+            if (string.IsNullOrEmpty(wf_epl_org_id) == false)
+            {
+                QuerySql += @$" and wf_epl_org_id  not in({wf_epl_org_id})  ";
+            }
+
+            string sql = "select count(1) from (" + QuerySql + ") a";
+            pageGridData.total = repository.DapperContext.ExecuteScalar(sql, null).GetInt();
+
+            sql = @$"select * from (" +
+                QuerySql + $" ) as s where s.rowId between {((pageData.Page - 1) * pageData.Rows + 1)} and {pageData.Page * pageData.Rows} ";
+            pageGridData.rows = repository.DapperContext.QueryList<view_wk_approval_eplOrg>(sql, null);
+            return pageGridData;
+        }
+
+        //批量審核
+        public WebResponseContent BatchApproveData(SaveModel saveModel)
         {
             SaveModel Model = new SaveModel();
             Dictionary<string, object> dic = new Dictionary<string, object>();
@@ -241,7 +306,7 @@ namespace PDMS.WorkFlow.Services
                                   //此處實現具體方法
                             break;
                         case "03"://主工作計劃管理
-                                  //此處實現具體方法
+                            ApproveMainPlan(saveModel);
                             break;
                         case "04"://任務
                             ApprovePlanExec(saveModel);
@@ -364,9 +429,60 @@ namespace PDMS.WorkFlow.Services
             return WebResponse.OK();
         }
 
+        
+            public WebResponseContent ApproveMainPlan(SaveModel saveModel)
+            {
+                try
+                {
+                    var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
+                    var approve_status = saveModel.MainData["approve_status"].ToString();
+                    var epl_id = "";
+                    cmc_pdms_wf_epl_task_define task_define = new cmc_pdms_wf_epl_task_define();
+                    cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                    List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
+                    task_define = repository.DbContext.Set<cmc_pdms_wf_epl_task_define>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).FirstOrDefault();
+                    if (task_define != null)
+                    {
+                        epl_id = task_define.epl_id.ToString();
+                    }
+                    epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == (epl_id == null ? null : Guid.Parse(epl_id))).FirstOrDefault();
 
-            //表單任務所用 方法
-            public WebResponseContent ApprovePlanExec(SaveModel saveModel)
+                    #region //更新Master表和Approvelog 表 ，後續補充郵件隊列
+
+                    WebResponse = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, approve_status, "", null, false);
+
+                    #endregion
+
+                    #region 任務表單的業務邏輯 02 = 核定 , 03 = 核退
+                    if (epl != null)
+                    {
+                        if (approve_status == "02")
+                        {
+                            epl.task_define_approve_status = "02";
+                        }
+                        else if (approve_status == "03")
+                        {
+                            epl.task_define_approve_status = "03";
+                        }
+                    }
+                    eplList.Add(epl);
+                #endregion
+                repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplList, x => new { x.task_define_approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，view_wk_approval_pendingService 文件-->ApproveMainPlan：" + DateTime.Now + ":" + ex.Message);
+                    return WebResponse.Error(ex.Message);
+                }
+                return WebResponse.OK();
+             }
+
+        //表單任務所用 方法
+        public WebResponseContent ApprovePlanExec(SaveModel saveModel)
         {
             try
             {

@@ -49,6 +49,14 @@ namespace PDMS.WorkFlow.Controllers
             return Json(_service.GetApproveDataByEplOrg(loadData));
         }
 
+        //獲取主工作計畫審批頁面
+        [ApiActionPermission]
+        [HttpPost, Route("GetApproveDataByMainProject")]
+        public ActionResult GetApproveDataByMainProject([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetApproveDataByMainProject(loadData));
+        }
+
 
         //總審批流程 通過Apply_type區分
         [ApiActionPermission]

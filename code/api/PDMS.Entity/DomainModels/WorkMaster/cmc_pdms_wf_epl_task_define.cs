@@ -35,10 +35,16 @@ namespace PDMS.Entity.DomainModels
        [Required(AllowEmptyStrings=false)]
        public Guid wf_master_id { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="epl_id")]
+        [Display(Name = "project_task_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        [Required(AllowEmptyStrings = false)]
+        public Guid project_task_id { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="epl_id")]
        [Column(TypeName="uniqueidentifier")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
@@ -49,7 +55,7 @@ namespace PDMS.Entity.DomainModels
        /// </summary>
        [Display(Name ="新增、修改、刪除")]
        [MaxLength(2)]
-       [Column(TypeName="varchar(2)")]
+       [Column(TypeName="varchar(20)")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
        public string action_type { get; set; }
