@@ -83,6 +83,7 @@ namespace PDMS.Core.Services
         }
         public static void Error(LoggerType loggerType, string requestParam, string resposeParam, string ex = null)
         {
+            WriteText($"{DateTime.Now}:type:{loggerType.ToString()},reqParam:{requestParam},respParam:{resposeParam},error:{ex}");
             Add(loggerType, requestParam, resposeParam, ex, LoggerStatus.Error);
         }
         /// <summary>
