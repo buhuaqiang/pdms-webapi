@@ -276,5 +276,14 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(10)")]
         [Editable(true)]
         public Guid epl_id { get; set; }
+
+
+        /// <summary>
+        /// eo任務所屬大日程id
+        /// </summary>
+        [Display(Name = "eo_gate_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? eo_gate_id { get; set; }
     }
 }
