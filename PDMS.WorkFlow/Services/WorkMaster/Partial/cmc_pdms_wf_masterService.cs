@@ -130,6 +130,7 @@ namespace PDMS.WorkFlow.Services
                             break;
                         case "02"://成本編列
                                   //此處實現具體方法
+                            Insert_cost(saveModel, wf_master_ids);
                             break;
                         case "03"://主工作計劃管理
                             Insert_epl_task_define(saveModel, wf_master_ids);
@@ -146,6 +147,56 @@ namespace PDMS.WorkFlow.Services
             return base.CustomBatchProcessEntity(saveModel);
 
         }
+
+
+        //寫入數據到EPL成本編列審核表中
+        public void Insert_cost(SaveModel saveModel, Guid wf_master_ids)
+        {
+            var TempList = saveModel.MainDatas;
+            if (TempList.Count > 0)
+            {
+                try
+                {
+                    List<cmc_pdms_wf_epl_fs> eplFsList = new List<cmc_pdms_wf_epl_fs>();
+                    foreach (var item in TempList)
+                    {
+                        cmc_pdms_wf_epl_fs eplFs = new cmc_pdms_wf_epl_fs();
+
+                        eplFs.wf_epl_fs_id = Guid.NewGuid();
+                        eplFs.wf_master_id = wf_master_ids;
+                        eplFs.epl_id = Guid.Parse(item["epl_id"].ToString());
+                        eplFs.approve_status = "1";//默认给1 通过
+                        eplFs.fs_1 = Convert.ToInt32(item["fs_1"]);
+                        eplFs.fs_2 = Convert.ToInt32(item["fs_2"]);
+                        eplFs.fs_3 = Convert.ToInt32(item["fs_3"]);
+                        eplFs.currency = item["currency"] == null ? "" : item["currency"].ToString();
+                        eplFs.exchange_rate = Convert.ToInt32(item["exchange_rate"]);
+                        eplFs.fs_1_ntd = Convert.ToInt32(item["fs_1_ntd"]);
+                        eplFs.fs_2_ntd = Convert.ToInt32(item["fs_2_ntd"]);
+                        eplFs.fs_1_rate = Convert.ToInt32(item["fs_1_rate"]);
+                        eplFs.fs_2_rate = Convert.ToInt32(item["fs_2_rate"]);
+                        eplFs.fs_remark = item["fs_remark"] == null ? "" : item["fs_remark"].ToString();
+
+                        eplFsList.Add(eplFs);
+                    }
+                    if (eplFsList.Count != 0)
+                    {//寫入數據到數據庫
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(eplFsList, "cmc_pdms_wf_epl_fs");
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量寫入執行 cmc_pdms_wf_epl_fs 表，cmc_pdms_wf_masterService 文件-->Insert_epl_org-->BulkInsert：" + DateTime.Now + ":" + ex.Message);
+                }
+
+            }
+
+        }
+
 
         //寫入數據到EPL部門變更審核表中
         public void Insert_epl_org(SaveModel saveModel, Guid wf_master_ids)
