@@ -1086,6 +1086,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
         {
 
             var MainDatas = saveModel.MainDatas;
+            var updateDatas = saveModel.DetailData;
             List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();
             List<cmc_pdms_project_epl_his> eplHisList = new List<cmc_pdms_project_epl_his>();
             Guid projectId = Guid.Parse(MainDatas[0]["project_id"].ToString());
@@ -1108,46 +1109,8 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                         if (epl != null)
                         {
-                            if (item["fs_approve_status"] == "02")
-                            { //審批通過更新時更新epl表狀態改為草稿並寫入數據到log表
-                                //寫入歷史表
-                                cmc_pdms_project_epl_his eplHis = new cmc_pdms_project_epl_his();
-                                eplHis.epl_his_id = Guid.NewGuid();
-                                eplHis.epl_id = epl.epl_id;
-                                eplHis.project_id = epl.project_id;
-                                eplHis.main_plan_id = epl.main_plan_id;
-                                eplHis.epl_source = epl.epl_source;
-                                eplHis.epl_phase = epl.epl_phase;
-                                eplHis.epl_import_date = epl.epl_import_date;
-                                eplHis.upg_id = epl.upg_id;
-                                eplHis.level = epl.level;
-                                eplHis.part_no = epl.part_no;
-                                eplHis.part_name = epl.part_name;
-                                eplHis.company_code = epl.company_code;
-                                eplHis.kd_type = epl.kd_type;
-                                eplHis.org_code = epl.org_code;
-                                eplHis.new_org_code = epl.new_org_code;
-                                eplHis.group_code = epl.group_code;
-                                eplHis.dev_taker_id = epl.dev_taker_id;
-                                eplHis.part_taker_id = epl.part_taker_id;
-                                eplHis.fs_1 = epl.fs_1;
-                                eplHis.fs_2 = epl.fs_2;
-                                eplHis.fs_3 = epl.fs_3;
-                                eplHis.fs_remark = epl.fs_remark;
-                                eplHis.Final_version_status = epl.Final_version_status;
-                                eplHis.fs_approve_status = epl.fs_approve_status;
-                                eplHis.task_define_approve_status = epl.task_define_approve_status;
-                                eplHis.org_change_approve_status = epl.org_change_approve_status;
-                                eplHis.gate_type = epl.gate_type;
-                                eplHis.is_eo = epl.is_eo;
-                                eplHis.original_part_no = epl.original_part_no;
-                                eplHis.del_flag = epl.del_flag;
-                                eplHis.currency = epl.currency;
-                                eplHis.submit_status = epl.submit_status;
-                                eplHis.action_type = epl.action_type;
-                                eplHis.data_source = "3";
-
-
+                            if (item["fs_approve_status"].ToString() == "02")
+                            { 
                                 //更新epl
                                 epl.fs_1 = item["fs_1"] == null ? null : item["fs_1"].ToDecimal();
                                 epl.fs_2 = item["fs_2"] == null ? null : item["fs_2"].ToDecimal();
@@ -1164,8 +1127,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                                 epl.fs_1_rate_def = item["fs_1_rate_def"] == null ? null : item["fs_1_rate_def"].ToDecimal();
                                 epl.fs_2_rate_def = item["fs_2_rate_def"] == null ? null : item["fs_2_rate_def"].ToDecimal();
-
-                                eplHisList.Add(eplHis);
+ 
                             }
                             else{ //審批為草稿或拒絕時直接更新epl表
                                 epl.fs_1 = item["fs_1"] == null ? null : item["fs_1"].ToDecimal();
@@ -1184,11 +1146,68 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_2_rate_def = item["fs_2_rate_def"] == null ? null : item["fs_2_rate_def"].ToDecimal();
 
                             }
-                            
-;
                         }
                         eplList.Add(epl);
                     }
+
+                    if (updateDatas.Count > 0) {//保存時寫入數據到歷史表
+                        foreach (var item in updateDatas) {
+                            cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
+                            epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+                            if (epl != null) {
+                                if (item["fs_approve_status"].ToString() == "02") {
+                                    //審批通過更新時更新epl表狀態改為草稿並寫入數據到log表
+                                    //寫入歷史表
+                                    cmc_pdms_project_epl_his eplHis = new cmc_pdms_project_epl_his();
+                                    eplHis.epl_his_id = Guid.NewGuid();
+                                    eplHis.epl_id = epl.epl_id;
+                                    eplHis.project_id = epl.project_id;
+                                    eplHis.main_plan_id = epl.main_plan_id;
+                                    eplHis.epl_source = epl.epl_source;
+                                    eplHis.epl_phase = epl.epl_phase;
+                                    eplHis.epl_import_date = epl.epl_import_date;
+                                    eplHis.upg_id = epl.upg_id;
+                                    eplHis.level = epl.level;
+                                    eplHis.part_no = epl.part_no;
+                                    eplHis.part_name = epl.part_name;
+                                    eplHis.company_code = epl.company_code;
+                                    eplHis.kd_type = epl.kd_type;
+                                    eplHis.org_code = epl.org_code;
+                                    eplHis.new_org_code = epl.new_org_code;
+                                    eplHis.group_code = epl.group_code;
+                                    eplHis.dev_taker_id = epl.dev_taker_id;
+                                    eplHis.part_taker_id = epl.part_taker_id;
+                                    eplHis.fs_1 = epl.fs_1;
+                                    eplHis.fs_2 = epl.fs_2;
+                                    eplHis.fs_3 = epl.fs_3;
+                                    eplHis.fs_remark = epl.fs_remark;
+                                    eplHis.Final_version_status = epl.Final_version_status;
+                                    eplHis.fs_approve_status = epl.fs_approve_status;
+                                    eplHis.task_define_approve_status = epl.task_define_approve_status;
+                                    eplHis.org_change_approve_status = epl.org_change_approve_status;
+                                    eplHis.gate_type = epl.gate_type;
+                                    eplHis.is_eo = epl.is_eo;
+                                    eplHis.original_part_no = epl.original_part_no;
+                                    eplHis.del_flag = epl.del_flag;
+                                    eplHis.currency = epl.currency;
+                                    eplHis.submit_status = epl.submit_status;
+                                    eplHis.action_type = "modify";
+                                    eplHis.data_source = "3";
+                                    eplHis.exchange_rate = epl.exchange_rate;
+                                    eplHis.fs_1_ntd = epl.fs_1_ntd;
+                                    eplHis.fs_2_ntd = epl.fs_2_ntd;
+                                    eplHis.fs_1_rate = epl.fs_1_rate;
+                                    eplHis.fs_2_rate = epl.fs_2_rate;
+                                    eplHis.fs_1_rate_def = epl.fs_1_rate_def;
+                                    eplHis.fs_2_rate_def = epl.fs_2_rate_def;
+
+                                    eplHisList.Add(eplHis);
+                                }
+                            }
+                        }
+                    }
+
+
                 }
                 catch (Exception ex)
                 {
