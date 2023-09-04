@@ -75,7 +75,7 @@ namespace PDMS.Project.Services
 	        eo_epl.ec_no,
 	        eo_epl.ai_type,
 	        main.glno,
-	        epl.action_type,
+	        eo_epl.action_type,
 	        epl.kd_type,
 	        eo_epl.part_no,
 	        eo_epl.part_version ,
@@ -84,7 +84,8 @@ namespace PDMS.Project.Services
 	        epl.org_code,
 	        epl.group_code,
 	        eo_epl.CreateDate,
-	        case when (epl.kd_type is  null or epl.org_code is  null or 	epl.group_code is  null) then 0 else eo_epl.eo_status end as eo_status
+					case when eo_epl.action_type='add' then (case when (epl.kd_type is  null or epl.org_code is  null or 	epl.group_code is  null) then 0 else eo_epl.eo_status end ) 
+					 else eo_epl.eo_status    end as eo_status
         FROM
 	        cmc_pdms_project_eo_epl eo_epl
 	        LEFT JOIN cmc_pdms_project_main main ON eo_epl.project_id= main.project_id
