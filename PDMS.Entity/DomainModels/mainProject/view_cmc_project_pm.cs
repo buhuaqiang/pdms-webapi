@@ -269,5 +269,15 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(200)")]
         [Editable(true)]
         public string fs_status { get; set; }
+
+        /// <summary>
+        ///FS成本編列是否在審批中
+        /// </summary>
+        [Display(Name = "FS成本編列是否在審批中")]
+        [MaxLength(200)]
+        [Column(TypeName = "varchar(200)")]
+        [Editable(true)]
+        public string? isApproving { get; set; }
+        
     }
 }
