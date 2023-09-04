@@ -699,16 +699,25 @@ SELECT
             var endD = item["end_date"]?.ToString() ?? "";
             if (!string.IsNullOrEmpty(startD))
             {
-                if (startD.Contains("/"))
+                // 檢查是否包含 "NaN"
+                if (startD.Contains("NaN"))
                 {
-                    DateTime dateTimeValue = DateTime.ParseExact(startD, format1, CultureInfo.InvariantCulture);
-                    string startDate = dateTimeValue.ToString("yyyy-MM-dd");
-                    pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
+                    pTask.start_date = null;
                 }
-                else
+                else 
                 {
-                    pTask.start_date = DateTime.ParseExact(startD, format2, CultureInfo.InvariantCulture);
+                    if (startD.Contains("/"))
+                    {
+                        DateTime dateTimeValue = DateTime.ParseExact(startD, format1, CultureInfo.InvariantCulture);
+                        string startDate = dateTimeValue.ToString("yyyy-MM-dd");
+                        pTask.start_date = DateTime.ParseExact(startDate, format2, CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        pTask.start_date = DateTime.ParseExact(startD, format2, CultureInfo.InvariantCulture);
+                    }
                 }
+                
             }
             else 
             {
@@ -716,15 +725,25 @@ SELECT
             }
             if (!string.IsNullOrEmpty(endD))
             {
-                if (endD.Contains("/"))
+                if (endD.Contains("NaN"))
                 {
-                    DateTime dateTimeValue = DateTime.ParseExact(endD, endformat1, CultureInfo.InvariantCulture);
-                    string endDate = dateTimeValue.ToString("yyyy-MM-dd HH:mm:ss");
-                    pTask.end_date = DateTime.ParseExact(endDate, endformat2, CultureInfo.InvariantCulture);
+                    pTask.end_date = null;
                 }
                 else
                 {
-                    pTask.end_date = DateTime.ParseExact(endD, endformat2, CultureInfo.InvariantCulture);
+                    DateTime dateTimeValue;
+                    if (endD.Contains("/"))
+                    {
+                        dateTimeValue = DateTime.ParseExact(endD, format1, CultureInfo.InvariantCulture);
+                        string endDate = dateTimeValue.ToString(format1);
+                        pTask.end_date = DateTime.ParseExact(endDate, format2, CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        pTask.end_date = DateTime.ParseExact(endD, format2, CultureInfo.InvariantCulture);
+                    }
+                    // 將 end_date 加上 "23:59:59" 的時間部分
+                    pTask.end_date = pTask.end_date?.Date.AddHours(23).AddMinutes(59).AddSeconds(59);
                 }
             }
             else
