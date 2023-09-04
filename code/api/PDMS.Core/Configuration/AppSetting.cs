@@ -59,6 +59,8 @@ namespace PDMS.Core.Configuration
         public static Smtp Smtp { get; set; }
         public static QuartzHeader quartzHeader { get; set; }
 
+        public static LoggerControl loggerControl { get; set; }
+
 
         /// <summary>
         /// JWT有效期(分钟=默认120)
@@ -230,6 +232,10 @@ namespace PDMS.Core.Configuration
     {
         public string Name { get; set; }
         public string Password { get; set; }
+    }
+    public class LoggerControl
+    {
+        public bool InfoOpen { get; set; }
     }
     public class Smtp
     {
