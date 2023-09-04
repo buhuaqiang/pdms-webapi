@@ -1036,21 +1036,20 @@ namespace PDMS.Project.Services
 	                        pm.CreateID,pm.Creator,pm.CreateDate,pm.ModifyID,pm.Modifier,pm.ModifyDate,pm.eo_fee,
 
                             (select top 1 gate_code from cmc_pdms_project_gate gate where gate.project_id=pm.project_id 
-								and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code 
-                                FROM cmc_pdms_project_main AS pm  ";
+								and convert(datetime,convert(varchar(10),getdate(),120))>=gate_start_date  and  convert(datetime,convert(varchar(10),getdate(),120))<=gate_end_date ) as gate_code, ";
 
 
                 if (path == "/view_cmc_project_pm")//
             {
                 string code = " and  pm.CreateID='" + userId + "'";
-                QuerySql += " LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
+                QuerySql += "  '' as isApproving  FROM cmc_pdms_project_main AS pm  LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
                 QuerySql += code;
                 QuerySql += where;
             }
             if (path == "/view_cmc_project_start")
             { //專案啟動部車型窗口查詢
                 string code = " and  po.user_id='" + userCode + "'";
-                QuerySql += " LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
+                QuerySql += "  '' as isApproving  FROM cmc_pdms_project_main AS pm  LEFT OUTER JOIN cmc_pdms_project_org AS po ON pm.project_id= po.project_id where 1=1  ";
                 QuerySql += code;
                 QuerySql += where;
 
@@ -1058,7 +1057,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_group_start")
             { //專案啟動組車型窗口查詢
                 string groupCode = " and  epl.group_code='" + departMentCode + "'";
-                QuerySql += " left  join cmc_pdms_project_epl epl on epl.project_id=pm.project_id  where 1=1 ";
+                QuerySql += "  '' as isApproving  FROM cmc_pdms_project_main AS pm  left  join cmc_pdms_project_epl epl on epl.project_id=pm.project_id  where 1=1 ";
                 QuerySql += groupCode;
                 QuerySql += where;
 
@@ -1066,7 +1065,7 @@ namespace PDMS.Project.Services
             if (path == "/view_cmc_project_book")
             { //開發清冊
                 string devTaker = " and  epl.dev_taker_id='" + userId + "'";
-                QuerySql += "  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1  and  epl.Final_version_status='2'  ";
+                QuerySql += "   (select  count(*) from  cmc_pdms_project_epl where  project_id= pm.project_id and Final_version_status='2' and dev_taker_id='"+ userId + "' and fs_approve_status='01') as isApproving  FROM cmc_pdms_project_main AS pm  LEFT OUTER JOIN cmc_pdms_project_epl AS epl ON pm.project_id= epl.project_id where 1=1  and  epl.Final_version_status='2'  ";
                 if (userId!=1)
                 {
                     QuerySql += devTaker;
