@@ -48,6 +48,20 @@ namespace PDMS.WorkFlow.Controllers
         {
             return Json(_service.GetApproveDataByEplOrg(loadData));
         }
+        //獲取部門變更待審批頁面
+        [ApiActionPermission]
+        [HttpPost, Route("GetApproveDataByEplFs")]
+        public ActionResult GetApproveDataByEplFs([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetApproveDataByEplFs(loadData));
+        }
+        //獲取部門變更待審批頁面
+        [ApiActionPermission]
+        [HttpPost, Route("GetGroupEplFs")]
+        public ActionResult GetGroupEplFs([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetGroupEplFs(loadData));
+        }
 
         //獲取主工作計畫審批頁面
         [ApiActionPermission]
