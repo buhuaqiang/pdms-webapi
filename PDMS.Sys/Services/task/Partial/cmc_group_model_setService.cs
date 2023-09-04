@@ -26,6 +26,7 @@ using System;
 using PDMS.Core.ManageUser;
 using PDMS.Core.DBManager;
 using StackExchange.Redis;
+using System.Text.RegularExpressions;
 
 namespace PDMS.Sys.Services
 {
@@ -147,12 +148,73 @@ namespace PDMS.Sys.Services
                     if(notExist.Count > 0)
                     {
                         //查詢是否已經提醒過，如果已提醒過一次則把組經理設置為組窗口
-                        string notice = "select * from sys_notice";
+                        string notice = "select * from sys_notice where notice_type=1";
                         List<sys_notice> allNotice= _repository.DapperContext.QueryList<sys_notice>(notice, null);
                         var grouList=notExist.GroupBy(g => new {g.DepartmentCode}).ToList();
-                        /*notExist.ForEach(x => {
+                        if(grouList.Count > 0)
+                        {
                             
-                        });*/
+                            List<cmc_group_model_set> setManager = new List<cmc_group_model_set>();
+                            List<sys_notice> noticeManager= new List<sys_notice>();
+                            foreach (var g in grouList)
+                            {
+                                string code = g.Key.DepartmentCode;
+                                int userID = Int32.Parse(this.getDeptManager(code));
+                                List<cmc_group_model_set> sendMail = new List<cmc_group_model_set>();
+                                foreach (var g2 in g)
+                                {
+                                    cmc_group_model_set ms = g2;
+                                    ms.user_id= userID;
+                                    var notc= allNotice.Where(x=> x.notice_user_id== userID && x.related_ids.Contains(ms.model_type) ).FirstOrDefault();
+                                   if (notc!=null)
+                                   {
+                                        //已經郵件通知過
+                                        ms.group_set_id= Guid.NewGuid();
+                                        ms.set_type = "01";
+                                        setManager.Add(ms);
+                                    }
+                                    else
+                                    {//未通知過
+                                        sendMail.Add(ms);
+                                    }                                   
+                                  
+                                }
+                                if (sendMail.Count > 0)
+                                {
+                                    List<string> allType = EPPlusHelper.GetSingleString(sendMail, x => new { x.model_type }).ToList();
+                                    string related_ids=string.Join(",", allType);
+                                    sys_notice ntc= new sys_notice();
+                                    ntc.notice_id=Guid.NewGuid();
+                                    ntc.notice_title = code+"組窗口設置提醒";
+                                    ntc.notice_type = "1";
+                                    ntc.notice_content = "車型"+related_ids+"還未設置組窗口人員，請在【系統設置-組窗口設置】功能菜單頁面完成設置！";
+                                    ntc.notice_user_id = userID;
+                                    ntc.related_ids=related_ids;
+                                    noticeManager.Add(ntc);
+                                }
+                                //
+
+                            }
+                            //批量新增組窗口設置
+                            if (setManager.Count > 0)
+                            {
+                                repository.DapperContext.BeginTransaction((r) =>
+                                {
+                                    DBServerProvider.SqlDapper.BulkInsert(setManager, "cmc_group_model_set");
+                                    return true;
+                                }, (ex) => { throw new Exception(ex.Message); });
+                            }
+                            //批量新增郵件通知
+                            if(noticeManager.Count> 0) {
+                                repository.DapperContext.BeginTransaction((r) =>
+                                {
+                                    DBServerProvider.SqlDapper.BulkInsert(noticeManager, "sys_notice");
+                                    return true;
+                                }, (ex) => { throw new Exception(ex.Message); });
+                            }
+
+                        }
+                        
                         //未提醒過則發送郵件和公告通知
                     }
                 }
