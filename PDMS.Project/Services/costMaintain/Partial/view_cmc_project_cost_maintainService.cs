@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Project.IRepositories;
 using PDMS.Core.ManageUser;
 using Microsoft.VisualBasic;
+using PDMS.Core.DBManager;
+using PDMS.WorkFlow.Services;
 
 namespace PDMS.Project.Services
 {
@@ -163,23 +165,81 @@ namespace PDMS.Project.Services
         /// </summary>
         /// <param name="keys"></param>
         /// <returns></returns>
-        public WebResponseContent costConfirm(object[] keys)
+        public WebResponseContent costConfirm(SaveModel saveModel)
         {
-            string epls = string.Join("','", keys);
-            string sql = $@"update cmc_pdms_project_epl set fs_approve_status='01' where epl_id in ('{epls}')";
-            try
+            var MainDatas = saveModel.MainDatas;
+            List<cmc_pdms_project_epl> costList = new List<cmc_pdms_project_epl>();
+            //存取提交審批的數據
+            List<Dictionary<string, object>> approveDatras = new List<Dictionary<string, object>>();
+            SaveModel ModelOne = new SaveModel();
+            if (MainDatas.Count != 0)
             {
-                var count3 = repository.DapperContext.ExcuteNonQuery(sql, null);
-            }
-            catch (Exception ex)
-            {
+                try
+                {
+                    foreach (var item in MainDatas) {
+                        cmc_pdms_project_epl cost = new cmc_pdms_project_epl();
+                        cost = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
+                        if (cost != null) {
+                            cost.fs_approve_status = "01";
+                            costList.Add(cost);
 
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "開發清冊成本編列確認，view_cmc_project_cost_maintainService 文件：costConfirm：" + DateTime.Now + ":" + ex.Message);
-                return webContent.Error();
+                            //添加到審批表
+                            approveDatras.Add(item);
+                        }
+                    }
+
+
+
+
+                
+                }
+                catch (Exception ex) {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱 cmc_pdms_project_epl 表，view_cmc_project_cost_maintainServiceService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return webContent.Error();
+                }
+
+                try
+                {
+                    if (costList.Count>0) {//更新數據
+                        repository.DapperContext.BeginTransaction((r) =>
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(costList, x => new { x.fs_approve_status });
+                            return true;
+                        }, (ex) => { throw new Exception(ex.Message); });
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_epl 表，view_cmc_project_cost_maintainServiceService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+
+                    return webContent.Error();
+                }
+
+                if (approveDatras.Count > 0)
+                {//成本編列確認後，做審核流程
+                    ModelOne.MainData = saveModel.MainDatas[0];
+                    ModelOne.MainDatas = approveDatras;
+                    webContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(ModelOne, "01", "02", null);
+                }
+
             }
+            return webContent.OK();
+            /* string epls = string.Join("','", keys);
+             string sql = $@"update cmc_pdms_project_epl set fs_approve_status='01' where epl_id in ('{epls}')";
+             try
+             {
+                 var count3 = repository.DapperContext.ExcuteNonQuery(sql, null);
+             }
+             catch (Exception ex)
+             {
+
+                 Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "開發清冊成本編列確認，view_cmc_project_cost_maintainService 文件：costConfirm：" + DateTime.Now + ":" + ex.Message);
+                 return webContent.Error();
+             }*/
             //todo寫入審批流程表 cmc_pdms_wf_master和cmc_pdms_wf_epl_fs
 
-            return webContent.OK("");
+
         }
     }
 }
