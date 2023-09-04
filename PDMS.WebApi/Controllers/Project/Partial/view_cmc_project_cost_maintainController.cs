@@ -39,9 +39,9 @@ namespace PDMS.Project.Controllers
 
         [ApiActionPermission()]
         [HttpPost, Route("costConfirm")]
-        public ActionResult costConfirm([FromBody] object[] keys)
+        public ActionResult costConfirm([FromBody] SaveModel saveModel)
         {
-            return Json(_service.costConfirm(keys));
+            return Json(_service.costConfirm(saveModel));
         }
 
         [ApiActionPermission()]
