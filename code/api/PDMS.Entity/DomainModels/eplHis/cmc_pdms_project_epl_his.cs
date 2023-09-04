@@ -366,6 +366,73 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string data_source { get; set; }
 
-       
+      
+
+
+        /// <summary>
+        ///設變費
+        /// </summary>
+        [Display(Name = "匯率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? exchange_rate { get; set; }
+
+        /// <summary>
+        ///設變費
+        /// </summary>
+        [Display(Name = "開發費NTD")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_1_ntd { get; set; }
+
+        /// <summary>
+        ///設變費
+        /// </summary>
+        [Display(Name = "模具費NTD")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_2_ntd { get; set; }
+
+        /// <summary>
+        ///設變費
+        /// </summary>
+        [Display(Name = "開發費稅率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_1_rate { get; set; }
+
+        /// <summary>
+        ///設變費
+        /// </summary>
+        [Display(Name = "模具費稅率")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_2_rate { get; set; }
+
+
+
+        /// <summary>
+        ///開發費稅率默認值
+        /// </summary>
+        [Display(Name = "開發費稅率默認值")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_1_rate_def { get; set; }
+
+        /// <summary>
+        ///模具費稅率默認值
+        /// </summary>
+        [Display(Name = "模具費稅率默認值")]
+        [DisplayFormat(DataFormatString = "10,2")]
+        [Column(TypeName = "decimal")]
+        [Editable(true)]
+        public decimal? fs_2_rate_def { get; set; }
+
     }
 }
