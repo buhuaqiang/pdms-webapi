@@ -317,10 +317,8 @@ WHERE
                         }
                         if (TempStatus == "02")
                         {
-                            #region  寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+                            //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
                             ResponseContent = Insert_task_hist(saveModel);
-                            #endregion
-
                         }
 
                         //判斷是否需要零品承辦參與審核
