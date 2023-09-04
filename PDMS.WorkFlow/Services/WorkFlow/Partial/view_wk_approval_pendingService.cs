@@ -299,11 +299,10 @@ namespace PDMS.WorkFlow.Services
                     switch (Apply_Type)
                     {
                         case "01"://部門變更
-                                  //此處實現具體方法
                             ApproveEplOrg(saveModel);
                             break;
                         case "02"://成本編列
-                                  //此處實現具體方法
+                            ApproveEplFs(saveModel);
                             break;
                         case "03"://主工作計劃管理
                             ApproveMainPlan(saveModel);
@@ -429,8 +428,104 @@ namespace PDMS.WorkFlow.Services
             return WebResponse.OK();
         }
 
-        
-            public WebResponseContent ApproveMainPlan(SaveModel saveModel)
+        //成本编列審核
+        public WebResponseContent ApproveEplFs(SaveModel saveModel)
+        {
+            try
+            {
+                var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
+                var approveStatus = saveModel.MainData["approve_status"].ToString();
+                List<string> eplFsIds = new List<string>();//cmc_pdms_wf_epl_fs 獲取核定的id
+                List<string> agreeEplFsIds = new List<string>();//cmc_pdms_wf_epl_fs 核定的epl_id的集合
+                List<string> rejectEplFsIds = new List<string>();//cmc_pdms_wf_epl_fs 核退的epl_id的集合
+                List<cmc_pdms_wf_epl_fs> eplFsList = new List<cmc_pdms_wf_epl_fs>();//存取查詢的cmc_pdms_wf_epl_fs
+                //在外層主頁面 點擊審核 是無法獲取到wf_epl_fs_id,故根據wf_master_id去查詢,排除拒絕的總數據
+                eplFsList = repository.DbContext.Set<cmc_pdms_wf_epl_fs>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                var eplFsRejectTemp = new List<string>();
+                if (approveStatus == "03")//核退
+                {
+                    eplFsRejectTemp = EPPlusHelper.GetSingleString(eplFsList, x => new { x.wf_epl_fs_id }).ToList(); ;
+                }
+
+                //獲取核定的id
+                eplFsIds = EPPlusHelper.GetSingleString(eplFsList, x => new { x.wf_epl_fs_id }).Except(eplFsRejectTemp).ToList();
+                //核定的數據集合
+                var AgreeTemp = eplFsList.Where(x => eplFsIds.Contains(x.wf_epl_fs_id.ToString()));
+                //核定數據的epl_id集合，用於更新epl主表
+                agreeEplFsIds = EPPlusHelper.GetSingleString(AgreeTemp, x => new { x.epl_id });
+
+                //核退數據的epl_id集合，用於更新epl主表
+                rejectEplFsIds = EPPlusHelper.GetSingleString(eplFsList.Where(x => eplFsRejectTemp.Contains(x.wf_epl_fs_id.ToString())).ToList(), x => new { x.epl_id }).ToList();
+
+                //更新master主表
+                WebResponse = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, approveStatus, "", null, false);
+
+
+                //獲取所有cmc_pdms_wf_epl_fs 需要調整為拒絕的內容
+                var eplFsList2 = repository.DbContext.Set<cmc_pdms_wf_epl_fs>().Where(x => !eplFsIds.Contains(x.wf_epl_fs_id.ToString()) && x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                eplFsList2.ForEach(item =>
+                {
+                    item.approve_status = "0";
+                });
+
+                //獲取所有cmc_pdms_project_epl成本編列審核同意的數據
+                var AgreeList = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => agreeEplFsIds.Contains(x.epl_id.ToString())).ToList();
+                AgreeList.ForEach(item =>
+                {
+                    item.fs_approve_status = "02";
+
+                });
+
+                //獲取所有cmc_pdms_wf_epl_fs 成本編列審核拒絕的數據
+                var RejectList = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => rejectEplFsIds.Contains(x.epl_id.ToString())).ToList();
+                RejectList.ForEach(item =>
+                {
+                    item.fs_approve_status = "03";
+
+                });
+
+                //執行數據庫變更cmc_pdms_wf_epl_fs狀態
+                if (eplFsList2.Count() != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(eplFsList2, x => new { x.approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+
+                //執行數據庫變更cmc_pdms_project_epl狀態為同意
+                if (AgreeList.Count() != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(AgreeList, x => new { x.fs_approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                //執行數據庫變更cmc_pdms_project_epl狀態為拒絕
+                if (RejectList.Count() != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(RejectList, x => new { x.fs_approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_wf_epl_fs/cmc_pdms_project_epl 表，view_wk_approval_pendingService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                return WebResponse.Error(ex.Message);
+            }
+
+
+            return WebResponse.OK();
+        }
+
+        public WebResponseContent ApproveMainPlan(SaveModel saveModel)
             {
                 try
                 {
