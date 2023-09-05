@@ -192,7 +192,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null   ) AA 
             }
             sql += $@" order by AA.order_no desc";
             info = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
-            repository.DapperContext.ExcuteNonQuery(sql, null);
+            //repository.DapperContext.ExcuteNonQuery(sql, null);
 
             return info;
         }
