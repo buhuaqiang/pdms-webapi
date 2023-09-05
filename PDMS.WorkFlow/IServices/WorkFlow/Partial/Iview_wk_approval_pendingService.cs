@@ -22,6 +22,8 @@ namespace PDMS.WorkFlow.IServices
 
         public PageGridData<view_pdms_group_epl_fs> GetGroupEplFs(PageDataOptions pageData);
 
+        public PageGridData<view_pdms_group_epl_fs> GetOrgEplFs(PageDataOptions pageData);
+
         public PageGridData<view_wk_approval_eplOrg> GetApproveDataByMainProject(PageDataOptions pageData);
 
         //總審批流程
