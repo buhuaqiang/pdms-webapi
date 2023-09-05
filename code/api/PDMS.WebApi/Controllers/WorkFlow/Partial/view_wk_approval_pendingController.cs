@@ -62,6 +62,13 @@ namespace PDMS.WorkFlow.Controllers
         {
             return Json(_service.GetGroupEplFs(loadData));
         }
+        //獲取成本编列部門頁面
+        [ApiActionPermission]
+        [HttpPost, Route("GetOrgEplFs")]
+        public ActionResult GetOrgEplFs([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetOrgEplFs(loadData));
+        }
 
         //獲取主工作計畫審批頁面
         [ApiActionPermission]
