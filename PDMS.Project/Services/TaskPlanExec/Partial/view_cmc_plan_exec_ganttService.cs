@@ -549,7 +549,14 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
                  where project_task_id in('{TaskIds}')";
             var list = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
             saveModel.MainDatas = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(list));
-
+            if(!saveModel.MainData.ContainsKey("epl_id"))
+            {
+                saveModel.MainData["epl_id"] = list[0].epl_id;
+            }
+            if (!saveModel.MainData.ContainsKey("project_id"))
+            {
+                saveModel.MainData["project_id"] = list[0].project_id;
+            }
             return saveModel;
         }
 
