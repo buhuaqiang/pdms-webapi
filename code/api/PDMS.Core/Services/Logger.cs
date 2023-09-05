@@ -58,10 +58,8 @@ namespace PDMS.Core.Services
         }
         public static void Info(LoggerType loggerType, string requestParam, string resposeParam, string ex = null)
         {
-            if (AppSetting.loggerControl.InfoOpen)
-            {
-                WriteText($"{DateTime.Now}:Info:{loggerType.ToString()},reqParam:{requestParam}");
-            }
+
+            WriteText($"{DateTime.Now}:Info:{loggerType.ToString()},reqParam:{requestParam}");
             Add(loggerType, requestParam, resposeParam, ex, LoggerStatus.Info);
         }
 
