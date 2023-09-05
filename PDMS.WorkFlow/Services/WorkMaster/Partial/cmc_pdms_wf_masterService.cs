@@ -144,7 +144,12 @@ namespace PDMS.WorkFlow.Services
                 }
           
             }
-            return base.CustomBatchProcessEntity(saveModel);
+            ResponseContent= base.CustomBatchProcessEntity(saveModel);
+            if (saveModel.DetailListData!=null && saveModel.DetailListData.Count() > 0)
+            {
+                saveModel.DetailListData = new List<SaveModel.DetailListDataResult>();
+            }
+            return ResponseContent;
 
         }
 
