@@ -307,7 +307,7 @@ namespace PDMS.WorkFlow.Services
                         where 1=1   ";
             if (string.IsNullOrEmpty(wf_master_id) == false)
             {
-                QuerySql += @$" and group_code=(select  group_code  from  cmc_pdms_project_epl 
+                QuerySql += @$" and org_code=(select  org_code  from  cmc_pdms_project_epl 
 		where epl_id=(select top 1 epl_id from cmc_pdms_wf_epl_fs where wf_master_id='{wf_master_id}')) ";
             }
             if (string.IsNullOrEmpty(project_id) == false)
@@ -327,6 +327,81 @@ namespace PDMS.WorkFlow.Services
             return pageGridData;
         }
 
+        //部門下fs成本編列詳情查詢
+        public PageGridData<view_pdms_group_epl_fs> GetOrgEplFs(PageDataOptions pageData)
+        {
+            PageGridData<view_pdms_group_epl_fs> pageGridData = new PageGridData<view_pdms_group_epl_fs>();
+            string approve_status = "";
+            string project_id = "";
+            string wf_master_id = "";
+            string epl_phase = "";
+            /*解析查询条件*/
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(pageData.Wheres))
+            {
+                searchParametersList = pageData.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "approve_status".ToLower())
+                        {
+                            approve_status = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "wf_master_id".ToLower())
+                        {
+                            wf_master_id = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "project_id".ToLower())
+                        {
+                            project_id = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "epl_phase".ToLower())
+                        {
+                            epl_phase = sp.Value;
+                            continue;
+                        }
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(pageData.Sort))
+            {
+                pageData.Sort = " CreateDate";
+            }
+            if (string.IsNullOrEmpty(pageData.Order))
+            {
+                pageData.Order = " desc";
+            }
+            QuerySql = @$"        	
+	            select  ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,case when (fs_approve_status='00' or fs_approve_status='' or fs_approve_status is null) then '' else dev_taker_id end as submitter,*    
+                       from  cmc_pdms_project_epl 
+                       
+                        where 1=1   ";
+            if (string.IsNullOrEmpty(wf_master_id) == false)
+            {
+                QuerySql += @$" and group_code=(select  group_code  from  cmc_pdms_project_epl 
+		where epl_id=(select top 1 epl_id from cmc_pdms_wf_epl_fs where wf_master_id='{wf_master_id}')) ";
+            }
+            if (string.IsNullOrEmpty(project_id) == false)
+            {
+                QuerySql += @$" and  project_id='{project_id}'  ";
+            }
+            if (string.IsNullOrEmpty(epl_phase) == false)
+            {
+                QuerySql += @$" and  epl_phase='{epl_phase}'  ";
+            }
+            string sql = "select count(1) from (" + QuerySql + ") a";
+            pageGridData.total = repository.DapperContext.ExecuteScalar(sql, null).GetInt();
+
+            sql = @$"select * from (" +
+                QuerySql + $" ) as s where s.rowId between {((pageData.Page - 1) * pageData.Rows + 1)} and {pageData.Page * pageData.Rows} ";
+            pageGridData.rows = repository.DapperContext.QueryList<view_pdms_group_epl_fs>(sql, null);
+            return pageGridData;
+        }
 
         //主工作計畫審批頁詳情查詢
         public PageGridData<view_wk_approval_eplOrg> GetApproveDataByMainProject(PageDataOptions pageData)
