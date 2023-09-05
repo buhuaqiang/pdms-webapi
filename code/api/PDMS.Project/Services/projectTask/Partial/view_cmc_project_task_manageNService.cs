@@ -817,7 +817,7 @@ SELECT
                         warn = ptask.warn,
                         warn_leader = ptask.warn_leader,
                         action_type = ptask.action_type,
-                        data_source = "03"
+                        data_source = "00"
                     });
                 }
 
