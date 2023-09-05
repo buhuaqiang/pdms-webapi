@@ -68,7 +68,9 @@ namespace PDMS.Project.Services
             string status = data[7]["status"] == null ? "" : data[7]["status"].ToString();
             string project_id = data[8]["project_id"] == null ? "" : data[8]["project_id"].ToString();
 
-            string sql = @$"SELECT 
+            string sql = @$"
+select *  from (
+SELECT 
 task.task_id,
 task.task_name,
 task.form_type,
@@ -90,6 +92,8 @@ tsk.warn_leader,
 tsk.approve_status,
 tsk.done_status,
 tsk.is_audit_key,
+tsk.eo_gate_id,
+tsk.order_no,
 users.User_Id,
 gate.gate_start_date,
 gate.gate_end_date,
@@ -106,47 +110,87 @@ left join cmc_pdms_project_gate  gate on gate.gate_code=sl3.DicValue  and gate.p
 left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
 where tsk.epl_id=(SELECT epl_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01') 
 and tsk.start_date is not null  and tsk.end_date is not null   and   tsk.start_date<=tsk.end_date
-and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
+and gate.gate_start_date is not null  and gate.gate_end_date is not null   and tsk.eo_gate_id is null
+
+union  all
+
+select 
+task.task_id,
+task.task_name,
+task.form_type,
+task.form_url,
+'8' as set_value,
+'EO階段' as set_name,
+sl3.DicValue as gate_code,
+sl3.DicName as gate_name,
+tsk.epl_id,
+project_id,
+tsk.project_task_id,
+tsk.start_date,
+tsk.end_date,
+tsk.FormCode,
+tsk.FormId,
+tsk.FormCollectionId,
+tsk.warn,
+tsk.warn_leader,
+tsk.approve_status,
+tsk.done_status,
+tsk.is_audit_key,
+tsk.eo_gate_id,
+tsk.order_no,
+users.User_Id,
+gate.gate_start_date,
+gate.gate_end_date,
+case when ((DATEDIFF(day,  GETDATE(), tsk.end_date))<=tsk.warn and Convert(VARCHAR(10),GETDATE(),23) <=  tsk.end_date) then '0' when (DATEDIFF(day,tsk.end_date , GETDATE())>=tsk.warn_leader) then '1' else '-1' end 'task_status'
+from cmc_pdms_project_task tsk
+left join cmc_common_task  task on tsk.task_id=task.task_id
+left join cmc_pdms_project_gate  gate on gate.gate_id=tsk.eo_gate_id  and gate.project_id=(SELECT project_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')	
+left join Sys_DictionaryList sl3 ON ( sl3.DicValue= gate.gate_code AND sl3.Dic_ID = ( SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo = 'gate' ))
+left join Sys_User  users on users.User_id=(SELECT dev_taker_id from cmc_pdms_project_epl where part_no='{part_no}' and kd_type like 'D*%'   and  epl_phase='02' and project_id='{project_id}' and task_define_approve_status='01')
+where tsk.eo_gate_id is not null 
+and tsk.start_date is not null  and tsk.end_date is not null   and   tsk.start_date<=tsk.end_date
+and gate.gate_start_date is not null  and gate.gate_end_date is not null   ) AA where 1=1 
+" ;
 
             if (!string.IsNullOrEmpty(start_date))
             {
-                sql += @$" and tsk.start_date>='{start_date}' ";
+                sql += @$" and AA.start_date>='{start_date}' ";
             }
             if (!string.IsNullOrEmpty(end_date))
             {
-                sql += @$" and tsk.end_date<='{end_date}' ";
+                sql += @$" and AA.end_date<='{end_date}' ";
             }
             if (!string.IsNullOrEmpty(gate_code))
             {
-                sql += @$" and sl3.DicValue='{gate_code}' ";
+                sql += @$" and AA.gate_code='{gate_code}' ";
             }
             if (!string.IsNullOrEmpty(set_value))
             {
-                sql += @$" and sl2.DicValue='{set_value}' ";
+                sql += @$" and AA.set_value='{set_value}' ";
             }
             if (!string.IsNullOrEmpty(task_name))
             {
-                sql += @$" and task.task_name like  '%{task_name}%' ";
+                sql += @$" and AA.task_name like  '%{task_name}%' ";
             }
 
             if (!string.IsNullOrEmpty(status))
             {
                 if (status == "0")
                 {
-                    sql += @" and DATEDIFF(day, GETDATE(), tsk.end_date)<=tsk.warn and  GETDATE()<=tsk.end_date";
+                    sql += @" and DATEDIFF(day, GETDATE(), AA.end_date)<=tsk.warn and  GETDATE()<=AA.end_date";
                 }
                 else
                 {
-                    sql += @"  and DATEDIFF(day, tsk.end_date , GETDATE())>=tsk.warn_leader";
+                    sql += @"  and DATEDIFF(day, AA.end_date , GETDATE())>=AA.warn_leader";
                 }
             }
             UserInfo userList = UserContext.Current.UserInfo;
             var User_Id = userList.User_Id;
             if (User_Id != 1)
             {
-                sql += @$" and users.User_Id='{User_Id}'";
+                sql += @$" and AA.User_Id='{User_Id}'";
             }
-            sql += $@" order by tsk.order_no desc";
+            sql += $@" order by AA.order_no desc";
             info = repository.DapperContext.QueryList<view_cmc_plan_exec_gantt>(sql, null);
             repository.DapperContext.ExcuteNonQuery(sql, null);
 
