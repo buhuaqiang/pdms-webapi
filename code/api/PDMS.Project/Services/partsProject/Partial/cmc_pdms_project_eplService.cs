@@ -456,10 +456,10 @@ namespace PDMS.Project.Services
                             if (epl.fs_1 != null && epl.fs_1 != 0)
                             {
                                 //計算調整比例前EO設變費按照比例的數值
-                                var eoCost = Math.Round(((Convert.ToDecimal(epl.fs_1) * oldEoFee) / 100), 2);
+                                var eoCost = Math.Round(((Convert.ToDecimal(epl.fs_1) * oldEoFee) / 100), 2,MidpointRounding.AwayFromZero);
                                 if (eoCost == epl.fs_3 || epl.fs_3.IsNullOrEmpty())
                                 {//判斷EO設變費是否手動調整過，若手動調整過則不必根據新比例重新計算
-                                    epl.fs_3 = Math.Round(((Convert.ToDecimal(epl.fs_1) * newEoFee) / 100), 2);
+                                    epl.fs_3 = Math.Round(((Convert.ToDecimal(epl.fs_1) * newEoFee) / 100), 2, MidpointRounding.AwayFromZero);
                                 }
                             }
                         }
