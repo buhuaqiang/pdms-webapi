@@ -301,7 +301,7 @@ namespace PDMS.WorkFlow.Services
                 pageData.Order = " desc";
             }
             QuerySql = @$"        	
-	            select  ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,case when (fs_approve_status='00' or fs_approve_status='' or fs_approve_status is null) then '' else dev_taker_id end as submitter,*    
+	            select  ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,case when (fs_approve_status='00' or fs_approve_status='' or fs_approve_status is null) then '' else (select  top 1 UserTrueName  from  sys_user where user_id=dev_taker_id) end as submitter,*    
                        from  cmc_pdms_project_epl 
                        
                         where 1=1   ";
