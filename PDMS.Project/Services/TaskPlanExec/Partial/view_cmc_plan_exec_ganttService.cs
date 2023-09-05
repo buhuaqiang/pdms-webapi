@@ -541,7 +541,7 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null  "  ;
             }
             string sql = $@"select ptask.project_task_id,ptask.task_id,ptask.start_date,ptask.end_date,ptask.approve_status,
                   ops.FormId,ops.FormCode,ops.FormOptions,
-                  obj.FormCollectionId,obj.FormData ,task.flow_code,epl.part_taker_id from  cmc_pdms_project_task  ptask
+                  obj.FormCollectionId,obj.FormData ,task.flow_code,epl.part_taker_id,epl.epl_id,epl.project_id from  cmc_pdms_project_task  ptask
                  left join  cmc_pdms_project_epl epl on ptask.epl_id=epl.epl_id
                  left join  cmc_common_task task  on ptask.task_id=task.task_id
                  left join  FormDesignOptions  ops on ptask.FormId=ops.FormId
