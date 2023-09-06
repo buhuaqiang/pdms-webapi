@@ -104,7 +104,7 @@ namespace PDMS.WorkFlow.Services
 	left join cmc_pdms_project_task  ptask  on ptask.project_task_id=wftask.project_task_id
 	left join cmc_pdms_project_epl  epl  on ptask.epl_id=epl.epl_id
 	left join cmc_pdms_project_main eplmain on epl.project_id=eplmain.project_id
-	left join cmc_common_task  tsk on ptask.task_id=tsk.task_id   where 1=1   and   master.approve_status='01'  ";
+	left join cmc_common_task  tsk on ptask.task_id=tsk.task_id   where 1=1     ";
             if (string.IsNullOrEmpty(approve_status) == false)
             {
                 QuerySql += @$" and wftask.approve_status='{approve_status}'";
