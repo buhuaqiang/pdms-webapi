@@ -15,6 +15,7 @@ using PDMS.Entity.DomainModels;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using Newtonsoft.Json;
 using System.Collections;
+using System.ComponentModel;
 
 namespace PDMS.Core.Utilities
 {
@@ -926,6 +927,89 @@ namespace PDMS.Core.Utilities
         }
 
 
+
+        public static List<Dictionary<string, object>> ToDictionary<T>(List<T> list)
+        {
+            Type tInfo = typeof(T);
+            List<object> listHeader = new List<object>();
+            List<Dictionary<string, object>> newList = new List<Dictionary<string, object>>();
+            Dictionary<string, object> dictData = new Dictionary<string, object>();
+            foreach (PropertyInfo p in tInfo.GetProperties())
+            {
+                string key = p.Name;
+                if (key.Equals("salestransfer_dbid")) continue;
+                //display名字
+                var name = p.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                ////不存在默认为保存
+                GetAttributes<DisplayNameAttribute>(name, out object displayName);
+                listHeader.Add(displayName ?? name);
+                if (!string.IsNullOrEmpty(name) && list.Count == 0)
+                {
+                    dictData[name] = null;
+                }
+                else
+                {
+                    dictData[name] = null;
+                }
+            }
+            if (list.Count != 0)
+            {
+                var dictDataList = new Dictionary<string, object>();
+                foreach (var model in list)
+                {
+                    dictDataList = new Dictionary<string, object>();
+                    foreach (PropertyInfo p in tInfo.GetProperties())
+                    {
+                        string key = p.Name;
+                        if (key.Equals("salestransfer_dbid")) continue;
+                        //display名字
+                        var name = p.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                        GetAttributes<DisplayNameAttribute>(name, out object displayName);
+                        if (!string.IsNullOrEmpty(name) && list.Count == 0)
+                        {
+                            dictDataList[name] = null;
+                        }
+                        else
+                        {
+                            dictDataList[name] = null;
+                        }
+                    }
+                    foreach (PropertyInfo p in tInfo.GetProperties())
+                    {
+                        string key = p.Name;
+                        if (key.Equals("salestransfer_dbid")) continue;
+                        string name = p.GetCustomAttribute<DisplayNameAttribute>().DisplayName;
+                        if (dictDataList.ContainsKey(name))
+                        {
+                            dictDataList[name] = p.GetValue(model, null);
+                        }
+                    }
+                    newList.Add(dictDataList);
+                }
+            }
+            else
+            {
+                newList.Add(dictData);
+            }
+            return newList;
+
+        }
+        static bool GetAttributes<A>(string propertyName, out object value)
+        {
+            value = default;
+            Type attributeType = typeof(A);
+            PropertyInfo propertyInfo = typeof(T).GetProperties().FirstOrDefault(p => p.Name == propertyName);
+            if (propertyInfo != null)
+            {
+                Attribute attr = Attribute.GetCustomAttribute(propertyInfo, attributeType);
+                if (attr != null)
+                {
+                    value = false;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         //將DataTable 轉換成 List
         //使用方法  List<CustomerContact> list2 = DtToList<CustomerContact>.ConvertToModel(dt);
