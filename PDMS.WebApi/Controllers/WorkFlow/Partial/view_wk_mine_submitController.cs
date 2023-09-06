@@ -11,6 +11,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.WorkFlow.IServices;
+using PDMS.Core.Filters;
+using PDMS.Core.Utilities;
 
 namespace PDMS.WorkFlow.Controllers
 {
@@ -28,6 +30,14 @@ namespace PDMS.WorkFlow.Controllers
         {
             _service = service;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        //提交功能
+        [ApiActionPermission()]
+        [HttpPost, Route("callBack")]
+        public WebResponseContent callBack([FromBody] SaveModel saveModel)
+        {
+            return Service.callBack(saveModel);
         }
     }
 }
