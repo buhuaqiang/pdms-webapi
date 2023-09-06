@@ -1109,7 +1109,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
 
                         if (epl != null)
                         {
-                            if (item["fs_approve_status"].ToString() == "02")
+                            if (item["fs_approve_status"]!=null &&   item["fs_approve_status"].ToString() == "02")
                             { 
                                 //更新epl
                                 epl.fs_1 = item["fs_1"] == null ? null : item["fs_1"].ToDecimal();
@@ -1155,7 +1155,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                             cmc_pdms_project_epl epl = new cmc_pdms_project_epl();
                             epl = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => x.epl_id == Guid.Parse(item["epl_id"].ToString())).FirstOrDefault();
                             if (epl != null) {
-                                if (item["fs_approve_status"].ToString() == "02") {
+                                if (item["fs_approve_status"] != null && item["fs_approve_status"].ToString() == "02") {
                                     //審批通過更新時更新epl表狀態改為草稿並寫入數據到log表
                                     //寫入歷史表
                                     cmc_pdms_project_epl_his eplHis = new cmc_pdms_project_epl_his();
