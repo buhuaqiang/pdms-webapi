@@ -29,6 +29,7 @@ namespace PDMS.Core.Utilities.WebServices
 
         private static bool Success = true;
 
+
         public static List<InterFaceData> AnalysisDataByList(string url="")
         {
             List<InterFaceData> List = new List<InterFaceData>();

@@ -14,7 +14,7 @@ namespace PDMS.Core.Utilities.WebServices
 {
     public  class WebServiceHelper
     {
-        /* 调用方式   
+        /* 调用方式   暂时弃用！！！！！！！ 2023年9月5日16:07:04
           *   string url = "http://www.webservicex.net/globalweather.asmx" ;   
           *   string[] args = new string[2] ;   
           *   args[0] = "Hangzhou";   
