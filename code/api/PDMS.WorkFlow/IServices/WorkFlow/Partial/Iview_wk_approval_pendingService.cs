@@ -18,6 +18,8 @@ namespace PDMS.WorkFlow.IServices
 
         public PageGridData<view_wk_approval_eplOrg> GetApproveDataByEplOrg(PageDataOptions pageData);
 
+        public PageGridData<view_wk_approval_eplOrg> GetRejectApproveData(PageDataOptions pageData);
+
         public PageGridData<view_wk_approval_eplFs> GetApproveDataByEplFs(PageDataOptions pageData);
 
         public PageGridData<view_pdms_group_epl_fs> GetGroupEplFs(PageDataOptions pageData);
