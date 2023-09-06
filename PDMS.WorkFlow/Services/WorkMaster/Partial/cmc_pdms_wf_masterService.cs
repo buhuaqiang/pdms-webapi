@@ -248,8 +248,13 @@ namespace PDMS.WorkFlow.Services
             var epl_id = MainData["epl_id"].ToString();
             try
              {
+                var task = repository.DbContext.Set<cmc_pdms_project_task>()
+                                                                        .Where(x => x.epl_id == Guid.Parse(epl_id))
+                                                                        .OrderByDescending(x => x.CreateDate) // 以 CreateDate 遞減排序
+                                                                        .FirstOrDefault(); // 取第一筆，即最新的記錄
+
                 var taskList = repository.DbContext.Set<cmc_pdms_project_task>()
-                                                .Where(x => x.epl_id == Guid.Parse(epl_id))
+                                                .Where(x => x.epl_id == Guid.Parse(epl_id) && x.template_id == task.template_id)
                                                 .Select(x => new Dictionary<string, object>
                                                 {
                                                     { "epl_id", x.epl_id },
@@ -298,7 +303,18 @@ namespace PDMS.WorkFlow.Services
                                 define.action_type = "modify";
                                 break;
                             case "delete":
-                                define.action_type = "add";
+                                var hisRecord = repository.DbContext.Set<cmc_pdms_project_task_hist>()
+                                                .Where(x => x.project_task_id == Guid.Parse(item["project_task_id"].ToString()))
+                                                .OrderByDescending(x => x.CreateDate) // 根據 CreateDate 降冪排序
+                                                .FirstOrDefault(); // 取得第一筆，即最新的一筆資料
+                                if (hisRecord != null)
+                                {
+                                    define.action_type = "delete";
+                                }
+                                else 
+                                {
+                                    define.action_type = "skip";
+                                }
                                 break;
                             default:
                                 define.action_type = "";
@@ -308,6 +324,10 @@ namespace PDMS.WorkFlow.Services
                     else
                     {
                         define.action_type = "add";
+                    }
+                    if (define.action_type == "skip")
+                    {
+                        continue;
                     }
                     define.approve_status = "02"; // 00草稿 01待審批 02通過 03拒絕 04待提交
                     define.done_status = item["done_status"]?.ToString();

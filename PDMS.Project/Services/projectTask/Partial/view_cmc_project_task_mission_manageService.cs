@@ -80,7 +80,7 @@ FROM
 	LEFT JOIN cmc_pdms_project_gate gate ON gate.gate_code = sl3.DicValue 
 	AND gate.project_id = ( SELECT project_id FROM cmc_pdms_project_epl WHERE epl_id = '{epl_id}' ) 
 WHERE
-	p.epl_id = '{epl_id}' ";
+	p.epl_id = '{epl_id}' AND p.action_type <>'delete' ";
 
             if (!string.IsNullOrEmpty(template_id))
             {
