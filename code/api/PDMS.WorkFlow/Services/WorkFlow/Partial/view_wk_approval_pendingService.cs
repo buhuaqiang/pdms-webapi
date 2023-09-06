@@ -875,78 +875,76 @@ namespace PDMS.WorkFlow.Services
 
                 foreach (var item in ptask)
                 {
-                    if (item.action_type.ToLower() == "delete")
+                    //判斷之前有沒有核定過此任務
+                    var ptaskhis = repository.DbContext.Set<cmc_pdms_project_task_hist>()
+                                            .Where(x => x.epl_id == epl_id && x.project_task_id == item.project_task_id)
+                                            .OrderByDescending(x => x.CreateDate) // 按 CreateDate 遞減排序，最新的會在頂部
+                                            .FirstOrDefault();
+                    var action = item.action_type;
+                    if (ptaskhis != null)
                     {
-                        //判斷之前有沒有核定過此任務
-                        var ptaskhis = repository.DbContext.Set<cmc_pdms_project_task_hist>()
-                                                .Where(x => x.epl_id == epl_id && x.project_task_id == item.project_task_id)
-                                                .OrderByDescending(x => x.CreateDate) // 按 CreateDate 遞減排序，最新的會在頂部
-                                                .FirstOrDefault();
-                        if (ptaskhis != null )
+                        switch (ptaskhis.action_type)
                         {
-                            task_List.Add(new cmc_pdms_project_task_hist
-                            {
-                                project_task_his_id = Guid.NewGuid(),
-                                project_task_id = item.project_task_id,
-                                epl_id = item.epl_id,
-                                approve_status = item.approve_status,
-                                done_status = item.done_status,
-                                check_flag = item.check_flag,
-                                template_id = item.template_id,
-                                task_id = item.task_id,
-                                FormCode = item.FormCode,
-                                FormId = item.FormId,
-                                FormCollectionId = item.FormCollectionId,
-                                start_date = item.start_date,
-                                end_date = item.end_date,
-                                order_no = item.order_no,
-                                pre_task_id = item.pre_task_id,
-                                rule_id = item.rule_id,
-                                is_eo = item.is_eo,
-                                is_part_handle = item.is_part_handle,
-                                is_delete_able = item.is_delete_able,
-                                is_audit_key = item.is_audit_key,
-                                warn = item.warn,
-                                warn_leader = item.warn_leader,
-                                action_type = item.action_type,
-                                mapping_id = item.mapping_id,
-                                eo_gate_id = item.eo_gate_id,
-                                data_source = "00"
-                            });
+                            case "add":
+                                if (action.ToLower() != "delete")
+                                {
+                                    action = "modify";
+                                }
+                                break;
+                            case "modify":
+                                if (action.ToLower() == "add")
+                                {
+                                    action = "modify";
+                                }
+                                break;
+                            case "delete":
+                                if (action.ToLower() != "delete")
+                                {
+                                    action = "add";
+                                }
+                                break;
+                            default:
+                                break;
                         }
                     }
-                    else
+                    else  //沒寫入歷史表過
                     {
-                        task_List.Add(new cmc_pdms_project_task_hist
+                        if (item.action_type.ToLower() == "delete")
                         {
-                            project_task_his_id = Guid.NewGuid(),
-                            project_task_id = item.project_task_id,
-                            epl_id = item.epl_id,
-                            approve_status = item.approve_status,
-                            done_status = item.done_status,
-                            check_flag = item.check_flag,
-                            template_id = item.template_id,
-                            task_id = item.task_id,
-                            FormCode = item.FormCode,
-                            FormId = item.FormId,
-                            FormCollectionId = item.FormCollectionId,
-                            start_date = item.start_date,
-                            end_date = item.end_date,
-                            order_no = item.order_no,
-                            pre_task_id = item.pre_task_id,
-                            rule_id = item.rule_id,
-                            is_eo = item.is_eo,
-                            is_part_handle = item.is_part_handle,
-                            is_delete_able = item.is_delete_able,
-                            is_audit_key = item.is_audit_key,
-                            warn = item.warn,
-                            warn_leader = item.warn_leader,
-                            action_type = item.action_type,
-                            mapping_id = item.mapping_id,
-                            eo_gate_id = item.eo_gate_id,
-                            data_source = "00"
-                        });
+                            continue;
+                        }
+                        action = "add";
                     }
+                    task_List.Add(new cmc_pdms_project_task_hist
+                    {
+                        project_task_his_id = Guid.NewGuid(),
+                        project_task_id = item.project_task_id,
+                        epl_id = item.epl_id,
+                        approve_status = item.approve_status,
+                        done_status = item.done_status,
+                        check_flag = item.check_flag,
+                        template_id = item.template_id,
+                        task_id = item.task_id,
+                        FormCode = item.FormCode,
+                        FormId = item.FormId,
+                        FormCollectionId = item.FormCollectionId,
+                        start_date = item.start_date,
+                        end_date = item.end_date,
+                        order_no = item.order_no,
+                        pre_task_id = item.pre_task_id,
+                        rule_id = item.rule_id,
+                        is_eo = item.is_eo,
+                        is_part_handle = item.is_part_handle,
+                        is_delete_able = item.is_delete_able,
+                        is_audit_key = item.is_audit_key,
+                        warn = item.warn,
+                        warn_leader = item.warn_leader,
+                        action_type = action,
+                        mapping_id = item.mapping_id,
+                        eo_gate_id = item.eo_gate_id,
+                        data_source = "00"
+                    });
+               
                 }
                 
                 repository.DapperContext.BeginTransaction((r) =>
