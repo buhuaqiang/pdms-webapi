@@ -207,5 +207,13 @@ namespace PDMS.System.Controllers
             return Json(Service.getSysUserDeptID(obj));
         }
 
+
+        [ApiActionPermission()]
+        [HttpPost, Route("syncUserList")]
+        public ActionResult syncUserList()
+        {
+            return Json(Service.syncUserList());
+        }
+
     }
 }

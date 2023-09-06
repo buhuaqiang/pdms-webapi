@@ -62,7 +62,7 @@ namespace PDMS.WorkFlow.Services
                                 callBackEplOrg(Model);
                                 break;
                             case "02"://成本編列
-                                //ApproveEplFs(item);
+                                callBackEplFs(Model);
                                 break;
                             case "03"://主工作計劃管理
                                       //待完善
@@ -95,11 +95,11 @@ namespace PDMS.WorkFlow.Services
                 List<string> eplIds = new List<string>();//cmc_pdms_wf_epl_org 的epl_id集合
 
 
-                master = repository.DbContext.Set<cmc_pdms_wf_master>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).FirstOrDefault();
-                if (master != null)
+               var  masterList = repository.DbContext.Set<cmc_pdms_wf_master>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                if (masterList.Count()!=0)
                 {
-                    Dictionary<string, object> dic = JsonConvert.DeserializeObject<Dictionary<string, object>>(JsonConvert.SerializeObject(master.ToString()));
-                    saveModel.MainData = dic;
+                    var lists = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(masterList))[0];
+                    saveModel.MainData = lists;
 
                     ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, "04", "", null, false);
                 }
@@ -138,10 +138,68 @@ namespace PDMS.WorkFlow.Services
 
             }
             catch (Exception ex) {
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_wf_epl_task_form/cmc_pdms_project_task 表，view_wk_approval_pendingService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行部門變更審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master 表，cmc_pdms_wf_masterService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
                 return ResponseContent.Error(ex.Message);
             }
             
+
+            return ResponseContent.OK();
+        }
+
+        public WebResponseContent callBackEplFs(SaveModel saveModel) {
+            try {
+                var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
+                cmc_pdms_wf_master master = new cmc_pdms_wf_master();//存取申請主表
+                List<cmc_pdms_wf_epl_fs> eplFsList = new List<cmc_pdms_wf_epl_fs>();//存取查詢的cmc_pdms_wf_epl_fs
+                List<cmc_pdms_project_epl> eplList = new List<cmc_pdms_project_epl>();//存取cmc_pdms_project_epl
+                List<string> eplFsIds = new List<string>();//cmc_pdms_wf_epl_fs 所有數據的id集合
+                List<string> eplIds = new List<string>();//cmc_pdms_wf_epl_fs 的epl_id集合
+
+
+                var masterList = repository.DbContext.Set<cmc_pdms_wf_master>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                if (masterList.Count() != 0)
+                {
+                    var lists = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(masterList))[0];
+                    saveModel.MainData = lists;
+
+                    ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, "04", "", null, false);
+                }
+
+
+                //查詢出申請明細
+                eplFsList = repository.DbContext.Set<cmc_pdms_wf_epl_fs>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+
+                //獲取明細的id
+                eplFsIds = EPPlusHelper.GetSingleString(eplFsList, x => new { x.wf_epl_fs_id }).ToList();
+                //獲取明細的數據
+                var tempList = eplFsList.Where(x => eplFsIds.Contains(x.wf_epl_fs_id.ToString()));
+                //獲取明細的epl_id
+                eplIds = EPPlusHelper.GetSingleString(tempList, x => new { x.epl_id });
+                //根據明細epl_id查詢出cmc_pdms_project_epl對應的明細
+                var projectEplList = repository.DbContext.Set<cmc_pdms_project_epl>().Where(x => eplIds.Contains(x.epl_id.ToString())).ToList();
+                //循環更新cmc_pdms_project_epl的數據狀態
+                projectEplList.ForEach(item =>
+                {
+                    item.fs_approve_status = "00";//調整提交狀態
+                });
+
+
+                //執行數據庫變更cmc_pdms_project_epl狀態為待提交
+                if (projectEplList.Count() != 0)
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(projectEplList, x => new { x.fs_approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+
+
+            }
+            catch (Exception ex) {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行fs成本編列審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master  表，view_wk_approval_pendingService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error(ex.Message);
+            }
 
             return ResponseContent.OK();
         }

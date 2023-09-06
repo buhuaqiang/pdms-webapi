@@ -20,6 +20,12 @@ namespace PDMS.System.IServices
         List<Sys_User> getUserName(Object obj);
         List<Sys_User> getUserCode(Object obj);
         List<Sys_UserDepartment> getSysUserDeptID(Object obj);
+
+        /// <summary>
+        /// 同步用戶數據
+        /// </summary>
+        /// <returns></returns>
+        WebResponseContent syncUserList();
     }
 }
 
