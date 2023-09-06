@@ -186,6 +186,10 @@ namespace PDMS.WorkFlow.Services
             {
                 QuerySql += @$" and wf_epl_org_id  not in({wf_epl_org_id})  ";
             }
+            if (string.IsNullOrEmpty(approve_status) == false)
+            {
+                QuerySql += @$" and approve_status ='{approve_status}' ";
+            }
 
             string sql = "select count(1) from (" + QuerySql + ") a";
             pageGridData.total = repository.DapperContext.ExecuteScalar(sql, null).GetInt();
@@ -329,7 +333,7 @@ namespace PDMS.WorkFlow.Services
             string approve_status = "";
             string project_id = "";
             string wf_master_id = "";
-            string epl_phase = "";
+            string project_status = "";
             /*解析查询条件*/
             List<SearchParameters> searchParametersList = new List<SearchParameters>();
             if (!string.IsNullOrEmpty(pageData.Wheres))
@@ -355,9 +359,10 @@ namespace PDMS.WorkFlow.Services
                             project_id = sp.Value;
                             continue;
                         }
-                        if (sp.Name.ToLower() == "epl_phase".ToLower())
+                        if (sp.Name.ToLower() == "project_status".ToLower())
                         {
-                            epl_phase = sp.Value;
+                            project_status = sp.Value;
+                            project_status =project_status == "01" ? "01" : "02";
                             continue;
                         }
                     }
@@ -385,9 +390,9 @@ namespace PDMS.WorkFlow.Services
             {
                 QuerySql += @$" and  project_id='{project_id}'  ";
             }
-            if (string.IsNullOrEmpty(epl_phase) == false)
+            if (string.IsNullOrEmpty(project_status) == false)
             {
-                QuerySql += @$" and  epl_phase='{epl_phase}'  ";
+                QuerySql += @$" and  epl_phase='{project_status}'  ";
             }
             string sql = "select count(1) from (" + QuerySql + ") a";
             pageGridData.total = repository.DapperContext.ExecuteScalar(sql, null).GetInt();
