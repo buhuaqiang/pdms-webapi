@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using PDMS.Entity.DomainModels;
 using PDMS.Project.IServices;
 using PDMS.Core.Filters;
+using PDMS.Core.Utilities.WebServices;
 
 namespace PDMS.Project.Controllers
 {
@@ -36,6 +37,8 @@ namespace PDMS.Project.Controllers
         [HttpPost, Route("dealEoData")]
         public ActionResult dealEoData( string  date)
         {
+
+            List<InterFaceData> List = InterfaceHelper.AnalysisDataByList("");
             return Json(_service.dealEoData(date));
         }
     }
