@@ -19,6 +19,8 @@ using PDMS.Entity.DomainModels;
 using PDMS.System.IRepositories;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Mvc;
+using PDMS.Core.DBManager;
 
 namespace PDMS.System.Services
 {
@@ -571,6 +573,104 @@ namespace PDMS.System.Services
 
             Result = repository.DapperContext.QueryList<Sys_UserDepartment>(sql, null);
             return Result;
+        }
+
+
+        public WebResponseContent syncUserList()
+        {
+            try
+            {
+                //查詢出所有需要同步的組織機構
+                string allGroup = @$"SELECT * from Sys_Department where ParentId in  (
+                                SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode in 
+                                (SELECT DicValue from Sys_DictionaryList where Dic_ID=(SELECT Dic_ID from Sys_Dictionary WHERE DicNo='sync_user_dept')))
+																or DepartmentId in (
+                                SELECT DepartmentId FROM Sys_Department WHERE DepartmentCode in 
+                                (SELECT DicValue from Sys_DictionaryList where Dic_ID=(SELECT Dic_ID from Sys_Dictionary WHERE DicNo='sync_user_dept')))";
+                List<Sys_Department> list = _repository.DapperContext.QueryList<Sys_Department>(allGroup, null);
+
+                string getAllUser = @$"select * from sys_user";
+                List<Sys_User> users = _repository.DapperContext.QueryList<Sys_User>(getAllUser, null);
+
+                List<Sys_User> usersFromInterface = new List<Sys_User>();
+
+                List<Sys_User> insertUserList = new List<Sys_User>();
+
+                List<Sys_User> updateUserList = new List<Sys_User>();
+
+                List<int> ids = new List<int>();
+
+                if (list != null && list.Count > 0)
+                {
+                    //單位內人員查詢imputString=ORG:MEMBEROFUNIT?UNIT:A325/
+                    list.ForEach(x =>
+                    {
+                        //
+                        List<Sys_User> tmp = new List<Sys_User>();
+                        tmp.ForEach(((Sys_User u) =>
+                        {
+                            u.DeptIds = x.DepartmentId.ToString();
+                        }));
+
+                        usersFromInterface = usersFromInterface.Union(tmp).ToList<Sys_User>(); //剔除重复项   
+                    });
+                    if (usersFromInterface.Count > 0)
+                    {//循環比較用戶是否已經存在
+                        usersFromInterface.ForEach(ui =>
+                        {
+                            Sys_User exist = users.Where(uu => (uu.user_code == ui.user_code)).FirstOrDefault();
+                            if (exist != null)
+                            {
+                                ui.User_Id = exist.User_Id;
+                                if (ui.DeptIds == exist.DeptIds)
+                                {
+
+                                }
+                                else
+                                {//部門變化了
+                                    updateUserList.Add(ui);
+                                    ids.Add(exist.User_Id);
+                                }
+                            }
+                            else
+                            {
+                                insertUserList.Add(ui);
+                            }
+                        });
+                    }
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        if (insertUserList.Count() > 0)
+                        {
+                            DBServerProvider.SqlDapper.BulkInsert(insertUserList, "sys_user");
+                        }
+                        if(updateUserList.Count() > 0)
+                        {
+                            DBServerProvider.SqlDapper.UpdateRange(updateUserList, x => new { x.DeptIds });
+                            //刪除部門變化的用戶部門信息
+                            string del=string.Join("','", ids);
+                            string delData =@$"DELETE from Sys_UserDepartment where UserId in  ('{del}')";
+                            int succ = repository.DapperContext.ExcuteNonQuery(delData, null);
+                            Console.WriteLine("刪除部門變化用戶組織機構數據：" + succ);
+                        }
+                        //增加用戶組織機構中間表
+                        string inserUserDept = $@"insert into Sys_UserDepartment (UserId,DepartmentId,Enable)
+                                    SELECT  User_Id,DeptIds,1 from  Sys_User where User_Id not in (SELECT DISTINCT UserId from Sys_UserDepartment WHERE Enable=1)";
+                        int succ1 = repository.DapperContext.ExcuteNonQuery(inserUserDept, null);
+                        Console.WriteLine("增加用戶組織機構數據："+succ1);
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                   
+                }
+
+            }
+            catch(Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "用戶數據同步 sys_user 表，Sys_UserService 文件-->syncUserList：" + DateTime.Now + ":" + ex.Message);
+                return webResponse.Error(ex.Message);
+            }
+            
+            return webResponse.OK();
         }
     }
 }

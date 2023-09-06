@@ -65,7 +65,7 @@ namespace PDMS.Project.Services
             try
             {
                 #region   先将 YTECH/YTECS/YTECB 写入对应的表
-                //ResponseContent = ImportEOData();
+                ResponseContent = ImportEOData();
                 #endregion
 
                 #region  根據當前時間查詢，當天的所有變更EO，中轉站處理,最後寫入cmc_pdms_eo_project
@@ -87,6 +87,7 @@ namespace PDMS.Project.Services
                 #endregion
 
                 #region 將EO清冊的數據寫入開發清冊
+                ResponseContent.Status = true;
                 if (ResponseContent.Status)
                 {
                     ResponseContent = insertProjectEPL(date);
@@ -107,7 +108,7 @@ namespace PDMS.Project.Services
         {
             try
             {
-                string getEplData = $@"select * from cmc_pdms_project_eo_epl where ec_date='{date}' and ai_type in (SELECT DicValue FROM Sys_DictionaryList WHERE Dic_ID=(SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo='eo_ai_type_1'))";
+                string getEplData = $@"select * from cmc_pdms_project_eo_epl where epl_id is not null and ec_date='{date}' and ai_type in (SELECT DicValue FROM Sys_DictionaryList WHERE Dic_ID=(SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo='eo_ai_type_1'))";
                 List<cmc_pdms_project_eo_epl> list= repository.DapperContext.QueryList<cmc_pdms_project_eo_epl>(getEplData, null);
                 if(list!=null&& list.Count()>0)
                 {
@@ -156,10 +157,16 @@ namespace PDMS.Project.Services
                                 if (taskData != null)
                                 {
                                     project_Task.task_id= taskData.task_id;
+                                    project_Task.FormCode = taskData.FormCode;
+                                    project_Task.FormId= taskData.FormId;
+                                    project_Task.approve_status = "00";
+                                    project_Task.warn = taskData.warn;
+                                    project_Task.warn_leader= taskData.warn_leader;
                                     taskList.Add(project_Task);
                                 }
                                 
                             }
+                            taskList.Count();
                         }
                     });
 
@@ -274,11 +281,11 @@ namespace PDMS.Project.Services
 
                 //查询出所有已存在的零件编号
                 string existPartList = @$"select  * from cmc_pdms_project_epl where  epl_phase='02' and kd_type like 'D*%' 
-								order by CreateID desc";
+								order by CreateDate desc";
                 List<cmc_pdms_project_epl> existList = repository.DapperContext.QueryList<cmc_pdms_project_epl>(existPartList, null);
 
                 //查询出所有gate
-                string allGate=@$"SELECT sl.DicName,* from cmc_pdms_project_gate gate 
+                string allGate=@$"SELECT sl.DicName as gateName,* from cmc_pdms_project_gate gate 
 					left join Sys_DictionaryList sl on gate.gate_code=sl.DicValue and sl.Dic_ID = (SELECT Dic_ID from Sys_Dictionary where DicNo='gate')";
                 List< gate_query> gateList=repository.DapperContext.QueryList<gate_query>(allGate, null);
 

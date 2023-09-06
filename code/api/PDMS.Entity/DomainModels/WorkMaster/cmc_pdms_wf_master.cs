@@ -22,8 +22,8 @@ namespace PDMS.Entity.DomainModels
        [Key]
        [Display(Name ="wf_master_id")]
        [Column(TypeName="uniqueidentifier")]
-       [Editable(true)]
-       [Required(AllowEmptyStrings=false)]
+        [Editable(true)]
+        [Required(AllowEmptyStrings=false)]
        public Guid wf_master_id { get; set; }
 
        /// <summary>
