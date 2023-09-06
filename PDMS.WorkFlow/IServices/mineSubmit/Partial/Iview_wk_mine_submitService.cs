@@ -9,5 +9,7 @@ namespace PDMS.WorkFlow.IServices
 {
     public partial interface Iview_wk_mine_submitService
     {
+
+        public WebResponseContent callBack(SaveModel saveModel);
     }
  }
