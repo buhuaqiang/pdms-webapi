@@ -196,6 +196,76 @@ namespace PDMS.WorkFlow.Services
             return pageGridData;
         }
 
+        //部門變更審批頁詳情查詢
+        public PageGridData<view_wk_approval_eplOrg> GetRejectApproveData(PageDataOptions pageData)
+        {
+            PageGridData<view_wk_approval_eplOrg> pageGridData = new PageGridData<view_wk_approval_eplOrg>();
+            string approve_status = "";
+            string wf_epl_org_id = "";
+            string wf_master_id = "";
+            /*解析查询条件*/
+            List<SearchParameters> searchParametersList = new List<SearchParameters>();
+            if (!string.IsNullOrEmpty(pageData.Wheres))
+            {
+                searchParametersList = pageData.Wheres.DeserializeObject<List<SearchParameters>>();
+                if (searchParametersList != null && searchParametersList.Count > 0)
+                {
+
+                    foreach (SearchParameters sp in searchParametersList)
+                    {
+                        if (sp.Name.ToLower() == "approve_status".ToLower())
+                        {
+                            approve_status = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "wf_master_id".ToLower())
+                        {
+                            wf_master_id = sp.Value;
+                            continue;
+                        }
+                        if (sp.Name.ToLower() == "wf_epl_org_id".ToLower())
+                        {
+                            wf_epl_org_id = string.Format("'{0}'", sp.Value.Replace(",", "','"));
+                            continue;
+                        }
+                    }
+                }
+            }
+            if (string.IsNullOrEmpty(pageData.Sort))
+            {
+                pageData.Sort = " org.CreateDate";
+            }
+            if (string.IsNullOrEmpty(pageData.Order))
+            {
+                pageData.Order = " desc";
+            }
+            QuerySql = @$"        	
+	            select  ROW_NUMBER()over(order by {pageData.Sort} {pageData.Order}) as rowId,  epl.part_name,epl.part_no,epl.company_code,org.*  
+                        from cmc_pdms_wf_epl_org org 
+                        left join cmc_pdms_project_epl epl on epl.epl_id=org.epl_id   
+                        where 1=1   ";
+            if (string.IsNullOrEmpty(wf_master_id) == false)
+            {
+                QuerySql += @$" and wf_master_id ='{wf_master_id}' ";
+            }
+            if (string.IsNullOrEmpty(wf_epl_org_id) == false)
+            {
+                QuerySql += @$" and wf_epl_org_id  not in({wf_epl_org_id})  ";
+            }
+            if (string.IsNullOrEmpty(approve_status) == false)
+            {
+                QuerySql += @$" and approve_status ='{approve_status}' ";
+            }
+
+            string sql = "select count(1) from (" + QuerySql + ") a";
+            pageGridData.total = repository.DapperContext.ExecuteScalar(sql, null).GetInt();
+
+            sql = @$"select * from (" +
+                QuerySql + $" ) as s where s.rowId between {((pageData.Page - 1) * pageData.Rows + 1)} and {pageData.Page * pageData.Rows} ";
+            pageGridData.rows = repository.DapperContext.QueryList<view_wk_approval_eplOrg>(sql, null);
+            return pageGridData;
+        }
+
         //fs成本編列審批頁詳情查詢
         public PageGridData<view_wk_approval_eplFs> GetApproveDataByEplFs(PageDataOptions pageData)
         {
