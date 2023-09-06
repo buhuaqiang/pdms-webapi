@@ -315,11 +315,11 @@ WHERE
                             ModelOne.MainData["project_id"] = manageN.project_id;
                             TempStatus = manageN.task_define_approve_status;
                         }
-                        if (TempStatus == "02")
-                        {
-                            //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
-                            ResponseContent = Insert_task_hist(saveModel);
-                        }
+                        //if (TempStatus == "02")
+                        //{
+                        //    //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
+                        //    ResponseContent = Insert_task_hist(ModelOne);
+                        //}
 
                         //判斷是否需要零品承辦參與審核
                         string need_part = "";
@@ -506,7 +506,7 @@ SELECT
             List<cmc_pdms_project_task> updateList = new List<cmc_pdms_project_task>();
             List<cmc_pdms_project_task> existTaskList = new List<cmc_pdms_project_task>();
             List<view_template_task_mapping> frontEndTaskLisk = new List<view_template_task_mapping>();
-            string deleteAction = "";
+            string setdeleteAction = "";
             //單個子專案選任務
             if (path == "single")
             {
@@ -518,30 +518,32 @@ SELECT
                 //如果沒有相同模板 => 1.還沒選任務 2.選了不同模板的任務 故刪除舊有資料後面再新增
                 if (!templateExists)
                 {
-                    deleteAction = @$"
-                            DELETE FROM
-	                            cmc_pdms_project_task 
-                            WHERE
-	                            epl_id ='{epl_id}'";
+                    setdeleteAction = @$"UPDATE cmc_pdms_project_task
+                                                            SET action_type = 'delete' 
+                                                            WHERE epl_id ='{epl_id}'";
                 }
             }
             //批次選任務
-            else if (path == "batch") 
+            else if (path == "batch")
             {
-                //直接先清空任務
-                deleteAction = @$"
-                            DELETE FROM
-	                            cmc_pdms_project_task 
-                            WHERE
-	                            epl_id IN ('{epl_id}')";
+                foreach (string item in epl_idArray)
+                {
+                    string sql = $@"SELECT  epl_id , template_id  FROM cmc_pdms_project_task
+                            WHERE epl_id='" + item + "'";
+                    checkTemplate = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql, null);
+                    bool templateExists = checkTemplate.Any(b => b.template_id.ToString() == template_id.ToString());
+                    //如果沒有相同模板 => 1.還沒選任務 2.選了不同模板的任務 故刪除舊有資料後面再新增
+                    if (!templateExists)
+                    {
+                        setdeleteAction = @$"UPDATE cmc_pdms_project_task SET action_type = 'delete' WHERE epl_id ='{epl_id}'";
+                    }
+                }
             }
-
-            if (!deleteAction.IsNullOrWhiteSpace()) 
+            if (!setdeleteAction.IsNullOrWhiteSpace()) 
             {
                 try
                 {
-                    Console.WriteLine("deleteAction:" + deleteAction);
-                    var count = repository.DapperContext.ExcuteNonQuery(deleteAction, null);
+                    var count = repository.DapperContext.ExcuteNonQuery(setdeleteAction, null);
                 }
                 catch (Exception ex)
                 {
@@ -587,7 +589,6 @@ SELECT
                 }
             }
 
-
             if (!string.IsNullOrEmpty(epl_id))
             {
                 try
@@ -595,7 +596,7 @@ SELECT
                     foreach (string eplId in epl_idArray)
                     {
                         //把已選擇之任務挑出來
-                        string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='{eplId}' AND template_id = '{template_id}'";
+                        string sql2 = $@"SELECT  *  FROM  cmc_pdms_project_task WHERE epl_id ='{eplId}' AND template_id = '{template_id}'  ";
                         existTaskList = repository.DapperContext.QueryList<cmc_pdms_project_task>(sql2, null);
 
                         if (MainDatas.Count != 0)
@@ -631,8 +632,15 @@ SELECT
                                         cmc_pdms_project_task pTask = new cmc_pdms_project_task();
                                         Guid mapping_id = Guid.Parse(item["mapping_id"].ToString());
                                         pTask = existTaskList.FirstOrDefault(t => t.mapping_id == mapping_id);
+                                        //看之後新增任務的時候date有沒有需要設為空
+                                        //pTask.start_date = null;
+                                        //pTask.end_date = null;
                                         pTask.warn = item["warn"] == null ? null : item["warn"].ToInt();
                                         pTask.warn_leader = item["warn_leader"] == null ? null : item["warn_leader"].ToInt();
+                                        if (pTask.action_type == "delete")
+                                        {
+                                            pTask.action_type = "add";
+                                        }
                                         //dateFormat(item, pTask);
                                         updateList.Add(pTask);
                                     }
@@ -668,7 +676,7 @@ SELECT
                         {
                             repository.DapperContext.BeginTransaction((r) =>
                             {
-                                DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.start_date, x.end_date });
+                                DBServerProvider.SqlDapper.UpdateRange(updateList, x => new { x.start_date, x.end_date, x.warn, x.warn_leader, x.action_type });
                                 return true;
                             }, (ex) => { throw new Exception(ex.Message); });
                         }
@@ -754,8 +762,47 @@ SELECT
 
         public WebResponseContent deleteMissionData(SaveModel saveModel)
         {
-            Console.WriteLine("deleteMissionData");
-            var MainData = saveModel.MainData;
+            //刪除任務時 賦予action_type = "delete" 方便日後寫入cmc_pdms_project_task_hist 跟 cmc_pdms_wf_project_task_define
+            var MainData = saveModel.MainDatas;
+            List<cmc_pdms_project_task> projectTaskLisk = new List<cmc_pdms_project_task>();
+            if (MainData.Count != 0)
+            {
+                try
+                {
+                    foreach (var item in MainData)
+                    {
+                        Guid project_task_id = Guid.Parse(item["project_task_id"].ToString());
+                        cmc_pdms_project_task pTask = new cmc_pdms_project_task();
+                        pTask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
+
+                        if (pTask != null)
+                        {
+                            pTask.action_type = "delete";
+                        }
+                        projectTaskLisk.Add(pTask);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改前装箱  cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件：projectTaskLisk：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+                try
+                {
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(projectTaskLisk, x => new { x.action_type });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                catch (Exception ex)
+                {
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量修改執行 cmc_pdms_project_task 表，view_cmc_pdms_project_task_manageService 文件-->UpdateRange：" + DateTime.Now + ":" + ex.Message);
+                    return ResponseContent.Error();
+                }
+            }
+            return ResponseContent.OK();
+            /*var MainData = saveModel.MainData;
             string project_task_id = MainData["project_task_id"] == null ? "" : MainData["project_task_id"].ToString();
 
             string deleteAction = @$"
@@ -772,67 +819,8 @@ SELECT
                 Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "子專案管理任務維護  刪除勾選任務 cmc_pdms_project_task 表 ，cmc_pdms_project_task 文件：deleteMissionData：" + DateTime.Now + ":" + ex.Message);
                 return ResponseContent.Error();
             }
-            return ResponseContent.OK();
-        }
+            return ResponseContent.OK();*/
 
-
-        //寫入子專案工作計劃歷史表cmc_pdms_project_task_hist
-        public WebResponseContent Insert_task_hist(SaveModel saveModel)
-        {
-            var TempList = saveModel.MainDatas;
-            if (TempList.Count == 0)
-            {
-                //表單單筆提交
-                TempList[0] = saveModel.MainData;
-            }
-            List<cmc_pdms_project_task_hist> task_List = new List<cmc_pdms_project_task_hist>();
-            try
-            {
-                foreach (var item in TempList)
-                {
-                    var project_task_id = Guid.Parse(item["project_task_id"].ToString());
-                    var ptask = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => x.project_task_id == project_task_id).FirstOrDefault();
-                    task_List.Add(new cmc_pdms_project_task_hist
-                    {
-                        project_task_his_id = Guid.NewGuid(),
-                        project_task_id = project_task_id,
-                        epl_id = ptask.epl_id,
-                        approve_status = ptask.approve_status,
-                        done_status = ptask.done_status,
-                        check_flag = ptask.check_flag,
-                        template_id = ptask.template_id,
-                        task_id = ptask.task_id,
-                        FormCode = ptask.FormCode,
-                        FormId = ptask.FormId,
-                        FormCollectionId = ptask.FormCollectionId,
-                        start_date = ptask.start_date,
-                        end_date = ptask.end_date,
-                        order_no = ptask.order_no,
-                        pre_task_id = ptask.pre_task_id,
-                        rule_id = ptask.rule_id,
-                        is_eo = ptask.is_eo,
-                        is_part_handle = ptask.is_part_handle,
-                        is_delete_able = ptask.is_delete_able,
-                        is_audit_key = ptask.is_audit_key,
-                        warn = ptask.warn,
-                        warn_leader = ptask.warn_leader,
-                        action_type = ptask.action_type,
-                        data_source = "00"
-                    });
-                }
-
-                repository.DapperContext.BeginTransaction((r) =>
-                {
-                    DBServerProvider.SqlDapper.BulkInsert(task_List, "cmc_pdms_project_task_hist");
-                    return true;
-                }, (ex) => { throw new Exception(ex.Message); });
-            }
-            catch (Exception ex)
-            {
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量新增執行 cmc_pdms_project_task_hist 表，view_cmc_plan_exec_ganttService 文件-->Insert_task_hist-->BulkInsert:" + DateTime.Now + ":" + ex.Message);
-                return ResponseContent.Error();
-            }
-            return ResponseContent.OK();
         }
 
     }
