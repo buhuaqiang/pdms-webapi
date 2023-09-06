@@ -48,6 +48,15 @@ namespace PDMS.WorkFlow.Controllers
         {
             return Json(_service.GetApproveDataByEplOrg(loadData));
         }
+
+        //獲取部門變更拒絕頁面
+        [ApiActionPermission]
+        [HttpPost, Route("GetRejectApproveData")]
+        public ActionResult GetRejectApproveData([FromBody] PageDataOptions loadData)
+        {
+            return Json(_service.GetRejectApproveData(loadData));
+        }
+
         //獲取成本编列待審批頁面
         [ApiActionPermission]
         [HttpPost, Route("GetApproveDataByEplFs")]
