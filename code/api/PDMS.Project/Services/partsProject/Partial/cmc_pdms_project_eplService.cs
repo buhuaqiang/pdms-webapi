@@ -624,13 +624,16 @@ namespace PDMS.Project.Services
             List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
             return UploadEplVali(list, "1", project_id);           
         }
-        public WebResponseContent getEPLFromCMS(string project_id)
+        public WebResponseContent getEPLFromCMS(string project_id,string filePath="")
         {
             DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
             List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
             //todo
             //通過接口查詢到數據,接口參數glno和date，返回的是base64的文件
-            string filePath = "C:\\Source\\PDMS\\code\\code\\AEPL模版.xlsx";
+            if (string.IsNullOrEmpty(filePath))
+            {
+                filePath = "C:\\Source\\PDMS\\code\\code\\AEPL模版.xlsx";
+            }
             WebResponseContent Response=EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
             list = Response.Data as List<cmc_pdms_project_epl>;
 
