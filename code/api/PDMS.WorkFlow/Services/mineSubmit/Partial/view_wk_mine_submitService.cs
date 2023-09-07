@@ -119,7 +119,7 @@ namespace PDMS.WorkFlow.Services
                 //循環更新cmc_pdms_project_epl的數據狀態
                 projectEplList.ForEach(item =>
                 {
-                    item.org_change_approve_status = "00";//調整提交狀態
+                    item.org_change_approve_status = "04";//調整提交狀態
                 });
 
 
@@ -180,7 +180,7 @@ namespace PDMS.WorkFlow.Services
                 //循環更新cmc_pdms_project_epl的數據狀態
                 projectEplList.ForEach(item =>
                 {
-                    item.fs_approve_status = "00";//調整提交狀態
+                    item.fs_approve_status = "04";//調整提交狀態
                 });
 
 
