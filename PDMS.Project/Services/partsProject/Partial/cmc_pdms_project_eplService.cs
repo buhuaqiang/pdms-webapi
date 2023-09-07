@@ -624,7 +624,7 @@ namespace PDMS.Project.Services
             List<cmc_pdms_project_epl> list = Response.Data as List<cmc_pdms_project_epl>;
             return UploadEplVali(list, "1", project_id);           
         }
-        public WebResponseContent getEPLFromCMS(string project_id,string filePath="")
+        public WebResponseContent getEPLFromCMS(string project_id,string flag="",string filePath="")
         {
             DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
             List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
@@ -634,10 +634,20 @@ namespace PDMS.Project.Services
             {
                 filePath = "C:\\Source\\PDMS\\code\\code\\AEPL模版.xlsx";
             }
-            WebResponseContent Response=EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
-            list = Response.Data as List<cmc_pdms_project_epl>;
+            //假EPL，自動定時任務
+            if (flag == "2")
+            {
+                WebResponseContent Response = EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
+                list = Response.Data as List<cmc_pdms_project_epl>;
+            }
+            //正式EPL 從PLM 獲取
+            else if(flag == "3")
+            { 
+            
+            }
 
-            return UploadEplVali(list, "2", project_id);
+
+            return UploadEplVali(list, flag, project_id);
         }
 
         public string[] getKDByPartNO(string part_no)
