@@ -775,7 +775,7 @@ namespace PDMS.Core.Utilities
 
 
         //将已经获取到的Base64字符串，转换成文件，保存到服务器的某个文件路径下面。
-        public string SaveDocumentByBase64(string base64)
+        public static string SaveDocumentByBase64(string base64)
         {
 
             string htmlRptPath = "".MapPath(true);
