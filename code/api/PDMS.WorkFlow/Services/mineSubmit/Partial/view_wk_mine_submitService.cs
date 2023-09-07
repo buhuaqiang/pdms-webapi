@@ -67,8 +67,8 @@ namespace PDMS.WorkFlow.Services
                             case "03"://主工作計劃管理
                                       //待完善
                                 break;
-                            case "04"://任務
-                                      //待完善
+                            case "04"://任務表單
+                                callBackTaskExec(Model); 
                                 break;
                             default:
                                 break;
@@ -138,7 +138,7 @@ namespace PDMS.WorkFlow.Services
 
             }
             catch (Exception ex) {
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行部門變更審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master 表，cmc_pdms_wf_masterService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行部門變更審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master 表，view_wk_mine_submitService 文件-->callBackEplOrg：" + DateTime.Now + ":" + ex.Message);
                 return ResponseContent.Error(ex.Message);
             }
             
@@ -197,13 +197,60 @@ namespace PDMS.WorkFlow.Services
 
             }
             catch (Exception ex) {
-                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行fs成本編列審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master  表，view_wk_approval_pendingService 文件-->ApprovePlanExec：" + DateTime.Now + ":" + ex.Message);
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行fs成本編列審批拿回 cmc_pdms_project_epl/cmc_pdms_wf_master  表，view_wk_mine_submitService 文件-->callBackEplFs：" + DateTime.Now + ":" + ex.Message);
                 return ResponseContent.Error(ex.Message);
             }
 
             return ResponseContent.OK();
         }
 
+        //表單任務
+        public WebResponseContent callBackTaskExec(SaveModel saveModel)
+        {
+            try
+            {
+                var wf_master_id = saveModel.MainData["wf_master_id"].ToString();
+                List<cmc_pdms_wf_epl_task_form> TaskFromList = new List<cmc_pdms_wf_epl_task_form>();//存取查詢的cmc_pdms_wf_epl_task_form
+                List<cmc_pdms_project_task> project_taskList = new List<cmc_pdms_project_task>();//存取cmc_pdms_project_epl
+                List<string> project_task_idIds = new List<string>();//cmc_pdms_wf_epl_fs 所有數據的id集合
+                var masterList = repository.DbContext.Set<cmc_pdms_wf_master>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                if (masterList.Count() != 0)
+                {
+                    var lists = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(JsonConvert.SerializeObject(masterList))[0];
+                    saveModel.MainData = lists;
+                    ResponseContent = cmc_pdms_wf_masterService.Instance.MasterUpdate(saveModel, "04", "", null, false);
+                }
+                //查詢出申請明細--> cmc_pdms_wf_epl_task_form
+                TaskFromList = repository.DbContext.Set<cmc_pdms_wf_epl_task_form>().Where(x => x.wf_master_id == Guid.Parse(wf_master_id)).ToList();
+                //獲取明細的id --> project_task_id
+                project_task_idIds = EPPlusHelper.GetSingleString(TaskFromList, x => new { x.project_task_id }).ToList();
+
+                //查詢業務表明細--> cmc_pdms_project_task
+                project_taskList = repository.DbContext.Set<cmc_pdms_project_task>().Where(x => project_task_idIds.Contains(x.project_task_id.ToString())).ToList();
+
+
+                //執行數據庫變更 cmc_pdms_project_task 狀態為待提交
+                if (project_taskList.Count() != 0)
+                {
+                    project_taskList.ForEach(item =>
+                    {
+                        item.approve_status = "04";//調整提交狀態//拿回 就改為待提交
+                    });
+                    repository.DapperContext.BeginTransaction((r) =>
+                    {
+                        DBServerProvider.SqlDapper.UpdateRange(project_taskList, x => new { x.approve_status });
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "批量執行 任務表單 審批拿回 cmc_pdms_project_task/cmc_pdms_wf_master  表，view_wk_mine_submitService 文件-->callBackTaskExec：" + DateTime.Now + ":" + ex.Message);
+                return ResponseContent.Error(ex.Message);
+            }
+
+            return ResponseContent.OK();
+        }
 
 
 
