@@ -15,6 +15,7 @@ using PDMS.Core.Filters;
 using PDMS.Core.Extensions;
 using PDMS.Core.Utilities;
 using PDMS.Core.Utilities;
+using Quartz;
 
 namespace PDMS.Project.Controllers
 {
@@ -96,7 +97,13 @@ namespace PDMS.Project.Controllers
         {//保存並發佈
             return Service.isGlnoRepeated(glno);
         }
-
+        //addHourMinSec
+        [ApiActionPermission()]
+        [HttpPost, Route("addHourMinSec")]
+        public WebResponseContent addHourMinSec(List<Dictionary<string, object>> dateList)
+        {
+            return Service.addHourMinSec( dateList);
+        }
         [ApiActionPermission()]
         [HttpPost, Route("isCompletion")]
         public int isCompletion([FromBody]  object obj)

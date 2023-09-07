@@ -31,6 +31,8 @@ using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
 using Newtonsoft.Json.Linq;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using static PDMS.System.Services.Sys_DictionaryService;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Globalization;
 
 namespace PDMS.Project.Services
 {
@@ -74,6 +76,34 @@ namespace PDMS.Project.Services
             count = Convert.ToInt32(repository.DapperContext.ExecuteScalar(isUniq, null));            
             return count;
         }
+
+        public WebResponseContent addHourMinSec(List<Dictionary<string, object>> dateList)
+        {
+            if (dateList != null && dateList.Count != 0)
+            {
+                foreach (var dateDict in dateList)
+                {
+                    if (dateDict.TryGetValue("gate_end_date", out var dateValue) && dateValue is string dateString)
+                    {
+                        if (DateTime.TryParse(dateString, out DateTime date))
+                        {
+                            DateTime updatedDate = date.AddHours(23).AddMinutes(59).AddSeconds(59);
+                            dateDict["gate_end_date"] = updatedDate;
+                        }
+                        else
+                        {
+                            // 處理無法解析的日期格式錯誤
+                        }
+                    }
+                    else
+                    {
+                        // 處理缺少 "gate_end_date" 鍵或其值不是字串的情況
+                    }
+                }
+            }
+            return webResponse.OK();
+            // 在此處返回 WebResponseContent
+        }
         public override WebResponseContent Add(SaveModel saveDataModel)
         {
             // 在保存数据库前的操作，所有数据都验证通过了，这一步执行完就执行数据库保存           
@@ -83,6 +113,7 @@ namespace PDMS.Project.Services
             //把畫面上數據都寫入數據庫
             if (count == 0)
             {
+                addHourMinSec(saveDataModel.Details[0].Data);
                 info = _cmc_pdms_project_mainService.Add(saveDataModel);
                 string selectstr1 = $@"SELECT project_id FROM cmc_pdms_project_main WHERE glno= '{glno}'";
                 List<cmc_pdms_project_main> pidResult = _repository.DapperContext.QueryList<cmc_pdms_project_main>(selectstr1, null);
@@ -148,6 +179,7 @@ namespace PDMS.Project.Services
             }
 
             //數據保存到數據庫
+            addHourMinSec(saveModel.Details[0].Data);
             info = _cmc_pdms_project_mainService.Update(saveModel);
 
             //保存歷史記錄表
@@ -202,7 +234,7 @@ namespace PDMS.Project.Services
                 {
                     x.version = newVersion.ToString();
                 });
-
+                addHourMinSec(saveModel.Details[0].Data);
                 info = _cmc_pdms_project_mainService.Add(saveModel);
 
                 cmc_pdms_project_main main = new cmc_pdms_project_main();
@@ -236,7 +268,7 @@ namespace PDMS.Project.Services
                 }
             }
             else { //專案存在後保存並發佈
-               
+                addHourMinSec(saveModel.Details[0].Data);
                 WebResponseContent data =  Update(saveModel);
 
                 Guid projectID = Guid.Parse(saveModel.MainData["project_id"].ToString());
@@ -573,16 +605,20 @@ namespace PDMS.Project.Services
             
             string findGateIdSql = $@"SELECT * FROM cmc_pdms_project_gate  WHERE project_id= '{keys[0].ToString()}'";
             List<cmc_pdms_project_gate> gateIds = _repository.DapperContext.QueryList<cmc_pdms_project_gate>(findGateIdSql, null);
-            //string[] gateKeys =new string[];
-            List<string> gateIdsList = new List<string>();
-            //object[] termsList = new object[gateIds.Count()];
-            gateIds.ForEach(x =>
+            if (gateIds.Count() != 0)
             {
-                gateIdsList.Add(x.gate_id.ToString());
-            });
-            Object [] gidKeys = gateIdsList.ToArray();
-            var gate = new WebResponseContent();
-            gate = _cmc_pdms_project_gateService.Del(gidKeys, delList);
+                //string[] gateKeys =new string[];
+                List<string> gateIdsList = new List<string>();
+                //object[] termsList = new object[gateIds.Count()];
+                gateIds.ForEach(x =>
+                {
+                    gateIdsList.Add(x.gate_id.ToString());
+                });
+                Object[] gidKeys = gateIdsList.ToArray();
+                var gate = new WebResponseContent();
+                gate = _cmc_pdms_project_gateService.Del(gidKeys, delList);
+                return _cmc_pdms_project_mainService.Del(keys, delList);
+            }
             return _cmc_pdms_project_mainService.Del(keys, delList);
         }
 
