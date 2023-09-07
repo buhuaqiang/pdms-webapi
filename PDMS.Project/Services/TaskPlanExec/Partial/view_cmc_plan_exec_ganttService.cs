@@ -67,7 +67,7 @@ namespace PDMS.Project.Services
             string task_name = data[6]["task_name"] == null ? "" : data[6]["task_name"].ToString();
             string status = data[7]["status"] == null ? "" : data[7]["status"].ToString();
             string project_id = data[8]["project_id"] == null ? "" : data[8]["project_id"].ToString();
-            string task_define_approve_status = data[9]["task_define_approve_status"] == null ? "" : data[9]["task_define_approve_status"].ToString();
+            string task_define_approve_status = data[9]["task_define_approve_status"] == null ? "02" : data[9]["task_define_approve_status"].ToString();
             
 
             string sql = @$"
