@@ -144,10 +144,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string approve_status { get; set; }
 
-       /// <summary>
-       ///
-       /// </summary>
-       [Display(Name ="master_no")]
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "task_define_approve_status")]
+        [MaxLength(2)]
+        [Column(TypeName = "varchar(2)")]
+        [Editable(true)]
+        public string task_define_approve_status { get; set; }
+
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name ="master_no")]
        [MaxLength(20)]
        [Column(TypeName="varchar(20)")]
        [Editable(true)]

@@ -909,7 +909,8 @@ namespace PDMS.WorkFlow.Services
                     }
                     else  //沒寫入歷史表過
                     {
-                        if (item.action_type.ToLower() == "delete")
+
+                        if (!string.IsNullOrEmpty(item.action_type) && item.action_type.ToLower() == "delete")
                         {
                             continue;
                         }
