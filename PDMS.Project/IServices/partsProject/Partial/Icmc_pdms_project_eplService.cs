@@ -60,5 +60,8 @@ namespace PDMS.Project.IServices
 
         public List<cmc_pdms_project_epl_car_model> getCarModel(Object obj);
 
+        //定時任務專用
+        public WebResponseContent UploadEplVali(List<cmc_pdms_project_epl> list, string flag, string project_id);
+
     }
 }
