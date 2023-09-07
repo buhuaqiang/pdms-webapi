@@ -368,6 +368,9 @@ and gate.gate_start_date is not null  and gate.gate_end_date is not null   ) AA 
                 case "04":
                     str = "待提交";
                     break;
+                case "05":
+                    str = "拿回";
+                    break;
                 default:
                     break;
             }
