@@ -205,7 +205,7 @@ namespace PDMS.Project.Services
             {
                 string getYtecbData = @$"SELECT   pro.project_id,ch.ec_date,cs.AI_TYPE,cs.AI_CL,cb.* from YTECB cb
                             LEFT join YTECH ch on cb.EC_NO=ch.EC_NO
-                            left join YTECS cs on cs.EC_NO= cb.EC_NO
+                            left join YTECS cs on cs.EC_NO= cb.EC_NO and cs.EC_AI=cb.EC_AI
                             left join cmc_pdms_eo_project pro on pro.ec_no=ch.EC_NO
                             WHERE ch.EC_DATE='{date}' 
 														AND cs.ai_type in (SELECT DicValue FROM Sys_DictionaryList WHERE Dic_ID=(SELECT Dic_ID FROM Sys_Dictionary WHERE DicNo='eo_ai_type_1'))

@@ -106,10 +106,19 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public string org_code { get; set; }
 
-       /// <summary>
-       ///組別代碼
-       /// </summary>
-       [Display(Name ="組別代碼")]
+
+        /// <summary>
+        ///部門代碼(eo表)
+        /// </summary>
+        [Display(Name = "部門代碼")]
+        [MaxLength(50)]
+        [Column(TypeName = "varchar(50)")]
+        [Editable(true)]
+        public string dept_code { get; set; }
+        /// <summary>
+        ///組別代碼
+        /// </summary>
+        [Display(Name ="組別代碼")]
        [MaxLength(50)]
        [Column(TypeName="varchar(50)")]
        [Editable(true)]
