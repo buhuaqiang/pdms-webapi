@@ -87,7 +87,7 @@ namespace PDMS.Project.Services
                 #endregion
 
                 #region 將EO清冊的數據寫入開發清冊
-                ResponseContent.Status = true;
+               // ResponseContent.Status = true;
                 if (ResponseContent.Status)
                 {
                     ResponseContent = insertProjectEPL(date);
@@ -162,6 +162,7 @@ namespace PDMS.Project.Services
                                     project_Task.approve_status = "00";
                                     project_Task.warn = taskData.warn;
                                     project_Task.warn_leader= taskData.warn_leader;
+                                    project_Task.action_type = "add";
                                     taskList.Add(project_Task);
                                 }
                                 
@@ -235,12 +236,12 @@ namespace PDMS.Project.Services
                             EPL.org_code = x.DEPT_ID;
                             if (x.DEPT_ID == "D146")
                             {
-                                EPL.org_code = "D157";
+                                EPL.org_code = "A01-01";//测试数据，正式时改为D157
                             }
                             EPL.action_type = "delete";
                             if (x.project_id != null)
                             {
-                                cmc_pdms_project_epl exist = existList.Where(a =>(a.project_id==x.project_id && a.part_no==x.EC_AI)).FirstOrDefault();
+                                cmc_pdms_project_epl exist = existList.Where(a =>(a.project_id==x.project_id && a.part_no==x.B_ITEM)).FirstOrDefault();
                            
                                 if (exist != null)
                                 {
@@ -310,7 +311,7 @@ namespace PDMS.Project.Services
                            
                             if (x.DEPT_ID == "D146")
                             {
-                                EPL.org_code = "D157";
+                                EPL.org_code = "A01-01";//测试数据，正式时改为D157
                             }
                             if (relatedType.Contains(EPL.ai_type))//開發清冊相關
                             {
