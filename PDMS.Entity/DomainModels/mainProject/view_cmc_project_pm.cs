@@ -278,6 +278,14 @@ namespace PDMS.Entity.DomainModels
         [Column(TypeName = "varchar(200)")]
         [Editable(true)]
         public string? isApproving { get; set; }
-        
+
+        /// <summary>
+        ///从plm抓取到正式EPL时间
+        /// </summary>
+        [Display(Name = "从plm抓取到正式EPL时间")]
+        [Column(TypeName = "datetime")]
+        [Editable(true)]
+        public DateTime? epl_load_time { get; set; }
+
     }
 }
