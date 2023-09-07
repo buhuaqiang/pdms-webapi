@@ -777,8 +777,6 @@ namespace PDMS.Core.Utilities
         //将已经获取到的Base64字符串，转换成文件，保存到服务器的某个文件路径下面。
         public static string SaveDocumentByBase64(string base64)
         {
-
-            string htmlRptPath = "".MapPath(true);
             string sFileName =  DateTime.Now.ToString("yyyMMddHHmmsss");   //这里的imageFormat就是文件类型
             string sFilePath =$"c:/home/site/Upload/{DateTime.Now.ToString("yyyMMdd")}/{typeof(T).Name}/".MapPath(true);//创建路径文件夹
             sFileName = sFilePath + "\\" + sFileName;
