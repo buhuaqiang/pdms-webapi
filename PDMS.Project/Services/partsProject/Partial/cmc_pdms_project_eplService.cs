@@ -93,7 +93,7 @@ namespace PDMS.Project.Services
                                     {//除了終版其他時候調整後需要重新部門定版
                                         epl.Final_version_status = item["Final_version_status"] == null ? null : "0";
                                     }
-                                    if (item["org_change_approve_status"] != null && item["org_change_approve_status"].ToString() == "00")
+                                    if (item["org_change_approve_status"] != null && item["org_change_approve_status"].ToString() == "04")
                                     {//部門變回原部門後狀態設為null
                                         epl.org_change_approve_status = "";
                                     }
@@ -113,7 +113,7 @@ namespace PDMS.Project.Services
                                         epl.org_change_approve_status = item["org_change_approve_status"].ToString(); ;
                                     }
                                     else {//其他情況狀態為待提交
-                                        epl.org_change_approve_status = "00";
+                                        epl.org_change_approve_status = "04";
                                     }
                                     epl.dev_taker_id = item["dev_taker_id"] == null ? null : item["dev_taker_id"].ToInt();
 
@@ -214,7 +214,7 @@ namespace PDMS.Project.Services
                                     epl.group_code = groupCode;
                                     epl.new_org_code = orgCode;
                                     epl.submit_status = "0";
-                                    epl.org_change_approve_status = "00";
+                                    epl.org_change_approve_status = "04";
                                 }
                             }
 
@@ -1117,7 +1117,7 @@ SELECT NEWID(),[epl_id], [project_id], [main_plan_id], [epl_source], [epl_phase]
                                 epl.fs_3 = item["fs_3"] == null ? null : item["fs_3"].ToDecimal();
                                 epl.fs_remark = item["fs_remark"] == null ? null : item["fs_remark"].ToString();
                                 epl.currency = item["currency"] == null ? null : item["currency"].ToString();
-                                epl.fs_approve_status = "00";
+                                epl.fs_approve_status = "04";
                                 epl.gate_type = gateType;
                                 epl.exchange_rate = item["exchange_rate"] == null ? null : item["exchange_rate"].ToDecimal();
                                 epl.fs_1_ntd = item["fs_1_ntd"] == null ? null : item["fs_1_ntd"].ToDecimal();
