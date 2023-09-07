@@ -270,6 +270,21 @@ namespace PDMS.Entity.DomainModels
        [Editable(true)]
        public DateTime? ModifyDate { get; set; }
 
-       
+        /// <summary>
+        ///
+        /// </summary>
+        [Display(Name = "mapping_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? mapping_id { get; set; }
+
+
+        /// <summary>
+        /// eo任務所屬大日程id
+        /// </summary>
+        [Display(Name = "eo_gate_id")]
+        [Column(TypeName = "uniqueidentifier")]
+        [Editable(true)]
+        public Guid? eo_gate_id { get; set; }
     }
 }
