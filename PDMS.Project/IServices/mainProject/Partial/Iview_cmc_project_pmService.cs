@@ -32,7 +32,8 @@ namespace PDMS.Project.IServices
         public WebResponseContent saveRelease(SaveModel saveModel);
 
         public int isGlnoRepeated(String glno);
-
+        //addHourMinSec
+        public WebResponseContent addHourMinSec(List<Dictionary<string, object>> glno);
         public int isCompletion(object obj);
     }
 }
