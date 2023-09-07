@@ -37,7 +37,7 @@ namespace PDMS.Project.IServices
         /// </summary>
         /// <param name="project_id"></param>
         /// <returns></returns>
-        public WebResponseContent getEPLFromCMS(string project_id);
+        public WebResponseContent getEPLFromCMS(string project_id, string filePath = "");
 
         public int getDepartCount(Object obj);
 
