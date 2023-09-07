@@ -119,13 +119,18 @@ namespace PDMS.Sys.Services
                     foreach (var item in addset)
                     {
                         //获取parent_set_id
-                        var parent_set_id = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id && x.template_id == newid).FirstOrDefault().set_id;
-                        //获取当前实体
-                        var Setlist = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.set_id == item.set_id).FirstOrDefault();
-                        //对需要调整的字段进行赋值
-                        Setlist.parent_set_id = parent_set_id;
-                        //将实体装箱
-                        setList.Add(Setlist);
+                        var parent = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.source_set_id == item.parent_set_id && x.template_id == newid).FirstOrDefault();
+                        if (parent != null)
+                        {
+                            var parent_set_id = parent.set_id;
+                            //获取当前实体
+                            var Setlist = repository.DbContext.Set<cmc_common_task_template_set>().Where(x => x.set_id == item.set_id).FirstOrDefault();
+                            //对需要调整的字段进行赋值
+                            Setlist.parent_set_id = parent_set_id;
+                            //将实体装箱
+                            setList.Add(Setlist);
+                        }
+                        
                     }
                 }
                 catch (Exception ex)
@@ -266,6 +271,28 @@ namespace PDMS.Sys.Services
 
             }
             return _responseContent.OK("操作成功");
+        }
+
+
+        public override WebResponseContent Del(object[] keys, bool delList = true)
+        {
+            string ids_str=string.Join("','", keys);
+            string sql = $@"SELECT count(0) from cmc_pdms_project_task WHERE template_id in ('{ids_str}')";
+            var count3 = Convert.ToInt32(repository.DapperContext.ExecuteScalar(sql, null));
+            if (count3 > 0)
+            {
+                return _responseContent.Error("模板被引用，不允許刪除");
+            }
+            else
+            {
+                string delMapping = $@"delete from  cmc_common_template_mapping where set_id in (SELECT set_id from cmc_common_task_template_set where template_id in ('{ids_str}')) ";
+                var delM=repository.DapperContext.ExcuteNonQuery(delMapping, null);
+                Console.WriteLine("刪除任務關聯數據："+delM);
+                string delSet = $@"delete from cmc_common_task_template_set where template_id in ('{ids_str}')";
+                var delS = repository.DapperContext.ExcuteNonQuery(delSet, null);
+                Console.WriteLine("刪除模版層級數據：" + delS);
+            }
+            return base.Del(keys, delList);
         }
     }  
 }

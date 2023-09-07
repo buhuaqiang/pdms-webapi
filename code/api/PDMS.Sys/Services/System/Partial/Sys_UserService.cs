@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using PDMS.Core.DBManager;
+using PDMS.Core.Utilities.WebServices;
 
 namespace PDMS.System.Services
 {
@@ -607,12 +608,21 @@ namespace PDMS.System.Services
                     {
                         //
                         List<Sys_User> tmp = new List<Sys_User>();
-                        tmp.ForEach(((Sys_User u) =>
+                        List<InterFaceData> List1 = InterfaceHelper.AnalysisDataByList("MEMBEROFUNIT?UNIT:"+x.DepartmentCode);
+                        List1.ForEach(tp =>
                         {
-                            u.DeptIds = x.DepartmentId.ToString();
-                        }));
-
-                        usersFromInterface = usersFromInterface.Union(tmp).ToList<Sys_User>(); //剔除重复项   
+                            Sys_User tu=new Sys_User();
+                            tu.user_code = tp.code;
+                            tu.UserName= tp.code;
+                            tu.UserTrueName= tp.name;
+                            tu.DeptIds= x.DepartmentId.ToString();
+                            tmp.Add(tu);
+                        });
+                        if (x.DepartmentCode == "A01-03")
+                        {
+                            usersFromInterface = usersFromInterface.Union(tmp).ToList<Sys_User>(); //剔除重复项   
+                        }
+                        
                     });
                     if (usersFromInterface.Count > 0)
                     {//循環比較用戶是否已經存在
@@ -652,15 +662,15 @@ namespace PDMS.System.Services
                             string delData =@$"DELETE from Sys_UserDepartment where UserId in  ('{del}')";
                             int succ = repository.DapperContext.ExcuteNonQuery(delData, null);
                             Console.WriteLine("刪除部門變化用戶組織機構數據：" + succ);
-                        }
-                        //增加用戶組織機構中間表
-                        string inserUserDept = $@"insert into Sys_UserDepartment (UserId,DepartmentId,Enable)
-                                    SELECT  User_Id,DeptIds,1 from  Sys_User where User_Id not in (SELECT DISTINCT UserId from Sys_UserDepartment WHERE Enable=1)";
-                        int succ1 = repository.DapperContext.ExcuteNonQuery(inserUserDept, null);
-                        Console.WriteLine("增加用戶組織機構數據："+succ1);
+                        }                       
                         return true;
                     }, (ex) => { throw new Exception(ex.Message); });
-                   
+
+                    //增加用戶組織機構中間表
+                    string inserUserDept = $@"insert into Sys_UserDepartment (Id,UserId,DepartmentId,Enable,CreateDate)
+                                    SELECT  NEWID(),User_Id,DeptIds,1,GETDATE() from  Sys_User where User_Id not in (SELECT DISTINCT UserId from Sys_UserDepartment WHERE Enable=1)";
+                    int succ1 = repository.DapperContext.ExcuteNonQuery(inserUserDept, null);
+                    Console.WriteLine("增加用戶組織機構數據：" + succ1);
                 }
 
             }

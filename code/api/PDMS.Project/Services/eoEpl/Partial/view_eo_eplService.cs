@@ -72,6 +72,7 @@ namespace PDMS.Project.Services
             }
             QuerySql = $@"SELECT
 	        eo_epl.eo_id,
+            eo_epl.org_code as dept_code,
 	        eo_epl.ec_no,
 	        eo_epl.ai_type,
 	        main.glno,
