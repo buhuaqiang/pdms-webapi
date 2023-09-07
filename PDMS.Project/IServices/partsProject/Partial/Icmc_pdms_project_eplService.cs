@@ -37,7 +37,7 @@ namespace PDMS.Project.IServices
         /// </summary>
         /// <param name="project_id"></param>
         /// <returns></returns>
-        WebResponseContent getEPLFromCMS(string project_id);
+        public WebResponseContent getEPLFromCMS(string project_id);
 
         public int getDepartCount(Object obj);
 
@@ -60,8 +60,6 @@ namespace PDMS.Project.IServices
 
         public List<cmc_pdms_project_epl_car_model> getCarModel(Object obj);
 
-        //定時任務專用
-        public WebResponseContent UploadEplVali(List<cmc_pdms_project_epl> list, string flag, string project_id);
 
     }
 }
