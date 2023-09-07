@@ -626,7 +626,7 @@ namespace PDMS.Project.Services
         }
         public WebResponseContent getEPLFromCMS(string project_id,string flag="",string filePath="")
         {
-            DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
+          
             List<cmc_pdms_project_epl> list = new List<cmc_pdms_project_epl>();
             //todo
             //通過接口查詢到數據,接口參數glno和date，返回的是base64的文件
@@ -637,6 +637,7 @@ namespace PDMS.Project.Services
             //假EPL，自動定時任務
             if (flag == "2")
             {
+                DownLoadTemplateColumns = x => new { x.upg_id, x.level, x.part_no, x.part_name };
                 WebResponseContent Response = EPPlusHelper.ReadToDataTable<cmc_pdms_project_epl>(filePath, DownLoadTemplateColumns);
                 list = Response.Data as List<cmc_pdms_project_epl>;
             }
