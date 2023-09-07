@@ -780,8 +780,7 @@ namespace PDMS.Core.Utilities
 
             string htmlRptPath = "".MapPath(true);
             string sFileName =  DateTime.Now.ToString("yyyMMddHHmmsss");   //这里的imageFormat就是文件类型
-            string sFilePath =$"Upload/Tables/{typeof(T).GetEntityTableName()}/{DateTime.Now.ToString("yyyMMddHHmmsss") + new Random().Next(1000, 9999)}/";//创建路径文件夹
-
+            string sFilePath =$"c:/home/site/Upload/{DateTime.Now.ToString("yyyMMdd")}/{typeof(T).Name}/".MapPath(true);//创建路径文件夹
             sFileName = sFilePath + "\\" + sFileName;
             //路径不存在，则创建路径
             if (!Directory.Exists(sFilePath))
