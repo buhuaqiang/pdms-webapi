@@ -45,7 +45,7 @@ namespace PDMS.Entity.DomainModels
        [Column(TypeName="varchar(1)")]
        [Editable(true)]
        [Required(AllowEmptyStrings=false)]
-       public string upload_date { get; set; }
+       public DateTime? upload_date { get; set; }
 
        /// <summary>
        ///
