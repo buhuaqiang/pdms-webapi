@@ -645,8 +645,6 @@ namespace PDMS.Project.Services
             { 
             
             }
-
-
             return UploadEplVali(list, flag, project_id);
         }
 
