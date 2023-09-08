@@ -45,146 +45,6 @@ namespace PDMS.Project.Services
         private WebResponseContent webResponse { get; set; }
         private readonly string spath = AppSetting.SftpSite.path;
 
- 
-        //正式EPL--  WebService方式  
-        public WebResponseContent ImportEplByPLM(IHeaderDictionary header)
-        {
-            Sys_schedule_log scheduleEntity = new Sys_schedule_log();
-            Guid schedule_dbid = Guid.NewGuid();
-            DateTime start_date = DateTime.Now;
-            try
-            {
-                this.webResponse = new WebResponseContent();
-                scheduleEntity = new Sys_schedule_log()
-                {
-                    schedule_dbid = schedule_dbid,
-                    task_id = "15",
-                    url = "/api/view_cmc_timed_task/ImportEplByFalse",
-                    start_date = start_date,
-                    status = "Y",
-                    message = "運行中",
-                    CreateDate = start_date
-                };
-                repository.DapperContext.Add(scheduleEntity);
-                DbContext dbcon = repository.DbContext;
-                var currentEntry = dbcon.ChangeTracker.Entries().FirstOrDefault();
-                if (currentEntry != null && currentEntry.Entity.ToString() == scheduleEntity.ToString())
-                {
-                    //设置实体State为EntityState.Detached，取消跟踪该实体，之后dbContext.ChangeTracker.Entries().Count()的值会减1
-                    currentEntry.State = EntityState.Detached;
-                }
-                //授權驗證
-                webResponse = HttpContextHelper.HttpContextBase(header);
-                if (!webResponse.Status)
-                {
-                    throw new Exception(webResponse.Message);
-                }
-                string AllFileName = "";
-                string ErrorMsg = "";
-                try
-                {
-                    //獲取專案建立的01 假EPL
-                    var ProjectList = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_status == "01").ToList();
-                    if (ProjectList.Count() > 0)
-                    {
-                        foreach (var item in ProjectList)
-                        {
-                            try
-                            {
-                                //從CMS獲取假EPL
-                                Dictionary<string, string> parameters = new Dictionary<string, string>();
-                                parameters.Add("name", "10086");
-                                string _result = HttpHelper.Helper.GetResponseString("", ERequestMode.Post, parameters, Encoding.Default, Encoding.UTF8);
-
-                                //根據Base64 轉換成 Excel文件
-                                AllFileName = EPPlusHelper.SaveDocumentByBase64(_result);
-                                webResponse = cmc_pdms_project_eplService.Instance.getEPLFromCMS(item.project_id.ToString(), AllFileName);
-                            }
-                            catch (Exception ex)
-                            {
-                                ErrorMsg = ex.Message;
-                                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "定時任務view_cmc_timed_taskService 文件:foreach,循環調閱接口讀取CMS正式EPL文件-->ImportEplByPLM：" + DateTime.Now + ":" + ex.Message);
-                            }
-                            finally
-                            {
-                                File.Delete(AllFileName);
-                            }      
-                        }
-                    }         
-                }
-                catch (Exception ex)
-                {
-                    ErrorMsg = ex.Message;
-                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "定時任務view_cmc_timed_taskService 文件-->ImportEplByPLM：" + DateTime.Now + ":" + ex.Message);
-                }
-                if (!string.IsNullOrEmpty(ErrorMsg))
-                {
-                    repository.DapperContext.BeginTransaction((result) =>
-                    {
-                        scheduleEntity = new Sys_schedule_log()
-                        {
-                            schedule_dbid = schedule_dbid,
-                            task_id = "15",
-                            url = "/api/view_cmc_timed_task/ImportEplByPLM",
-                            start_date = start_date,
-                            end_date = DateTime.Now,
-                            status = "N",
-                            message = ErrorMsg,
-                            CreateDate = start_date,
-                            ModifyDate = DateTime.Now
-                        };
-                        repository.DapperContext.Update(scheduleEntity);
-                        webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
-                        return true;
-                    }, (ex) => { });
-                }
-                else
-                {
-                    repository.DapperContext.BeginTransaction((result) =>
-                    {
-                        scheduleEntity = new Sys_schedule_log()
-                        {
-                            schedule_dbid = schedule_dbid,
-                            task_id = "2",
-                            url = "/api/view_cmc_timed_task/ImportEplByPLM",
-                            start_date = start_date,
-                            end_date = DateTime.Now,
-                            status = "Y",
-                            message = "import success!",
-                            CreateDate = start_date,
-                            ModifyDate = DateTime.Now
-                        };
-                        repository.DapperContext.Update(scheduleEntity);
-                        webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
-                        return true;
-                    }, (ex) => { throw new Exception(ex.Message); });
-                }
-                return webResponse;      
-            }
-            catch (Exception ex)
-            {
-                repository.DapperContext.BeginTransaction((result) =>
-                {
-                    scheduleEntity = new Sys_schedule_log()
-                    {
-                        schedule_dbid = schedule_dbid,
-                        task_id = "15",
-                        url = "/api/view_cmc_timed_task/ImportEplByPLM",
-                        start_date = start_date,
-                        end_date = DateTime.Now,
-                        status = "N",
-                        message = ex.Message,
-                        CreateDate = start_date,
-                        ModifyDate = DateTime.Now
-                    };
-                    repository.DapperContext.Update(scheduleEntity);
-                    webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
-                    return true;
-                }, (ex) => { });
-            }
-            return webResponse;
-        }
-
 
         //假EPL獲取，FTP獲取
         public WebResponseContent ImportEplByFalse(IHeaderDictionary header)
@@ -218,7 +78,7 @@ namespace PDMS.Project.Services
                 if (!webResponse.Status)
                 {
                     throw new Exception(webResponse.Message);
-                }         
+                }
                 string AllFileName = "";
                 string ErrorMsg = "";
                 string localPath = "";
@@ -226,12 +86,12 @@ namespace PDMS.Project.Services
                 try
                 {
                     //獲取專案啟動
-                    var ProjectList = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_status == "02"&& x.epl_load_date<=DateTime.Now  ).ToList();
+                    var ProjectList = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_status == "01").ToList();
                     //獲取專案建立的02 正式EPL
                     if (ProjectList.Count() > 0)
                     {
                         try
-                        {                       
+                        {
                             List<Sys_DictionaryList> systemValueList = repository.DbContext.Set<Sys_DictionaryList>().Where(x => x.Dic_ID == 161).OrderBy(x => x.DicValue).ToList();
                             if (systemValueList.Count() > 0)
                             {
@@ -369,6 +229,149 @@ namespace PDMS.Project.Services
             return webResponse;
         }
 
+
+
+        //正式EPL--  WebService方式  
+        public WebResponseContent ImportEplByPLM(IHeaderDictionary header)
+        {
+            Sys_schedule_log scheduleEntity = new Sys_schedule_log();
+            Guid schedule_dbid = Guid.NewGuid();
+            DateTime start_date = DateTime.Now;
+            try
+            {
+                this.webResponse = new WebResponseContent();
+                scheduleEntity = new Sys_schedule_log()
+                {
+                    schedule_dbid = schedule_dbid,
+                    task_id = "15",
+                    url = "/api/view_cmc_timed_task/ImportEplByFalse",
+                    start_date = start_date,
+                    status = "Y",
+                    message = "運行中",
+                    CreateDate = start_date
+                };
+                repository.DapperContext.Add(scheduleEntity);
+                DbContext dbcon = repository.DbContext;
+                var currentEntry = dbcon.ChangeTracker.Entries().FirstOrDefault();
+                if (currentEntry != null && currentEntry.Entity.ToString() == scheduleEntity.ToString())
+                {
+                    //设置实体State为EntityState.Detached，取消跟踪该实体，之后dbContext.ChangeTracker.Entries().Count()的值会减1
+                    currentEntry.State = EntityState.Detached;
+                }
+                //授權驗證
+                webResponse = HttpContextHelper.HttpContextBase(header);
+                if (!webResponse.Status)
+                {
+                    throw new Exception(webResponse.Message);
+                }
+                string AllFileName = "";
+                string ErrorMsg = "";
+                try
+                {
+                    //獲取專案建立的01 假EPL
+                    var ProjectList = repository.DbContext.Set<cmc_pdms_project_main>().Where(x => x.project_status == "02" && x.epl_load_date <= DateTime.Now && x.epl_load_time==null).ToList();
+                    if (ProjectList.Count() > 0)
+                    {
+                        foreach (var item in ProjectList)
+                        {
+                            try
+                            {
+                                //從CMS獲取假EPL
+                                Dictionary<string, string> parameters = new Dictionary<string, string>();
+                                parameters.Add("name", "10086");
+                                string _result = HttpHelper.Helper.GetResponseString("", ERequestMode.Post, parameters, Encoding.Default, Encoding.UTF8);
+
+                                //根據Base64 轉換成 Excel文件
+                                AllFileName = EPPlusHelper.SaveDocumentByBase64(_result);
+                                webResponse = cmc_pdms_project_eplService.Instance.getEPLFromCMS(item.project_id.ToString(), AllFileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                ErrorMsg = ex.Message;
+                                Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "定時任務view_cmc_timed_taskService 文件:foreach,循環調閱接口讀取CMS正式EPL文件-->ImportEplByPLM：" + DateTime.Now + ":" + ex.Message);
+                            }
+                            finally
+                            {
+                                File.Delete(AllFileName);
+                            }      
+                        }
+                    }         
+                }
+                catch (Exception ex)
+                {
+                    ErrorMsg = ex.Message;
+                    Core.Services.Logger.Error(Core.Enums.LoggerType.Error, "定時任務view_cmc_timed_taskService 文件-->ImportEplByPLM：" + DateTime.Now + ":" + ex.Message);
+                }
+                if (!string.IsNullOrEmpty(ErrorMsg))
+                {
+                    repository.DapperContext.BeginTransaction((result) =>
+                    {
+                        scheduleEntity = new Sys_schedule_log()
+                        {
+                            schedule_dbid = schedule_dbid,
+                            task_id = "15",
+                            url = "/api/view_cmc_timed_task/ImportEplByPLM",
+                            start_date = start_date,
+                            end_date = DateTime.Now,
+                            status = "N",
+                            message = ErrorMsg,
+                            CreateDate = start_date,
+                            ModifyDate = DateTime.Now
+                        };
+                        repository.DapperContext.Update(scheduleEntity);
+                        webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
+                        return true;
+                    }, (ex) => { });
+                }
+                else
+                {
+                    repository.DapperContext.BeginTransaction((result) =>
+                    {
+                        scheduleEntity = new Sys_schedule_log()
+                        {
+                            schedule_dbid = schedule_dbid,
+                            task_id = "2",
+                            url = "/api/view_cmc_timed_task/ImportEplByPLM",
+                            start_date = start_date,
+                            end_date = DateTime.Now,
+                            status = "Y",
+                            message = "import success!",
+                            CreateDate = start_date,
+                            ModifyDate = DateTime.Now
+                        };
+                        repository.DapperContext.Update(scheduleEntity);
+                        webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
+                        return true;
+                    }, (ex) => { throw new Exception(ex.Message); });
+                }
+                return webResponse;      
+            }
+            catch (Exception ex)
+            {
+                repository.DapperContext.BeginTransaction((result) =>
+                {
+                    scheduleEntity = new Sys_schedule_log()
+                    {
+                        schedule_dbid = schedule_dbid,
+                        task_id = "15",
+                        url = "/api/view_cmc_timed_task/ImportEplByPLM",
+                        start_date = start_date,
+                        end_date = DateTime.Now,
+                        status = "N",
+                        message = ex.Message,
+                        CreateDate = start_date,
+                        ModifyDate = DateTime.Now
+                    };
+                    repository.DapperContext.Update(scheduleEntity);
+                    webResponse.OK(Core.Enums.ResponseType.SaveSuccess);
+                    return true;
+                }, (ex) => { });
+            }
+            return webResponse;
+        }
+
+
+
         //定時更新任務完成狀態
         public WebResponseContent UpdateTaskStatus(IHeaderDictionary header)
         {
@@ -396,12 +399,14 @@ namespace PDMS.Project.Services
                     //设置实体State为EntityState.Detached，取消跟踪该实体，之后dbContext.ChangeTracker.Entries().Count()的值会减1
                     currentEntry.State = EntityState.Detached;
                 }
+                //授權認證
                 webResponse = HttpContextHelper.HttpContextBase(header);
                 if (!webResponse.Status)
                 {
                     throw new Exception(webResponse.Message);
                 }
                 string msg = "";
+
 
                 if (!string.IsNullOrEmpty(msg))
                 {
