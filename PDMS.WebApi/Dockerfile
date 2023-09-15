@@ -4,7 +4,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 RUN apt-get update; apt-get install libfontconfig1 -y
 
 WORKDIR /app
-EXPOSE 9991
+EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
@@ -27,4 +27,6 @@ RUN dotnet publish "PDMS.WebApi.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+RUN mkdir -p Upload && chmod 777 Upload
+Run mkdir -p quartz && chmod 777 quartz
 ENTRYPOINT ["dotnet", "PDMS.WebApi.dll"]
