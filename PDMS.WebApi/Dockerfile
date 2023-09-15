@@ -9,7 +9,7 @@ EXPOSE 9991
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["PDMS.WebApi/PDMS.WebApi.csproj", "PDMS.WebApi/"]
-COPY ["PDMS.System/PDMS.System.csproj", "PDMS.System/"]
+COPY ["PDMS.Sys/PDMS.Sys.csproj", "PDMS.Sys/"]
 COPY ["PDMS.Core/PDMS.Core.csproj", "PDMS.Core/"]
 COPY ["PDMS.Entity/PDMS.Entity.csproj", "PDMS.Entity/"]
 COPY ["PDMS.Order/PDMS.Order.csproj", "PDMS.Order/"]
