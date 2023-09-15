@@ -12,8 +12,9 @@ COPY ["PDMS.WebApi/PDMS.WebApi.csproj", "PDMS.WebApi/"]
 COPY ["PDMS.Sys/PDMS.Sys.csproj", "PDMS.Sys/"]
 COPY ["PDMS.Core/PDMS.Core.csproj", "PDMS.Core/"]
 COPY ["PDMS.Entity/PDMS.Entity.csproj", "PDMS.Entity/"]
-COPY ["PDMS.Order/PDMS.Order.csproj", "PDMS.Order/"]
-COPY ["PDMS.AppManager/PDMS.AppManager.csproj", "PDMS.AppManager/"]
+COPY ["PDMS.Project/PDMS.Project.csproj", "PDMS.Project/"]
+COPY ["PDMS.WorkFlow/PDMS.WorkFlow.csproj", "PDMS.WorkFlow/"]
+COPY ["PDMS.WebService/PDMS.WebService.csproj", "PDMS.WebService/"]
 COPY ["PDMS.Builder/PDMS.Builder.csproj", "PDMS.Builder/"]
 RUN dotnet restore "PDMS.WebApi/PDMS.WebApi.csproj"
 COPY . .
