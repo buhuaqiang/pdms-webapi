@@ -20,7 +20,7 @@ namespace PDMS.WebApi
             //AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
             //CreateHostBuilder(args).Build().Run();
             var host = CreateHostBuilder(args).Build();
-            #region kafka¶©ÔÄÏûÏ¢
+            #region kafkaè®¢é˜…æ¶ˆæ¯
             //if (AppSetting.Kafka.UseConsumer)
             //{
             //    using var scope = host.Services.CreateScope();
@@ -28,9 +28,9 @@ namespace PDMS.WebApi
             //    testConsumer.Consume(res =>
             //    {
             //        Console.WriteLine($"recieve:{DateTime.Now.ToLongTimeString()}  value:{res.Message.Value}");
-            //        //¾²Ì¬·½·¨ Êı¾İ´¦Àí Èë¿âµÈ²Ù×÷
+            //        //é™æ€æ–¹æ³• æ•°æ®å¤„ç† å…¥åº“ç­‰æ“ä½œ
             //        bool bl = DataHandle.AlarmData(res.Message.Value);
-            //        //»Øµ÷º¯ÊıĞè·µ»Ø±ãÓÚÖ´ĞĞCommit
+            //        //å›è°ƒå‡½æ•°éœ€è¿”å›ä¾¿äºæ‰§è¡ŒCommit
             //        return bl;
             //    }, AppSetting.Kafka.Topics.TestTopic);
             //}
@@ -47,7 +47,7 @@ namespace PDMS.WebApi
                            serverOptions.Limits.MaxRequestBodySize = 10485760;
                            // Set properties and call methods on options
                        });
-                       webBuilder.UseKestrel().UseUrls("http://*:9100");
+                       webBuilder.UseKestrel().UseUrls("http://*:8080");
                        webBuilder.UseIIS();
                        webBuilder.UseStartup<Startup>();
                    }).UseServiceProviderFactory(new AutofacServiceProviderFactory());
