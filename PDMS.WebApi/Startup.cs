@@ -127,7 +127,7 @@ namespace PDMS.WebApi
             services.AddSwaggerGen(c =>
             {
                 //分为2份接口文档
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PDMS.Core后台Api", Version = "v1", Description = "这是对文档的描述。。" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "PDMS.Core后台Api", Version = "v1", Description = "CMC  PDMS 后台 API V1.0" });
                 c.SwaggerDoc("v2", new OpenApiInfo { Title = "PDMS.Core对外三方Api", Version = "v2", Description = "xxx接口文档" });  //控制器里使用[ApiExplorerSettings(GroupName = "v2")]              
                                                                                                                                 //启用中文注释功能
                                                                                                                                 // var basePath = PlatformServices.Default.Application.ApplicationBasePath;
